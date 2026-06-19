@@ -1,0 +1,192 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">{{ isEdit() ? 'Edit Employee' : 'Add Employee' }}</h1>
+      <p class="page-header__subtitle">{{ isEdit() ? 'Update employee information' : 'Fill in the details to create a new employee record' }}</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button (click)="cancel()" [disabled]="saving()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <mat-stepper class="employee-stepper" [linear]="!isEdit()" orientation="horizontal" animationDuration="0" *ngIf="!loading()" #stepper>
+
+    <!-- Step 1: Personal Info -->
+    <mat-step [stepControl]="personalForm" label="Personal Info">
+      <form [formGroup]="personalForm" class="step-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>First Name *</mat-label>
+            <input matInput formControlName="firstName">
+            <mat-error *ngIf="personalForm.get('firstName')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name *</mat-label>
+            <input matInput formControlName="lastName">
+            <mat-error *ngIf="personalForm.get('lastName')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Email *</mat-label>
+            <mat-icon matPrefix>email</mat-icon>
+            <input matInput type="email" formControlName="email">
+            <mat-error *ngIf="personalForm.get('email')?.hasError('required')">Required</mat-error>
+            <mat-error *ngIf="personalForm.get('email')?.hasError('email')">Invalid email</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Phone *</mat-label>
+            <mat-icon matPrefix>phone</mat-icon>
+            <input matInput formControlName="phone">
+            <mat-error *ngIf="personalForm.get('phone')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Date of Birth *</mat-label>
+            <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth">
+            <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+            <mat-datepicker #dobPicker></mat-datepicker>
+            <mat-error *ngIf="personalForm.get('dateOfBirth')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Gender *</mat-label>
+            <mat-select formControlName="gender">
+              <mat-option *ngFor="let opt of genderOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="personalForm.get('gender')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="step-actions">
+          <button mat-raised-button color="primary" matStepperNext [disabled]="personalForm.invalid">
+            Next <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Employment -->
+    <mat-step [stepControl]="employmentForm" label="Employment">
+      <form [formGroup]="employmentForm" class="step-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Joining Date *</mat-label>
+            <input matInput [matDatepicker]="joinPicker" formControlName="joiningDate">
+            <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
+            <mat-datepicker #joinPicker></mat-datepicker>
+            <mat-error *ngIf="employmentForm.get('joiningDate')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Employment Type *</mat-label>
+            <mat-select formControlName="employmentType">
+              <mat-option *ngFor="let opt of employmentTypeOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="employmentForm.get('employmentType')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Department *</mat-label>
+            <mat-select formControlName="departmentId">
+              <mat-option value="dept-001">Operations</mat-option>
+              <mat-option value="dept-002">Security</mat-option>
+              <mat-option value="dept-003">Housekeeping</mat-option>
+              <mat-option value="dept-004">Administration</mat-option>
+            </mat-select>
+            <mat-error *ngIf="employmentForm.get('departmentId')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Designation *</mat-label>
+            <mat-select formControlName="designationId">
+              <mat-option value="des-001">Security Guard</mat-option>
+              <mat-option value="des-002">Supervisor</mat-option>
+              <mat-option value="des-003">Housekeeping Staff</mat-option>
+              <mat-option value="des-004">Manager</mat-option>
+            </mat-select>
+            <mat-error *ngIf="employmentForm.get('designationId')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="step-actions">
+          <button mat-stroked-button matStepperPrevious>
+            <mat-icon>arrow_back</mat-icon> Back
+          </button>
+          <button mat-raised-button color="primary" matStepperNext [disabled]="employmentForm.invalid">
+            Next <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3: Address -->
+    <mat-step label="Address">
+      <form [formGroup]="addressForm" class="step-form">
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Present Address</mat-label>
+          <textarea matInput formControlName="presentAddress" rows="2"></textarea>
+        </mat-form-field>
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Permanent Address</mat-label>
+          <textarea matInput formControlName="permanentAddress" rows="2"></textarea>
+        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>State</mat-label>
+            <input matInput formControlName="state">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>PIN Code</mat-label>
+            <input matInput formControlName="pinCode">
+          </mat-form-field>
+        </div>
+        <div class="step-actions">
+          <button mat-stroked-button matStepperPrevious><mat-icon>arrow_back</mat-icon> Back</button>
+          <button mat-raised-button color="primary" matStepperNext>Next <mat-icon>arrow_forward</mat-icon></button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 4: Salary -->
+    <mat-step [stepControl]="salaryForm" label="Salary">
+      <form [formGroup]="salaryForm" class="step-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Basic Salary (₹) *</mat-label>
+            <mat-icon matPrefix>currency_rupee</mat-icon>
+            <input matInput type="number" formControlName="basicSalary">
+            <mat-error *ngIf="salaryForm.get('basicSalary')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Gross Salary (₹) *</mat-label>
+            <mat-icon matPrefix>currency_rupee</mat-icon>
+            <input matInput type="number" formControlName="grossSalary">
+            <mat-error *ngIf="salaryForm.get('grossSalary')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="step-actions">
+          <button mat-stroked-button matStepperPrevious><mat-icon>arrow_back</mat-icon> Back</button>
+          <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
+            <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!saving()">{{ isEdit() ? 'save' : 'person_add' }}</mat-icon>
+            {{ isEdit() ? 'Save Changes' : 'Create Employee' }}
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+  </mat-stepper>
+</div>

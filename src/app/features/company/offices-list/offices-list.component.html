@@ -1,0 +1,98 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Offices</h1>
+      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} offices</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/company">
+        <mat-icon>arrow_back</mat-icon> Company Profile
+      </button>
+      <button mat-raised-button color="primary">
+        <mat-icon>add</mat-icon> Add Office
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-bar__search">
+      <mat-label>Search offices...</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchCtrl">
+    </mat-form-field>
+    <div class="filter-bar__filters">
+      <mat-form-field appearance="outline" style="width: 160px;">
+        <mat-label>Status</mat-label>
+        <mat-select [formControl]="statusCtrl">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option [value]="true">Active</mat-option>
+          <mat-option [value]="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="filter-bar__actions">
+      <button mat-stroked-button (click)="clearFilters()">Clear</button>
+      <button mat-icon-button (click)="load()"><mat-icon>refresh</mat-icon></button>
+    </div>
+  </div>
+
+  <div class="card card--flush">
+    <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+    <div class="empty-state" *ngIf="!loading() && data()?.items?.length === 0">
+      <mat-icon>domain</mat-icon>
+      <h3>No offices found</h3>
+      <p>Add an office or adjust your filters.</p>
+      <button mat-raised-button color="primary"><mat-icon>add</mat-icon> Add Office</button>
+    </div>
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+      <ng-container matColumnDef="officeCode">
+        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+        <mat-cell *matCellDef="let o"><span class="code-chip">{{ o.officeCode }}</span></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="officeName">
+        <mat-header-cell *matHeaderCellDef>Office</mat-header-cell>
+        <mat-cell *matCellDef="let o"><strong>{{ o.officeName }}</strong></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="branchName">
+        <mat-header-cell *matHeaderCellDef>Branch</mat-header-cell>
+        <mat-cell *matCellDef="let o">{{ o.branchName }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="floor">
+        <mat-header-cell *matHeaderCellDef>Floor</mat-header-cell>
+        <mat-cell *matCellDef="let o">{{ o.floor }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="capacity">
+        <mat-header-cell *matHeaderCellDef>Capacity</mat-header-cell>
+        <mat-cell *matCellDef="let o">{{ o.capacity }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let o">
+          <span class="badge" [class.badge--active]="o.isActive" [class.badge--inactive]="!o.isActive">
+            {{ o.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let o">
+          <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+          <mat-menu #menu>
+            <button mat-menu-item><mat-icon>edit</mat-icon> Edit</button>
+            <button mat-menu-item (click)="deleteOffice(o)"><mat-icon>delete</mat-icon> Delete</button>
+          </mat-menu>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
+    </mat-table>
+    <mat-paginator
+      *ngIf="!loading() && (data()?.totalCount ?? 0) > 0"
+      [length]="data()?.totalCount ?? 0"
+      [pageSize]="pageSize"
+      [pageIndex]="page - 1"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+</div>

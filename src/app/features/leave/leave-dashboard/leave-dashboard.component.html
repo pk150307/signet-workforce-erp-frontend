@@ -1,0 +1,14 @@
+<div class="page-container">
+  <div class="page-header"><div><h1 class="page-header__title">Leave Dashboard</h1><p class="page-header__subtitle">Leave management overview</p></div>
+    <div class="page-header__actions"><button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button><button mat-raised-button color="primary" routerLink="/leave/apply"><mat-icon>add</mat-icon> Apply Leave</button></div></div>
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="4"></app-skeleton-loader>
+  <ng-container *ngIf="!loading() && summary() as s">
+    <div class="kpi-grid">
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--orange"><mat-icon>pending_actions</mat-icon></div><div><div class="stat-card__value">{{ s.pendingRequests }}</div><div class="stat-card__label">Pending</div></div></div>
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--green"><mat-icon>check_circle</mat-icon></div><div><div class="stat-card__value">{{ s.approvedThisMonth }}</div><div class="stat-card__label">Approved (Month)</div></div></div>
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--red"><mat-icon>cancel</mat-icon></div><div><div class="stat-card__value">{{ s.rejectedThisMonth }}</div><div class="stat-card__label">Rejected (Month)</div></div></div>
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--blue"><mat-icon>beach_access</mat-icon></div><div><div class="stat-card__value">{{ s.onLeaveToday }}</div><div class="stat-card__label">On Leave Today</div></div></div>
+    </div>
+    <div class="quick-links"><a *ngFor="let l of links" mat-stroked-button [routerLink]="l.route"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }}</a></div>
+  </ng-container>
+</div>

@@ -1,0 +1,73 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Clients</h1>
+      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} clients</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-raised-button color="primary" routerLink="/clients/new">
+        <mat-icon>add_business</mat-icon> Add Client
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-bar__search">
+      <mat-label>Search clients...</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchCtrl">
+    </mat-form-field>
+  </div>
+
+  <div class="card card--flush">
+    <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+    <div class="empty-state" *ngIf="!loading() && data()?.items?.length === 0">
+      <mat-icon>business_center</mat-icon>
+      <h3>No clients yet</h3>
+      <p>Add your first client to get started.</p>
+      <button mat-raised-button color="primary" routerLink="/clients/new">Add Client</button>
+    </div>
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+      <ng-container matColumnDef="clientCode">
+        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+        <mat-cell *matCellDef="let c"><span class="code-chip">{{ c.clientCode }}</span></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="companyName">
+        <mat-header-cell *matHeaderCellDef>Company</mat-header-cell>
+        <mat-cell *matCellDef="let c"><strong>{{ c.companyName }}</strong></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="contactPerson">
+        <mat-header-cell *matHeaderCellDef>Contact</mat-header-cell>
+        <mat-cell *matCellDef="let c">{{ c.contactPerson }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="location">
+        <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
+        <mat-cell *matCellDef="let c">{{ c.city }}, {{ c.state }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let c">
+          <span class="badge" [class.badge--active]="c.isActive" [class.badge--inactive]="!c.isActive">
+            {{ c.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let c">
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu>
+            <button mat-menu-item [routerLink]="['/clients', c.id, 'edit']">
+              <mat-icon>edit</mat-icon> Edit
+            </button>
+          </mat-menu>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
+    </mat-table>
+    <mat-paginator [length]="data()?.totalCount ?? 0" [pageSize]="20" *ngIf="(data()?.totalCount ?? 0) > 0"></mat-paginator>
+  </div>
+</div>

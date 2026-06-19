@@ -1,0 +1,146 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Company Profile</h1>
+      <p class="page-header__subtitle">Manage company information, GST, billing, and logo</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/company/branches">
+        <mat-icon>account_tree</mat-icon> Branches
+      </button>
+      <button mat-stroked-button routerLink="/company/offices">
+        <mat-icon>domain</mat-icon> Offices
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <div class="card" *ngIf="!loading()">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="logo-section">
+        <div class="logo-section__preview">
+          <img *ngIf="logoPreview()" [src]="logoPreview()" alt="Company logo">
+          <mat-icon *ngIf="!logoPreview()">business</mat-icon>
+        </div>
+        <div class="logo-section__actions">
+          <h3>Company Logo</h3>
+          <p>Upload PNG or JPG, max 2 MB. Recommended 200×200 px.</p>
+          <input type="file" #logoInput accept="image/png,image/jpeg" hidden (change)="onLogoSelected($event)">
+          <button mat-stroked-button type="button" (click)="logoInput.click()">
+            <mat-icon>upload</mat-icon> Upload Logo
+          </button>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <mat-tab-group animationDuration="0ms">
+        <mat-tab label="Company Info">
+          <div class="tab-content">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Company Name *</mat-label>
+                <input matInput formControlName="companyName">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Legal Name *</mat-label>
+                <input matInput formControlName="legalName">
+              </mat-form-field>
+            </div>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Registration Number</mat-label>
+                <input matInput formControlName="registrationNumber">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Email *</mat-label>
+                <input matInput formControlName="email">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Phone *</mat-label>
+                <input matInput formControlName="phone">
+              </mat-form-field>
+            </div>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Website</mat-label>
+                <input matInput formControlName="website">
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Address *</mat-label>
+              <textarea matInput formControlName="address" rows="2"></textarea>
+            </mat-form-field>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>City *</mat-label>
+                <input matInput formControlName="city">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>State *</mat-label>
+                <input matInput formControlName="state">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>PIN Code</mat-label>
+                <input matInput formControlName="pinCode">
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="GST & Tax">
+          <div class="tab-content">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>GST Number</mat-label>
+                <input matInput formControlName="gstNumber" placeholder="e.g. 27AABCS1234F1Z5">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>PAN Number</mat-label>
+                <input matInput formControlName="panNumber" placeholder="e.g. AABCS1234F">
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Billing Address">
+          <div class="tab-content">
+            <div class="billing-actions">
+              <button mat-stroked-button type="button" (click)="copyBillingFromCompany()">
+                <mat-icon>content_copy</mat-icon> Copy from company address
+              </button>
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Billing Address</mat-label>
+              <textarea matInput formControlName="billingAddress" rows="2"></textarea>
+            </mat-form-field>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>City</mat-label>
+                <input matInput formControlName="billingCity">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>State</mat-label>
+                <input matInput formControlName="billingState">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>PIN Code</mat-label>
+                <input matInput formControlName="billingPinCode">
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+
+      <div class="form-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

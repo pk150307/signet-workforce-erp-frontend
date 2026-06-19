@@ -1,0 +1,107 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Dashboard</h1>
+      <p class="page-header__subtitle">Real-time overview of your workforce operations</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button color="primary" routerLink="/reports">
+        <mat-icon>bar_chart</mat-icon> View Reports
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="40" />
+    </div>
+  }
+
+  @if (!loading() && stats(); as s) {
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>people</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.totalEmployees }}</div>
+          <div class="stat-card__label">Total Employees</div>
+          <div class="stat-card__trend up">{{ s.activeEmployees }} active</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>event_available</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.todayPresent }}</div>
+          <div class="stat-card__label">Present Today</div>
+          <div class="stat-card__trend down">{{ s.todayAbsent }} absent · {{ s.todayOnLeave }} on leave</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange"><mat-icon>business</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.totalClients }}</div>
+          <div class="stat-card__label">Total Clients</div>
+          <div class="stat-card__trend up">{{ s.activeClients }} active · {{ s.totalSites }} sites</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple"><mat-icon>account_balance_wallet</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ formatCurrency(s.currentMonthPayroll) }}</div>
+          <div class="stat-card__label">This Month Payroll</div>
+          <div class="stat-card__trend up">Processed</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--teal"><mat-icon>receipt_long</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ formatCurrency(s.currentMonthRevenue) }}</div>
+          <div class="stat-card__label">Revenue This Month</div>
+          <div class="stat-card__trend up">Billed</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--red"><mat-icon>warning</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ formatCurrency(s.outstandingInvoices) }}</div>
+          <div class="stat-card__label">Outstanding</div>
+          <div class="stat-card__trend down">Pending collection</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <h3 class="chart-title">Attendance Trend (Last 7 Days)</h3>
+        <highcharts-chart [Highcharts]="Highcharts" [options]="attendanceChartOptions()" style="width: 100%; display: block;" />
+      </div>
+      <div class="card">
+        <h3 class="chart-title">Revenue vs Payroll (6 Months)</h3>
+        <highcharts-chart [Highcharts]="Highcharts" [options]="revenueChartOptions()" style="width: 100%; display: block;" />
+      </div>
+    </div>
+
+    <div class="alerts-grid">
+      <div class="card">
+        <h3 class="section-title"><mat-icon>pending_actions</mat-icon> Pending Actions</h3>
+        <div class="action-list">
+          <div class="action-item" routerLink="/leave">
+            <div class="action-item__icon action-item__icon--orange"><mat-icon>beach_access</mat-icon></div>
+            <div class="action-item__text">
+              <strong>{{ s.pendingLeaveRequests }}</strong> leave requests pending approval
+            </div>
+            <mat-icon class="action-item__arrow">chevron_right</mat-icon>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="section-title"><mat-icon>flash_on</mat-icon> Quick Actions</h3>
+        <div class="quick-actions">
+          <button mat-stroked-button routerLink="/employees/new"><mat-icon>person_add</mat-icon> Add Employee</button>
+          <button mat-stroked-button routerLink="/attendance"><mat-icon>fingerprint</mat-icon> Mark Attendance</button>
+          <button mat-stroked-button routerLink="/billing"><mat-icon>add_circle</mat-icon> New Invoice</button>
+          <button mat-stroked-button routerLink="/payroll"><mat-icon>payments</mat-icon> Process Payroll</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

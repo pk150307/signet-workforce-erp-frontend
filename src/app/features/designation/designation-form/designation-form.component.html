@@ -1,0 +1,57 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">{{ isEdit() ? 'Edit Designation' : 'Add Designation' }}</h1>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/designations'])">Cancel</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+
+  <div class="card form-card" *ngIf="!loading()">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Designation Code *</mat-label>
+          <input matInput formControlName="designationCode">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Designation Name *</mat-label>
+          <input matInput formControlName="designationName">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Salary Grade *</mat-label>
+          <mat-select formControlName="salaryGrade">
+            <mat-option *ngFor="let g of gradeOptions" [value]="g">{{ g }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Department</mat-label>
+          <mat-select formControlName="departmentId">
+            <mat-option value="">None</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Reports To</mat-label>
+          <mat-select formControlName="parentDesignationId">
+            <mat-option value="">None</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+      </mat-form-field>
+      <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="router.navigate(['/designations'])">Cancel</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
+          {{ isEdit() ? 'Save Changes' : 'Create Designation' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

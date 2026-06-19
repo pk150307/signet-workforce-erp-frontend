@@ -1,0 +1,9 @@
+<div class="page-container">
+  <div class="page-header"><div><h1 class="page-header__title">Apply Leave</h1><p class="page-header__subtitle">Submit a new leave request</p></div></div>
+  <form class="card apply-form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline"><mat-label>Leave Type</mat-label><mat-select formControlName="leaveType"><mat-option *ngFor="let t of leaveTypes" [value]="t">{{ t }}</mat-option></mat-select></mat-form-field>
+    <div class="date-row"><mat-form-field appearance="outline"><mat-label>From Date</mat-label><input matInput [matDatepicker]="fromPicker" formControlName="fromDate"><mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle><mat-datepicker #fromPicker></mat-datepicker></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>To Date</mat-label><input matInput [matDatepicker]="toPicker" formControlName="toDate"><mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle><mat-datepicker #toPicker></mat-datepicker></mat-form-field></div>
+    <mat-form-field appearance="outline"><mat-label>Reason</mat-label><textarea matInput rows="3" formControlName="reason"></textarea></mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid"><mat-icon>send</mat-icon> Submit Request</button>
+  </form></div>

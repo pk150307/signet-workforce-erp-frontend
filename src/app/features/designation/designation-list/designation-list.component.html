@@ -1,0 +1,116 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Designations</h1>
+      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} designations</p>
+    </div>
+    <div class="page-header__actions">
+      <mat-button-toggle-group [value]="viewMode()" (change)="viewMode.set($event.value)">
+        <mat-button-toggle value="table"><mat-icon>table_rows</mat-icon> Table</mat-button-toggle>
+        <mat-button-toggle value="hierarchy"><mat-icon>account_tree</mat-icon> Hierarchy</mat-button-toggle>
+      </mat-button-toggle-group>
+      <button mat-raised-button color="primary" routerLink="/designations/new">
+        <mat-icon>add</mat-icon> Add Designation
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-bar__search">
+      <mat-label>Search designations...</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchCtrl">
+    </mat-form-field>
+    <div class="filter-bar__filters">
+      <mat-form-field appearance="outline" style="width: 140px;">
+        <mat-label>Salary Grade</mat-label>
+        <mat-select [formControl]="gradeCtrl">
+          <mat-option [value]="null">All Grades</mat-option>
+          <mat-option *ngFor="let g of gradeOptions" [value]="g">{{ g }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 160px;">
+        <mat-label>Status</mat-label>
+        <mat-select [formControl]="statusCtrl">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option [value]="true">Active</mat-option>
+          <mat-option [value]="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="filter-bar__actions">
+      <button mat-stroked-button (click)="clearFilters()">Clear</button>
+      <button mat-icon-button (click)="load()"><mat-icon>refresh</mat-icon></button>
+    </div>
+  </div>
+
+  <div class="hierarchy-placeholder card" *ngIf="viewMode() === 'hierarchy'">
+    <mat-icon>account_tree</mat-icon>
+    <h3>Designation Hierarchy</h3>
+    <p>Visual hierarchy chart coming soon. Use table view for CRUD operations.</p>
+  </div>
+
+  <div class="card card--flush" *ngIf="viewMode() === 'table'">
+    <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+    <div class="empty-state" *ngIf="!loading() && data()?.items?.length === 0">
+      <mat-icon>badge</mat-icon>
+      <h3>No designations found</h3>
+      <p>Create designations to define roles and salary grades.</p>
+      <button mat-raised-button color="primary" routerLink="/designations/new">Add Designation</button>
+    </div>
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+      <ng-container matColumnDef="designationCode">
+        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+        <mat-cell *matCellDef="let d"><span class="code-chip">{{ d.designationCode }}</span></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="designationName">
+        <mat-header-cell *matHeaderCellDef>Designation</mat-header-cell>
+        <mat-cell *matCellDef="let d"><strong>{{ d.designationName }}</strong></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="parentDesignationName">
+        <mat-header-cell *matHeaderCellDef>Reports To</mat-header-cell>
+        <mat-cell *matCellDef="let d">{{ d.parentDesignationName || '—' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="departmentName">
+        <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
+        <mat-cell *matCellDef="let d">{{ d.departmentName || '—' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="salaryGrade">
+        <mat-header-cell *matHeaderCellDef>Salary Grade</mat-header-cell>
+        <mat-cell *matCellDef="let d"><span class="grade-badge">{{ d.salaryGrade }}</span></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="employeeCount">
+        <mat-header-cell *matHeaderCellDef>Employees</mat-header-cell>
+        <mat-cell *matCellDef="let d">{{ d.employeeCount }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let d">
+          <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
+            {{ d.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let d">
+          <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+          <mat-menu #menu>
+            <button mat-menu-item (click)="editDesignation(d.id)"><mat-icon>edit</mat-icon> Edit</button>
+            <button mat-menu-item (click)="deleteDesignation(d)"><mat-icon>delete</mat-icon> Delete</button>
+          </mat-menu>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
+    </mat-table>
+    <mat-paginator
+      *ngIf="!loading() && (data()?.totalCount ?? 0) > 0"
+      [length]="data()?.totalCount ?? 0"
+      [pageSize]="pageSize"
+      [pageIndex]="page - 1"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+</div>

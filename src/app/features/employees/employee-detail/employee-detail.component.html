@@ -1,0 +1,156 @@
+<div class="page-container">
+
+  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+
+  <ng-container *ngIf="!loading() && employee() as emp">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="emp-header">
+        <button mat-icon-button routerLink="/employees"><mat-icon>arrow_back</mat-icon></button>
+        <div class="emp-header__avatar">{{ emp.firstName.charAt(0) }}</div>
+        <div>
+          <h1 class="page-header__title">{{ emp.firstName }} {{ emp.lastName }}</h1>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+            <span class="badge" [ngClass]="'badge--' + getStatusClass(emp.status)">
+              {{ statusLabels[emp.status] }}
+            </span>
+            <span class="text-muted">{{ emp.employeeCode }}</span>
+            <span class="sep">·</span>
+            <span class="text-muted">{{ emp.designationName }}</span>
+            <span class="sep">·</span>
+            <span class="text-muted">{{ emp.departmentName }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="page-header__actions">
+        <button mat-stroked-button [routerLink]="['/employees', emp.id, 'edit']">
+          <mat-icon>edit</mat-icon> Edit
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group [(selectedIndex)]="activeTab" class="detail-tabs">
+
+      <!-- Overview -->
+      <mat-tab label="Overview">
+        <div class="tab-content">
+          <div class="detail-grid">
+            <div class="card">
+              <h4 class="detail-section">Personal Information</h4>
+              <div class="detail-row">
+                <span class="detail-label">Full Name</span>
+                <span class="detail-value">{{ emp.firstName }} {{ emp.lastName }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Email</span>
+                <a [href]="'mailto:' + emp.email" class="detail-value detail-link">{{ emp.email }}</a>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Phone</span>
+                <span class="detail-value">{{ emp.phone }}</span>
+              </div>
+              <div class="detail-row" *ngIf="emp.alternatePhone">
+                <span class="detail-label">Alt. Phone</span>
+                <span class="detail-value">{{ emp.alternatePhone }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value">{{ emp.dateOfBirth | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Gender</span>
+                <span class="detail-value">{{ genderLabels[emp.gender] }}</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4 class="detail-section">Employment Details</h4>
+              <div class="detail-row">
+                <span class="detail-label">Employee Code</span>
+                <span class="detail-value mono">{{ emp.employeeCode }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Joining Date</span>
+                <span class="detail-value">{{ emp.joiningDate | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Employment Type</span>
+                <span class="detail-value">{{ employmentTypeLabels[emp.employmentType] }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Department</span>
+                <span class="detail-value">{{ emp.departmentName }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Designation</span>
+                <span class="detail-value">{{ emp.designationName }}</span>
+              </div>
+              <div class="detail-row" *ngIf="emp.reportingManagerName">
+                <span class="detail-label">Reports To</span>
+                <span class="detail-value">{{ emp.reportingManagerName }}</span>
+              </div>
+              <div class="detail-row" *ngIf="emp.siteName">
+                <span class="detail-label">Site</span>
+                <span class="detail-value">{{ emp.siteName }}</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4 class="detail-section">Salary Details</h4>
+              <div class="detail-row">
+                <span class="detail-label">Basic Salary</span>
+                <span class="detail-value salary">₹{{ emp.basicSalary | number:'1.0-0' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Gross Salary</span>
+                <span class="detail-value salary">₹{{ emp.grossSalary | number:'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <div class="card" *ngIf="emp.presentAddress || emp.city">
+              <h4 class="detail-section">Address</h4>
+              <div class="detail-row" *ngIf="emp.presentAddress">
+                <span class="detail-label">Present</span>
+                <span class="detail-value">{{ emp.presentAddress }}</span>
+              </div>
+              <div class="detail-row" *ngIf="emp.permanentAddress">
+                <span class="detail-label">Permanent</span>
+                <span class="detail-value">{{ emp.permanentAddress }}</span>
+              </div>
+              <div class="detail-row" *ngIf="emp.city">
+                <span class="detail-label">City / State</span>
+                <span class="detail-value">{{ emp.city }}, {{ emp.state }} {{ emp.pinCode }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Statutory -->
+      <mat-tab label="Statutory & Bank">
+        <div class="tab-content">
+          <div class="detail-grid">
+            <div class="card">
+              <h4 class="detail-section">Statutory Details</h4>
+              <div class="detail-row"><span class="detail-label">PAN</span><span class="detail-value mono">{{ emp.panNumber || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Aadhaar</span><span class="detail-value mono">{{ emp.aadhaarNumber ? ('XXXX XXXX ' + emp.aadhaarNumber.slice(-4)) : '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">PF Number</span><span class="detail-value mono">{{ emp.pfNumber || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">ESI Number</span><span class="detail-value mono">{{ emp.esiNumber || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">UAN</span><span class="detail-value mono">{{ emp.uanNumber || '—' }}</span></div>
+            </div>
+
+            <div class="card">
+              <h4 class="detail-section">Bank Details</h4>
+              <div class="detail-row"><span class="detail-label">Bank Name</span><span class="detail-value">{{ emp.bankName || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Account No.</span><span class="detail-value mono">{{ emp.accountNumber ? ('XXXX XXXX ' + emp.accountNumber.slice(-4)) : '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">IFSC Code</span><span class="detail-value mono">{{ emp.ifscCode || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Account Holder</span><span class="detail-value">{{ emp.accountHolderName || '—' }}</span></div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </ng-container>
+</div>

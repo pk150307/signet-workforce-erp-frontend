@@ -1,0 +1,53 @@
+.step-form {
+  padding: 24px 0 8px;
+  color: var(--color-text-primary);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.step-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.employee-stepper {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
+
+  .mat-step-label,
+  .mat-step-text-label {
+    color: var(--color-text-secondary);
+  }
+
+  .mat-step-header[aria-selected='true'] {
+    .mat-step-label,
+    .mat-step-text-label {
+      color: var(--color-text-primary);
+    }
+  }
+
+  .mat-horizontal-content-container {
+    color: var(--color-text-primary);
+  }
+
+  .mat-horizontal-stepper-content:not(.mat-horizontal-stepper-content-inactive) {
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
