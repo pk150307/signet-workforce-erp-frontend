@@ -1,0 +1,14 @@
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  @for (item of breadcrumbService.items(); track item.label; let last = $last) {
+    <span class="breadcrumb__item" [class.breadcrumb__item--active]="last">
+      @if (!last && item.route) {
+        <a [routerLink]="item.route">{{ item.label }}</a>
+      } @else {
+        {{ item.label }}
+      }
+    </span>
+    @if (!last) {
+      <mat-icon class="breadcrumb__separator">chevron_right</mat-icon>
+    }
+  }
+</nav>

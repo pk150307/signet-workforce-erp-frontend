@@ -1,0 +1,11 @@
+<div class="empty-state">
+  <mat-icon class="empty-state__icon">{{ icon }}</mat-icon>
+  <h3 class="empty-state__title">{{ title }}</h3>
+  <p class="empty-state__description">{{ description }}</p>
+  @if (actionLabel) {
+    <button mat-raised-button color="primary">
+      {{ actionLabel }}
+    </button>
+  }
+  <ng-content />
+</div>

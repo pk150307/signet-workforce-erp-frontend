@@ -1,0 +1,11 @@
+@if (type === 'card') {
+  <div class="skeleton__card">
+    @for (row of rowArray; track row) {
+      <div class="skeleton__line" [class.skeleton__line--full]="row === 0" [class.skeleton__line--medium]="row > 0"></div>
+    }
+  </div>
+} @else {
+  @for (row of rowArray; track row) {
+    <div class="skeleton__line skeleton__line--full"></div>
+  }
+}
