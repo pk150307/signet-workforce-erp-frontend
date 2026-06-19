@@ -1,0 +1,169 @@
+<div class="pf-esic-bulk-wizard">
+  <h2 mat-dialog-title>{{ title }}</h2>
+
+  <mat-dialog-content>
+    <mat-stepper #stepper>
+      <!-- Step 1: Upload / Manual Entry -->
+      <mat-step>
+        <ng-template matStepLabel>Upload</ng-template>
+
+        <div class="pf-esic-bulk-wizard__step">
+          <p class="pf-esic-bulk-wizard__hint">Upload a CSV file or enter records manually.</p>
+          <p class="pf-esic-bulk-wizard__format">CSV columns: employeeCode, uanNumber, pfNumber, esicNumber, status, effectiveDate</p>
+
+          <div class="pf-esic-bulk-wizard__upload">
+            <input type="file" accept=".csv" #fileInput hidden (change)="onFileSelected($event)" />
+            <button mat-stroked-button type="button" (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon>
+              Choose CSV File
+            </button>
+            @if (selectedFile(); as file) {
+              <span class="pf-esic-bulk-wizard__filename">{{ file.name }}</span>
+            }
+          </div>
+
+          <mat-divider class="pf-esic-bulk-wizard__divider" />
+
+          <form [formGroup]="manualForm">
+            <div formArrayName="rows" class="pf-esic-bulk-wizard__manual-rows">
+              @for (row of rows.controls; track $index; let i = $index) {
+                <div [formGroupName]="i" class="pf-esic-bulk-wizard__manual-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Employee Code</mat-label>
+                    <input matInput formControlName="employeeCode" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>UAN</mat-label>
+                    <input matInput formControlName="uanNumber" maxlength="12" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>PF Number</mat-label>
+                    <input matInput formControlName="pfNumber" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>ESIC</mat-label>
+                    <input matInput formControlName="esicNumber" maxlength="17" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Status</mat-label>
+                    <mat-select formControlName="status">
+                      @for (s of statusOptions; track s) {
+                        <mat-option [value]="s">{{ s }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Effective Date</mat-label>
+                    <input matInput formControlName="effectiveDate" placeholder="YYYY-MM-DD" />
+                  </mat-form-field>
+                  <button mat-icon-button type="button" color="warn" (click)="removeRow(i)" [disabled]="rows.length === 1">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <button mat-stroked-button type="button" (click)="addRow()">
+              <mat-icon>add</mat-icon> Add Row
+            </button>
+          </form>
+        </div>
+
+        <div class="pf-esic-bulk-wizard__actions">
+          <button mat-button type="button" (click)="cancel()">Cancel</button>
+          <button mat-raised-button color="primary" matStepperNext type="button" (click)="validateManualRows()">
+            Next
+          </button>
+        </div>
+      </mat-step>
+
+      <!-- Step 2: Preview & Validate -->
+      <mat-step>
+        <ng-template matStepLabel>Preview</ng-template>
+
+        <div class="pf-esic-bulk-wizard__step pf-esic-bulk-wizard__preview">
+          <div class="pf-esic-bulk-wizard__summary">
+            <span class="badge badge--active">{{ validRows.length }} valid</span>
+            @if (invalidRows.length) {
+              <span class="badge badge--inactive">{{ invalidRows.length }} invalid</span>
+            }
+          </div>
+
+          @if (parsedRows().length) {
+            <table mat-table [dataSource]="parsedRows()" class="pf-esic-bulk-wizard__table">
+              <ng-container matColumnDef="employeeCode">
+                <th mat-header-cell *matHeaderCellDef>Code</th>
+                <td mat-cell *matCellDef="let row">{{ row.employeeCode || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="uanNumber">
+                <th mat-header-cell *matHeaderCellDef>UAN</th>
+                <td mat-cell *matCellDef="let row">{{ row.uanNumber || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="pfNumber">
+                <th mat-header-cell *matHeaderCellDef>PF</th>
+                <td mat-cell *matCellDef="let row">{{ row.pfNumber || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="esicNumber">
+                <th mat-header-cell *matHeaderCellDef>ESIC</th>
+                <td mat-cell *matCellDef="let row">{{ row.esicNumber || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let row">{{ row.status || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="errors">
+                <th mat-header-cell *matHeaderCellDef>Validation</th>
+                <td mat-cell *matCellDef="let row">
+                  @if (row.errors.length) {
+                    <span class="pf-esic-bulk-wizard__error">{{ row.errors.join('; ') }}</span>
+                  } @else {
+                    <mat-icon class="pf-esic-bulk-wizard__ok">check_circle</mat-icon>
+                  }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="previewColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: previewColumns"
+                  [class.pf-esic-bulk-wizard__row--invalid]="row.errors.length"></tr>
+            </table>
+          } @else {
+            <p class="pf-esic-bulk-wizard__empty">No data to preview. Go back and upload a CSV or enter records manually.</p>
+          }
+        </div>
+
+        <div class="pf-esic-bulk-wizard__actions">
+          <button mat-button matStepperPrevious type="button">Back</button>
+          <button mat-raised-button color="primary" matStepperNext type="button" [disabled]="!validRows.length">
+            Next
+          </button>
+        </div>
+      </mat-step>
+
+      <!-- Step 3: Confirm & Submit -->
+      <mat-step>
+        <ng-template matStepLabel>Confirm</ng-template>
+
+        <div class="pf-esic-bulk-wizard__step">
+          <p>
+            You are about to {{ data.mode === 'import' ? 'import' : 'update' }}
+            <strong>{{ data.mode === 'import' ? (selectedFile()?.name || validRows.length + ' records') : validRows.length + ' records' }}</strong>.
+          </p>
+          @if (invalidRows.length) {
+            <p class="pf-esic-bulk-wizard__warn">
+              {{ invalidRows.length }} record(s) with validation errors will be skipped.
+            </p>
+          }
+        </div>
+
+        <div class="pf-esic-bulk-wizard__actions">
+          <button mat-button matStepperPrevious type="button" [disabled]="submitting()">Back</button>
+          <button mat-raised-button color="primary" type="button" (click)="submit()"
+                  [disabled]="submitting() || (data.mode === 'update' && !validRows.length) || (data.mode === 'import' && !selectedFile() && !validRows.length)">
+            @if (submitting()) {
+              <mat-spinner diameter="18" />
+            }
+            Submit
+          </button>
+        </div>
+      </mat-step>
+    </mat-stepper>
+  </mat-dialog-content>
+</div>

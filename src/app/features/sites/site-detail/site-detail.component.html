@@ -1,0 +1,14 @@
+<div class="page-container">
+  <div class="page-header"><div><h1 class="page-header__title">{{ site()?.siteName ?? 'Site Detail' }}</h1><p class="page-header__subtitle">{{ site()?.siteCode }} · {{ site()?.clientCompanyName }}</p></div>
+    <div class="page-header__actions"><button mat-stroked-button routerLink="/sites"><mat-icon>arrow_back</mat-icon> Back</button></div></div>
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="3"></app-skeleton-loader>
+  <div class="card detail-grid" *ngIf="!loading() && site() as s">
+    <div class="detail-item"><span class="detail-label">Address</span><span>{{ s.address }}, {{ s.city }}, {{ s.state }} - {{ s.pincode }}</span></div>
+    <div class="detail-item"><span class="detail-label">Supervisor</span><span>{{ s.supervisorName }}</span></div>
+    <div class="detail-item"><span class="detail-label">Contact</span><span>{{ s.contactPhone }}</span></div>
+    <div class="detail-item"><span class="detail-label">Headcount</span><span>{{ s.deployedHeadcount }} / {{ s.requiredHeadcount }}</span></div>
+    <div class="detail-item"><span class="detail-label">Contract</span><span>{{ s.contractStartDate }} — {{ s.contractEndDate }}</span></div>
+    <div class="detail-item"><span class="detail-label">Status</span><span class="badge" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</span></div>
+  </div>
+  <app-empty-state *ngIf="!loading() && !site()" icon="location_off" title="Site not found" description="The requested site could not be loaded."></app-empty-state>
+</div>

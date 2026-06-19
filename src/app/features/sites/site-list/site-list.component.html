@@ -1,0 +1,19 @@
+<div class="page-container">
+  <div class="page-header"><div><h1 class="page-header__title">Site List</h1><p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} sites</p></div>
+    <div class="page-header__actions"><button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button><button mat-raised-button color="primary" routerLink="/sites/dashboard"><mat-icon>dashboard</mat-icon> Dashboard</button></div></div>
+  <div class="filter-bar"><mat-form-field appearance="outline" class="filter-bar__search"><mat-label>Search sites...</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [formControl]="searchCtrl"></mat-form-field></div>
+  <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
+  <div class="card card--flush" *ngIf="!loading()">
+    <app-empty-state *ngIf="data()?.items?.length === 0" icon="location_on" title="No sites found" description="No sites match your search."></app-empty-state>
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
+      <ng-container matColumnDef="siteCode"><mat-header-cell *matHeaderCellDef>Code</mat-header-cell><mat-cell *matCellDef="let s"><span class="code-chip">{{ s.siteCode }}</span></mat-cell></ng-container>
+      <ng-container matColumnDef="siteName"><mat-header-cell *matHeaderCellDef>Site</mat-header-cell><mat-cell *matCellDef="let s"><strong>{{ s.siteName }}</strong></mat-cell></ng-container>
+      <ng-container matColumnDef="clientCompanyName"><mat-header-cell *matHeaderCellDef>Client</mat-header-cell><mat-cell *matCellDef="let s">{{ s.clientCompanyName }}</mat-cell></ng-container>
+      <ng-container matColumnDef="city"><mat-header-cell *matHeaderCellDef>City</mat-header-cell><mat-cell *matCellDef="let s">{{ s.city }}</mat-cell></ng-container>
+      <ng-container matColumnDef="requiredHeadcount"><mat-header-cell *matHeaderCellDef>Required</mat-header-cell><mat-cell *matCellDef="let s">{{ s.requiredHeadcount }}</mat-cell></ng-container>
+      <ng-container matColumnDef="deployedHeadcount"><mat-header-cell *matHeaderCellDef>Deployed</mat-header-cell><mat-cell *matCellDef="let s">{{ s.deployedHeadcount }}</mat-cell></ng-container>
+      <ng-container matColumnDef="isActive"><mat-header-cell *matHeaderCellDef>Status</mat-header-cell><mat-cell *matCellDef="let s"><span class="badge" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</span></mat-cell></ng-container>
+      <ng-container matColumnDef="actions"><mat-header-cell *matHeaderCellDef></mat-header-cell><mat-cell *matCellDef="let s"><button mat-icon-button (click)="viewSite(s.id)"><mat-icon>visibility</mat-icon></button></mat-cell></ng-container>
+      <mat-header-row *matHeaderRowDef="cols"></mat-header-row><mat-row *matRowDef="let row; columns: cols;"></mat-row></mat-table>
+    <mat-paginator *ngIf="(data()?.totalCount ?? 0) > 0" [length]="data()?.totalCount ?? 0" [pageSize]="pageSize" [pageIndex]="page - 1" [pageSizeOptions]="[10,20,50]" (page)="onPageChange($event)"></mat-paginator>
+  </div></div>

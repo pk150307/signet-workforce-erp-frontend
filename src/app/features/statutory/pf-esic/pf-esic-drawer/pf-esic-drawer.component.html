@@ -1,0 +1,149 @@
+<div class="pf-esic-drawer">
+  <div class="pf-esic-drawer__header">
+    <div>
+      <h2>PF / ESIC Details</h2>
+      @if (detail(); as d) {
+        <p>{{ d.fullName }} · {{ d.employeeCode }}</p>
+      }
+    </div>
+    <button mat-icon-button type="button" aria-label="Close" (click)="closed.emit()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="pf-esic-drawer__loading">
+      <app-skeleton-loader [rows]="8" type="card" />
+    </div>
+  } @else {
+    @if (detail(); as d) {
+    <div class="pf-esic-drawer__body">
+      <section class="pf-esic-drawer__section">
+        <h3>Employee Information</h3>
+        <dl class="pf-esic-drawer__info-grid">
+          <div><dt>Department</dt><dd>{{ d.department }}</dd></div>
+          <div><dt>Designation</dt><dd>{{ d.designation }}</dd></div>
+          <div><dt>Site</dt><dd>{{ d.siteName || '—' }}</dd></div>
+          <div><dt>Date of Joining</dt><dd>{{ d.dateOfJoining ? (d.dateOfJoining | date:'dd MMM yyyy') : '—' }}</dd></div>
+        </dl>
+        @if (!editing()) {
+          <button mat-stroked-button color="primary" type="button" (click)="startEdit()">
+            <mat-icon>edit</mat-icon> Edit
+          </button>
+        }
+      </section>
+
+      <mat-divider />
+
+      <form [formGroup]="form" class="pf-esic-drawer__form">
+        <section class="pf-esic-drawer__section">
+          <h3>Statutory Numbers</h3>
+          <mat-form-field appearance="outline" class="pf-esic-drawer__field">
+            <mat-label>UAN Number</mat-label>
+            <input matInput formControlName="uanNumber" maxlength="12" [readonly]="!editing()" />
+            @if (form.controls.uanNumber.hasError('pattern') && form.controls.uanNumber.touched) {
+              <mat-error>UAN must be exactly 12 digits</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="pf-esic-drawer__field">
+            <mat-label>PF Number</mat-label>
+            <input matInput formControlName="pfNumber" [readonly]="!editing()" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="pf-esic-drawer__field">
+            <mat-label>ESIC Number</mat-label>
+            <input matInput formControlName="esicNumber" maxlength="17" [readonly]="!editing()" />
+            @if (form.controls.esicNumber.hasError('pattern') && form.controls.esicNumber.touched) {
+              <mat-error>ESIC must be exactly 17 digits</mat-error>
+            }
+          </mat-form-field>
+        </section>
+
+        <section class="pf-esic-drawer__section">
+          <h3>Contribution Settings</h3>
+          <div class="pf-esic-drawer__contrib-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>PF Employee %</mat-label>
+              <input matInput type="number" formControlName="pfContributionEmployee" [readonly]="!editing()" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>PF Employer %</mat-label>
+              <input matInput type="number" formControlName="pfContributionEmployer" [readonly]="!editing()" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>ESIC Employee %</mat-label>
+              <input matInput type="number" formControlName="esicContributionEmployee" [readonly]="!editing()" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>ESIC Employer %</mat-label>
+              <input matInput type="number" formControlName="esicContributionEmployer" [readonly]="!editing()" />
+            </mat-form-field>
+          </div>
+        </section>
+
+        <section class="pf-esic-drawer__section">
+          <mat-form-field appearance="outline" class="pf-esic-drawer__field">
+            <mat-label>Effective Date</mat-label>
+            <input matInput [matDatepicker]="effPicker" formControlName="effectiveDate" [readonly]="!editing()" />
+            <mat-datepicker-toggle matIconSuffix [for]="effPicker" [disabled]="!editing()" />
+            <mat-datepicker #effPicker />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="pf-esic-drawer__field">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status" [disabled]="!editing()">
+              @for (status of statusOptions; track status) {
+                <mat-option [value]="status">{{ status }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (!editing()) {
+            <span class="badge" [ngClass]="'badge--' + getStatusClass(d.status)">{{ d.status }}</span>
+          }
+        </section>
+      </form>
+
+      @if (d.auditHistory?.length) {
+        <mat-divider />
+        <section class="pf-esic-drawer__section pf-esic-drawer__timeline">
+          <h3>Audit History</h3>
+          <ul class="pf-esic-drawer__audit-list">
+            @for (entry of d.auditHistory; track entry.id) {
+              <li class="pf-esic-drawer__audit-item">
+                <div class="pf-esic-drawer__audit-dot"></div>
+                <div>
+                  <strong>{{ entry.action }}</strong>
+                  @if (entry.field) {
+                    <span> — {{ entry.field }}: {{ entry.oldValue || '—' }} → {{ entry.newValue || '—' }}</span>
+                  }
+                  <div class="pf-esic-drawer__audit-meta">
+                    {{ entry.changedBy }} · {{ entry.changedAt | date:'dd MMM yyyy, hh:mm a' }}
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+
+    @if (editing()) {
+      <div class="pf-esic-drawer__footer">
+        <button mat-button type="button" (click)="cancelEdit()" [disabled]="saving()">
+          Cancel
+        </button>
+        <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            <mat-icon>save</mat-icon>
+          }
+          Save
+        </button>
+      </div>
+    }
+    }
+  }
+</div>
