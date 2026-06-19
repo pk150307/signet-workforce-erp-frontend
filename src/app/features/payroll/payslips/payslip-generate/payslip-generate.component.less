@@ -1,0 +1,47 @@
+.generate-layout {
+  max-width: 720px;
+}
+
+.generate-card {
+  padding: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.form-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.progress-card {
+  margin-top: 20px;
+  padding: 24px;
+
+  h3 {
+    margin: 0 0 16px;
+    font-size: 16px;
+  }
+}
+
+.progress-text {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.progress-count {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

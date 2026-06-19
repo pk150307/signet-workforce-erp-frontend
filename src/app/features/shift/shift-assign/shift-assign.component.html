@@ -1,0 +1,92 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Bulk Shift Assignment</h1>
+      <p class="page-header__subtitle">Assign a shift to multiple employees at once</p>
+    </div>
+    <button mat-stroked-button routerLink="/shifts">
+      <mat-icon>arrow_back</mat-icon> Back to Shifts
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+
+  <div *ngIf="!loading()">
+    <div class="card assign-config">
+      <form [formGroup]="form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Shift *</mat-label>
+            <mat-select formControlName="shiftId">
+              <mat-option *ngFor="let s of shifts()" [value]="s.id">
+                {{ s.shiftName }} ({{ s.startTime }} – {{ s.endTime }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Effective From *</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="effectiveFrom">
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </form>
+    </div>
+
+    <div class="filter-bar">
+      <mat-form-field appearance="outline" class="filter-bar__search">
+        <mat-label>Search employees...</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="searchCtrl">
+      </mat-form-field>
+      <div class="filter-bar__actions">
+        <span class="selection-count">{{ selectedIds().size }} selected</span>
+      </div>
+    </div>
+
+    <div class="card card--flush">
+      <mat-table [dataSource]="filteredEmployees">
+        <ng-container matColumnDef="select">
+          <mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              [checked]="allSelected()"
+              (change)="toggleAll($event.checked)">
+            </mat-checkbox>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let e">
+            <mat-checkbox
+              [checked]="isSelected(e.id)"
+              (change)="toggleEmployee(e.id)">
+            </mat-checkbox>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="employeeCode">
+          <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+          <mat-cell *matCellDef="let e"><span class="code-chip">{{ e.employeeCode }}</span></mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="fullName">
+          <mat-header-cell *matHeaderCellDef>Employee</mat-header-cell>
+          <mat-cell *matCellDef="let e"><strong>{{ e.fullName }}</strong></mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="department">
+          <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
+          <mat-cell *matCellDef="let e">{{ e.department }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="currentShift">
+          <mat-header-cell *matHeaderCellDef>Current Shift</mat-header-cell>
+          <mat-cell *matCellDef="let e">{{ e.currentShift || '—' }}</mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: cols;"></mat-row>
+      </mat-table>
+    </div>
+
+    <div class="form-actions">
+      <button mat-stroked-button type="button" (click)="router.navigate(['/shifts'])">Cancel</button>
+      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
+        <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
+        Assign Shift ({{ selectedIds().size }})
+      </button>
+    </div>
+  </div>
+</div>

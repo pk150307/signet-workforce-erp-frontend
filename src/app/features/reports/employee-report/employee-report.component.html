@@ -1,0 +1,23 @@
+<div class="page-container">
+  <div class="page-header">
+    <div><h1 class="page-header__title">Employee Report</h1><p class="page-header__subtitle">{{ report()?.period }}</p></div>
+    <div class="page-header__actions"><button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button><button mat-stroked-button><mat-icon>download</mat-icon> Export</button></div>
+  </div>
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="3"></app-skeleton-loader>
+  <ng-container *ngIf="!loading() && report() as r">
+    <div class="kpi-grid">
+      <div class="stat-card" *ngFor="let entry of (r.summary | keyvalue)">
+        <div><div class="stat-card__value">{{ entry.value }}</div><div class="stat-card__label">{{ entry.key }}</div></div>
+      </div>
+    </div>
+    <div class="card report-table">
+      <table class="summary-table">
+        <thead><tr><th>Item</th><th>Value</th><th>Trend</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let row of r.rows"><td>{{ row.label }}</td><td>{{ row.value }}</td><td>{{ row.trend ?? '—' }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <app-empty-state *ngIf="r.rows.length === 0" icon="bar_chart" title="No report data" description="No data available for this period."></app-empty-state>
+  </ng-container>
+</div>

@@ -1,0 +1,112 @@
+<div class="page-container">
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
+
+  <ng-container *ngIf="!loading() && payslip() as ps">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">{{ ps.employeeName }}</h1>
+        <p class="page-header__subtitle">
+          {{ ps.employeeCode }} · {{ ps.designation }} · {{ ps.department }}
+          <span class="badge" [ngClass]="'badge--' + getStatusClass(ps.status)">{{ ps.status }}</span>
+        </p>
+      </div>
+      <div class="page-header__actions">
+        <button mat-stroked-button routerLink="/payroll/payslips">
+          <mat-icon>arrow_back</mat-icon> Back
+        </button>
+        <button mat-stroked-button (click)="openPrintPreview()">
+          <mat-icon>print</mat-icon> Print
+        </button>
+        <button mat-stroked-button (click)="downloadPdf()">
+          <mat-icon>picture_as_pdf</mat-icon> PDF
+        </button>
+        <button mat-raised-button color="primary" (click)="emailPayslip()">
+          <mat-icon>email</mat-icon> Email
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="card summary-card">
+        <h3>Pay Summary</h3>
+        <div class="summary-row">
+          <span>Period</span>
+          <strong>{{ ps.month }}/{{ ps.year }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Working Days</span>
+          <strong>{{ ps.workingDays }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Paid Days</span>
+          <strong>{{ ps.paidDays }}</strong>
+        </div>
+        <div class="summary-row">
+          <span>LOP Days</span>
+          <strong>{{ ps.lopDays }}</strong>
+        </div>
+        <mat-divider></mat-divider>
+        <div class="summary-row summary-row--highlight">
+          <span>Gross Salary</span>
+          <strong>₹{{ ps.grossSalary | number:'1.0-0' }}</strong>
+        </div>
+        <div class="summary-row summary-row--net">
+          <span>Net Salary</span>
+          <strong>₹{{ ps.netSalary | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Employee Details</h3>
+        <div class="info-grid">
+          <div><span>Bank Account</span><strong>{{ ps.bankAccount || '—' }}</strong></div>
+          <div><span>PAN</span><strong>{{ ps.panNumber || '—' }}</strong></div>
+          <div><span>UAN</span><strong>{{ ps.uanNumber || '—' }}</strong></div>
+          <div><span>PF Number</span><strong>{{ ps.pfNumber || '—' }}</strong></div>
+          <div><span>ESIC Number</span><strong>{{ ps.esicNumber || '—' }}</strong></div>
+          <div><span>Generated</span><strong>{{ ps.generatedAt | date:'dd MMM yyyy, hh:mm a' }}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="breakdown-grid">
+      <div class="card">
+        <h3>Earnings</h3>
+        <table class="breakdown-table">
+          <tr *ngFor="let item of ps.earnings">
+            <td>{{ item.component }}</td>
+            <td>₹{{ item.amount | number:'1.0-0' }}</td>
+          </tr>
+          <tr class="total-row">
+            <td>Total Earnings</td>
+            <td>₹{{ totalEarnings | number:'1.0-0' }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Deductions</h3>
+        <table class="breakdown-table">
+          <tr *ngFor="let item of ps.deductions">
+            <td>{{ item.component }}</td>
+            <td>₹{{ item.amount | number:'1.0-0' }}</td>
+          </tr>
+          <tr class="total-row">
+            <td>Total Deductions</td>
+            <td>₹{{ totalDeductions | number:'1.0-0' }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Employer Contributions</h3>
+        <table class="breakdown-table">
+          <tr *ngFor="let item of ps.employerContributions">
+            <td>{{ item.component }}</td>
+            <td>₹{{ item.amount | number:'1.0-0' }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>

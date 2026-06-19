@@ -1,0 +1,63 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Payslip Generate</h1>
+      <p class="page-header__subtitle">Generate salary slips for a payroll period</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/payroll/payslips">
+        <mat-icon>arrow_back</mat-icon> Back
+      </button>
+    </div>
+  </div>
+
+  <div class="generate-layout">
+    <mat-card class="generate-card">
+      <form [formGroup]="form" (ngSubmit)="generate()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Month</mat-label>
+            <mat-select formControlName="month">
+              <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Year</mat-label>
+            <mat-select formControlName="year">
+              <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Scope</mat-label>
+            <mat-select formControlName="scope">
+              <mat-option value="all">All Employees</mat-option>
+              <mat-option value="department">By Department</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" *ngIf="form.value.scope === 'department'">
+            <mat-label>Department</mat-label>
+            <mat-select formControlName="departmentId">
+              <mat-option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="generating()">
+            <mat-icon>play_arrow</mat-icon> Generate Payslips
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="progress-card" *ngIf="generating()">
+      <h3>Generating Payslips...</h3>
+      <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
+      <p class="progress-text">{{ progress() | number:'1.0-0' }}% complete</p>
+      <p class="progress-count" *ngIf="generatedCount() > 0">{{ generatedCount() }} payslip(s) generated</p>
+    </mat-card>
+  </div>
+</div>

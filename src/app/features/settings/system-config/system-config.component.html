@@ -1,0 +1,60 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">System Config</h1>
+      <p class="page-header__subtitle">Configure company-wide system preferences</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button>
+      <button mat-raised-button color="primary" [disabled]="form.invalid || saving()" (click)="save()">
+        <mat-icon>save</mat-icon> Save Changes
+      </button>
+    </div>
+  </div>
+
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="4"></app-skeleton-loader>
+
+  <form class="card config-form" *ngIf="!loading()" [formGroup]="form">
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Company Name</mat-label>
+        <input matInput formControlName="companyName">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Timezone</mat-label>
+        <mat-select formControlName="timezone">
+          <mat-option value="Asia/Kolkata">Asia/Kolkata (IST)</mat-option>
+          <mat-option value="Asia/Dubai">Asia/Dubai (GST)</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Date Format</mat-label>
+        <mat-select formControlName="dateFormat">
+          <mat-option value="DD/MM/YYYY">DD/MM/YYYY</mat-option>
+          <mat-option value="MM/DD/YYYY">MM/DD/YYYY</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Currency</mat-label>
+        <mat-select formControlName="currency">
+          <mat-option value="INR">INR (₹)</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Fiscal Year Start</mat-label>
+        <mat-select formControlName="fiscalYearStart">
+          <mat-option value="April">April</mat-option>
+          <mat-option value="January">January</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Session Timeout (minutes)</mat-label>
+        <input matInput type="number" formControlName="sessionTimeoutMinutes">
+      </mat-form-field>
+    </div>
+    <div class="toggle-row">
+      <mat-slide-toggle formControlName="enableTwoFactor">Enable Two-Factor Authentication</mat-slide-toggle>
+      <mat-slide-toggle formControlName="enableAuditLog">Enable Audit Logging</mat-slide-toggle>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,12 @@
+<div class="page-container">
+  <div class="page-header">
+    <div><h1 class="page-header__title">Reports Hub</h1><p class="page-header__subtitle">Generate and view workforce reports</p></div>
+  </div>
+  <div class="report-grid">
+    <a *ngFor="let r of reports" [routerLink]="r.route" class="report-card card card--hover">
+      <div class="report-card__icon" [style.background]="r.color + '18'" [style.color]="r.color"><mat-icon>{{ r.icon }}</mat-icon></div>
+      <div><h3>{{ r.title }}</h3><p>{{ r.description }}</p></div>
+      <mat-icon class="report-card__arrow">chevron_right</mat-icon>
+    </a>
+  </div>
+</div>

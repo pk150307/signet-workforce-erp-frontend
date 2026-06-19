@@ -1,0 +1,61 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Email Templates</h1>
+      <p class="page-header__subtitle">
+        {{ data()?.totalCount ?? 0 }} records
+        <span class="mock-badge" *ngIf="usingMock()">Sample Data</span>
+      </p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-bar__search">
+      <mat-label>Search...</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchCtrl">
+    </mat-form-field>
+  </div>
+
+  <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
+
+  <div class="card card--flush" *ngIf="!loading()">
+    <app-empty-state
+      *ngIf="data()?.items?.length === 0"
+      icon="inbox"
+      title="No records found"
+      description="No email templates match your search criteria.">
+    </app-empty-state>
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
+      <ng-container matColumnDef="templateCode">
+        <mat-header-cell *matHeaderCellDef>Template Code</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.templateCode ?? '—' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="templateName">
+        <mat-header-cell *matHeaderCellDef>Template Name</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.templateName ?? '—' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="subject">
+        <mat-header-cell *matHeaderCellDef>Subject</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.subject ?? '—' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="lastModified">
+        <mat-header-cell *matHeaderCellDef>Last Modified</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.lastModified ?? '—' }}</mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
+    </mat-table>
+    <mat-paginator
+      *ngIf="(data()?.totalCount ?? 0) > 0"
+      [length]="data()?.totalCount ?? 0"
+      [pageSize]="pageSize"
+      [pageIndex]="page - 1"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
+</div>

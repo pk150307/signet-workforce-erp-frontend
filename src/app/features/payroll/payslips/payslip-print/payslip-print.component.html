@@ -1,0 +1,79 @@
+<div class="print-toolbar no-print" *ngIf="payslip()">
+  <button mat-raised-button color="primary" (click)="print()">
+    <mat-icon>print</mat-icon> Print
+  </button>
+</div>
+
+<div class="payslip-document" *ngIf="payslip() as ps">
+  <header class="doc-header">
+    <div class="company">
+      <h1>Signet Workforce Services Pvt Ltd</h1>
+      <p>123 Business Park, Andheri East, Mumbai 400093</p>
+      <p>GSTIN: 27AABCS1429B1Z5 | CIN: U74999MH2010PTC204567</p>
+    </div>
+    <div class="doc-title">
+      <h2>Salary Slip</h2>
+      <p>{{ getMonthLabel(ps.month) }} {{ ps.year }}</p>
+    </div>
+  </header>
+
+  <section class="employee-info">
+    <div class="info-col">
+      <div class="info-row"><span>Employee Name</span><strong>{{ ps.employeeName }}</strong></div>
+      <div class="info-row"><span>Employee Code</span><strong>{{ ps.employeeCode }}</strong></div>
+      <div class="info-row"><span>Designation</span><strong>{{ ps.designation }}</strong></div>
+      <div class="info-row"><span>Department</span><strong>{{ ps.department }}</strong></div>
+    </div>
+    <div class="info-col">
+      <div class="info-row"><span>Bank Account</span><strong>{{ ps.bankAccount || '—' }}</strong></div>
+      <div class="info-row"><span>PAN</span><strong>{{ ps.panNumber || '—' }}</strong></div>
+      <div class="info-row"><span>UAN</span><strong>{{ ps.uanNumber || '—' }}</strong></div>
+      <div class="info-row"><span>Generated</span><strong>{{ ps.generatedAt | date:'dd MMM yyyy' }}</strong></div>
+    </div>
+    <div class="info-col">
+      <div class="info-row"><span>Working Days</span><strong>{{ ps.workingDays }}</strong></div>
+      <div class="info-row"><span>Paid Days</span><strong>{{ ps.paidDays }}</strong></div>
+      <div class="info-row"><span>LOP Days</span><strong>{{ ps.lopDays }}</strong></div>
+    </div>
+  </section>
+
+  <section class="salary-tables">
+    <table class="salary-table">
+      <thead><tr><th colspan="2">Earnings</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of ps.earnings">
+          <td>{{ item.component }}</td>
+          <td>₹{{ item.amount | number:'1.2-2' }}</td>
+        </tr>
+        <tr class="total"><td>Total Earnings</td><td>₹{{ totalEarnings | number:'1.2-2' }}</td></tr>
+      </tbody>
+    </table>
+
+    <table class="salary-table">
+      <thead><tr><th colspan="2">Deductions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let item of ps.deductions">
+          <td>{{ item.component }}</td>
+          <td>₹{{ item.amount | number:'1.2-2' }}</td>
+        </tr>
+        <tr class="total"><td>Total Deductions</td><td>₹{{ totalDeductions | number:'1.2-2' }}</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="net-pay">
+    <div class="net-pay__row">
+      <span>Gross Salary</span>
+      <strong>₹{{ ps.grossSalary | number:'1.2-2' }}</strong>
+    </div>
+    <div class="net-pay__row net-pay__row--final">
+      <span>Net Salary (Take Home)</span>
+      <strong>₹{{ ps.netSalary | number:'1.2-2' }}</strong>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>This is a computer-generated document and does not require a signature.</p>
+    <p>For queries, contact HR at hr&#64;signetworkforce.com</p>
+  </footer>
+</div>

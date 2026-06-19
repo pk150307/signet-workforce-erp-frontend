@@ -1,0 +1,21 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Settings</h1>
+      <p class="page-header__subtitle">Configure roles, users, and system preferences</p>
+    </div>
+  </div>
+
+  <div class="settings-grid">
+    <a *ngFor="let card of cards" [routerLink]="card.route" class="settings-card card card--hover">
+      <div class="settings-card__icon" [style.background]="card.color + '18'" [style.color]="card.color">
+        <mat-icon>{{ card.icon }}</mat-icon>
+      </div>
+      <div class="settings-card__content">
+        <h3>{{ card.title }}</h3>
+        <p>{{ card.description }}</p>
+      </div>
+      <mat-icon class="settings-card__arrow">chevron_right</mat-icon>
+    </a>
+  </div>
+</div>

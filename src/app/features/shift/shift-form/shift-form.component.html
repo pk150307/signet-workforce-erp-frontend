@@ -1,0 +1,62 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">{{ isEdit() ? 'Edit Shift' : 'Add Shift' }}</h1>
+    </div>
+    <button mat-stroked-button (click)="router.navigate(['/shifts'])">Cancel</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+
+  <div class="card form-card" *ngIf="!loading()">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Shift Code *</mat-label>
+          <input matInput formControlName="shiftCode">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Shift Name *</mat-label>
+          <input matInput formControlName="shiftName">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Start Time *</mat-label>
+          <input matInput type="time" formControlName="startTime">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>End Time *</mat-label>
+          <input matInput type="time" formControlName="endTime">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Break (minutes) *</mat-label>
+          <input matInput type="number" formControlName="breakMinutes">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Grace (minutes)</mat-label>
+          <input matInput type="number" formControlName="graceMinutes">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Weekly Off *</mat-label>
+          <mat-select formControlName="weeklyOff">
+            <mat-option *ngFor="let opt of weeklyOffOptions" [value]="opt">{{ opt }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="toggle-row">
+        <mat-slide-toggle formControlName="isNightShift">Night Shift</mat-slide-toggle>
+        <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
+      </div>
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="router.navigate(['/shifts'])">Cancel</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
+          {{ isEdit() ? 'Save Changes' : 'Create Shift' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
