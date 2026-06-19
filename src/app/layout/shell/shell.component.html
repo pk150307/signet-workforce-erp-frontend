@@ -1,0 +1,36 @@
+<div class="shell" [class.shell--collapsed]="sidebarCollapsed()">
+
+  @if (isMobile$ | async) {
+    <mat-sidenav-container class="shell__sidenav-container" [hasBackdrop]="true">
+      <mat-sidenav #drawer mode="over" class="shell__drawer">
+        <app-sidebar [collapsed]="false" (linkClicked)="drawer.close()" />
+      </mat-sidenav>
+      <mat-sidenav-content>
+        <app-topbar (menuToggle)="drawer.toggle()" />
+        <div class="shell__body">
+          <app-breadcrumb />
+          <main class="shell__content">
+            <router-outlet />
+          </main>
+          <app-footer />
+        </div>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  } @else {
+    <aside class="shell__sidebar">
+      <app-sidebar [collapsed]="sidebarCollapsed()" />
+    </aside>
+    <div class="shell__main">
+      <app-topbar (menuToggle)="toggleSidebar()" />
+      <div class="shell__body">
+        <app-breadcrumb />
+        <main class="shell__content">
+          <router-outlet />
+        </main>
+        <app-footer />
+      </div>
+    </div>
+  }
+
+  <app-loading-overlay />
+</div>

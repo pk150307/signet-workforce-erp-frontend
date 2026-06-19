@@ -1,0 +1,133 @@
+.topbar {
+  height: var(--topbar-height);
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px 0 8px;
+  gap: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  position: sticky;
+  top: 0;
+
+  &__menu-btn {
+    color: var(--color-text-secondary);
+  }
+
+  &__spacer {
+    flex: 0 0 8px;
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    gap: 8px;
+    flex: 1;
+    max-width: 400px;
+  }
+
+  &__search-icon {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &__search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--color-text-primary);
+    font-family: inherit;
+    width: 100%;
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  &__action-btn {
+    color: var(--color-text-secondary);
+  }
+
+  &__user-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    height: auto !important;
+    line-height: normal !important;
+
+    &:hover {
+      background: var(--color-bg);
+    }
+  }
+
+  &__user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), #1e88e5);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__user-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+
+    @media (max-width: 600px) {
+      display: none;
+    }
+  }
+
+  &__user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  &__user-role {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  &__user-caret {
+    color: var(--color-text-muted);
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+
+    @media (max-width: 600px) {
+      display: none;
+    }
+  }
+
+  &__logout {
+    color: var(--color-danger);
+  }
+}
