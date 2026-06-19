@@ -1,0 +1,124 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Invoice List</h1>
+      <p class="page-header__subtitle">
+        {{ data()?.totalCount ?? 0 | number }} invoices
+        <span class="mock-badge" *ngIf="usingMock()">Sample Data</span>
+      </p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button (click)="loadData()" matTooltip="Refresh"><mat-icon>refresh</mat-icon></button>
+      <button mat-stroked-button (click)="exportInvoices()"><mat-icon>download</mat-icon> Export</button>
+      <button mat-stroked-button routerLink="/billing/invoices/generate"><mat-icon>auto_awesome</mat-icon> Generate</button>
+      <button mat-raised-button color="primary" routerLink="/billing/invoices/new"><mat-icon>add</mat-icon> New Invoice</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="filter-bar__search">
+      <mat-label>Search invoices...</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchCtrl" autocomplete="off">
+    </mat-form-field>
+
+    <div class="filter-bar__filters">
+      <mat-form-field appearance="outline" style="width: 120px;">
+        <mat-label>Month</mat-label>
+        <mat-select [formControl]="monthCtrl">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ m }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="width: 110px;">
+        <mat-label>Year</mat-label>
+        <mat-select [formControl]="yearCtrl">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let y of [2024, 2025, 2026]" [value]="y">{{ y }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="filter-bar__actions">
+      <button mat-icon-button matTooltip="Clear filters" (click)="clearFilters()"
+              *ngIf="searchCtrl.value || statusCtrl.value || monthCtrl.value || yearCtrl.value">
+        <mat-icon>filter_alt_off</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="status-chips">
+    <mat-chip-listbox [value]="statusCtrl.value" (change)="setStatusFilter($event.value)">
+      <mat-chip-option [value]="null">All</mat-chip-option>
+      <mat-chip-option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <div class="card card--flush">
+    <app-skeleton-loader *ngIf="loading()" [rows]="8"></app-skeleton-loader>
+
+    <app-empty-state *ngIf="!loading() && !data()?.items?.length"
+                     icon="receipt"
+                     title="No invoices found"
+                     description="Create a new invoice or generate site invoices for the billing period.">
+      <button mat-raised-button color="primary" routerLink="/billing/invoices/new">New Invoice</button>
+    </app-empty-state>
+
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+      <ng-container matColumnDef="invoiceNumber">
+        <mat-header-cell *matHeaderCellDef>Invoice #</mat-header-cell>
+        <mat-cell *matCellDef="let inv"><strong class="inv-number">{{ inv.invoiceNumber }}</strong></mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="client">
+        <mat-header-cell *matHeaderCellDef>Client</mat-header-cell>
+        <mat-cell *matCellDef="let inv">{{ inv.clientName }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="site">
+        <mat-header-cell *matHeaderCellDef>Site</mat-header-cell>
+        <mat-cell *matCellDef="let inv">{{ inv.siteName }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="invoiceDate">
+        <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
+        <mat-cell *matCellDef="let inv">{{ inv.invoiceDate | date:'dd MMM yyyy' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="dueDate">
+        <mat-header-cell *matHeaderCellDef>Due</mat-header-cell>
+        <mat-cell *matCellDef="let inv">{{ inv.dueDate | date:'dd MMM yyyy' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="totalAmount">
+        <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
+        <mat-cell *matCellDef="let inv">₹{{ inv.totalAmount | number:'1.0-0' }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let inv">
+          <span class="badge" [ngClass]="'badge--' + getStatusClass(inv.status)">{{ inv.status }}</span>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let inv">
+          <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu>
+            <button mat-menu-item (click)="viewInvoice(inv.id)"><mat-icon>visibility</mat-icon> View</button>
+            <button mat-menu-item (click)="downloadPdf(inv)"><mat-icon>picture_as_pdf</mat-icon> Download PDF</button>
+            <button mat-menu-item (click)="emailInvoice(inv)"><mat-icon>send</mat-icon> Email</button>
+          </mat-menu>
+        </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row" (click)="viewInvoice(row.id)"></mat-row>
+    </mat-table>
+
+    <mat-paginator *ngIf="(data()?.totalCount ?? 0) > 0"
+                   [length]="data()?.totalCount ?? 0"
+                   [pageSize]="pageSize"
+                   [pageIndex]="page - 1"
+                   [pageSizeOptions]="[10, 20, 50]"
+                   (page)="onPageChange($event)"
+                   showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">My Profile</h1>
+      <p class="page-header__subtitle">View and manage your account information</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button color="primary" routerLink="/auth/change-password">
+        <mat-icon>lock</mat-icon> Change Password
+      </button>
+    </div>
+  </div>
+
+  <div class="card profile">
+    <div class="profile__header">
+      <div class="profile__avatar">
+        {{ (authService.userFullName() || 'U').charAt(0).toUpperCase() }}
+      </div>
+      <div>
+        <h2 class="profile__name">{{ authService.userFullName() }}</h2>
+        <p class="profile__email">{{ authService.currentUser()?.email || authService.currentUser()?.userName }}</p>
+      </div>
+    </div>
+
+    <mat-divider />
+
+    <div class="profile__grid" style="margin-top: 20px;">
+      <div class="profile__field">
+        <label>Role</label>
+        <span>{{ authService.userRoles().join(', ') || 'User' }}</span>
+      </div>
+      <div class="profile__field">
+        <label>User ID</label>
+        <span>{{ authService.currentUser()?.userId || '—' }}</span>
+      </div>
+    </div>
+  </div>
+</div>

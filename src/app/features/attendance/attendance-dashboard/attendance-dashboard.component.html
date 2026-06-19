@@ -1,0 +1,14 @@
+<div class="page-container">
+  <div class="page-header"><div><h1 class="page-header__title">Attendance Dashboard</h1><p class="page-header__subtitle">Today's workforce attendance overview</p></div>
+    <div class="page-header__actions"><button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button></div></div>
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="4"></app-skeleton-loader>
+  <ng-container *ngIf="!loading() && summary() as s">
+    <div class="kpi-grid">
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--green"><mat-icon>check_circle</mat-icon></div><div><div class="stat-card__value">{{ s.present }}</div><div class="stat-card__label">Present</div></div></div>
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--red"><mat-icon>cancel</mat-icon></div><div><div class="stat-card__value">{{ s.absent }}</div><div class="stat-card__label">Absent</div></div></div>
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--blue"><mat-icon>beach_access</mat-icon></div><div><div class="stat-card__value">{{ s.onLeave }}</div><div class="stat-card__label">On Leave</div></div></div>
+      <div class="stat-card"><div class="stat-card__icon stat-card__icon--orange"><mat-icon>schedule</mat-icon></div><div><div class="stat-card__value">{{ s.late }}</div><div class="stat-card__label">Late</div></div></div>
+    </div>
+    <div class="quick-links"><a *ngFor="let l of links" mat-stroked-button [routerLink]="l.route"><mat-icon>{{ l.icon }}</mat-icon> {{ l.label }}</a></div>
+  </ng-container>
+</div>

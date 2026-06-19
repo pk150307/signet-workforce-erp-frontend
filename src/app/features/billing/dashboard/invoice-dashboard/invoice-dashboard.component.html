@@ -1,0 +1,85 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Invoice Dashboard</h1>
+      <p class="page-header__subtitle">
+        Billing overview for {{ month }}/{{ year }}
+        <span class="mock-badge" *ngIf="usingMock()">Sample Data</span>
+      </p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button (click)="loadData()"><mat-icon>refresh</mat-icon></button>
+      <button mat-stroked-button routerLink="/billing/invoices/generate">
+        <mat-icon>auto_awesome</mat-icon> Generate
+      </button>
+      <button mat-raised-button color="primary" routerLink="/billing/invoices/new">
+        <mat-icon>add</mat-icon> New Invoice
+      </button>
+    </div>
+  </div>
+
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="4"></app-skeleton-loader>
+
+  <ng-container *ngIf="!loading()">
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>receipt_long</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ formatCurrency(kpis().totalBilled) }}</div>
+          <div class="stat-card__label">Total Billed</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple"><mat-icon>account_balance</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ formatCurrency(kpis().totalGst) }}</div>
+          <div class="stat-card__label">GST Collected</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>paid</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ kpis().paidCount }}</div>
+          <div class="stat-card__label">Paid ({{ formatCurrency(kpis().paidAmount) }})</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange"><mat-icon>schedule</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ kpis().pendingCount }}</div>
+          <div class="stat-card__label">Pending ({{ formatCurrency(kpis().pendingAmount) }})</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card site-summary" *ngIf="siteSummary().length">
+      <h3>Site Billing Summary</h3>
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Site</th>
+            <th>Client</th>
+            <th>Headcount</th>
+            <th>Monthly Amount</th>
+            <th>Invoiced</th>
+            <th>Pending</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let site of siteSummary()">
+            <td>{{ site.siteName }}</td>
+            <td>{{ site.clientName }}</td>
+            <td>{{ site.headcount }}</td>
+            <td>{{ formatCurrency(site.monthlyAmount) }}</td>
+            <td>{{ formatCurrency(site.invoicedAmount) }}</td>
+            <td [class.pending]="site.pendingAmount > 0">{{ formatCurrency(site.pendingAmount) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="quick-links">
+      <a mat-stroked-button routerLink="/billing/invoices">View All Invoices</a>
+    </div>
+  </ng-container>
+</div>

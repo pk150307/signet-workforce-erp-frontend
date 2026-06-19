@@ -1,0 +1,90 @@
+<div class="page-container">
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="8"></app-skeleton-loader>
+
+  <ng-container *ngIf="!loading() && invoice() as inv">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">{{ inv.invoiceNumber }}</h1>
+        <p class="page-header__subtitle">
+          {{ inv.clientName }} · {{ inv.siteName }}
+          <span class="badge" [ngClass]="'badge--' + getStatusClass(inv.status)">{{ inv.status }}</span>
+        </p>
+      </div>
+      <div class="page-header__actions">
+        <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
+        <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
+        <button mat-stroked-button (click)="downloadPdf()"><mat-icon>picture_as_pdf</mat-icon> PDF</button>
+        <button mat-raised-button color="primary" (click)="emailInvoice()"><mat-icon>email</mat-icon> Email</button>
+      </div>
+    </div>
+
+    <div class="detail-layout">
+      <div class="main-col">
+        <div class="card">
+          <h3>Line Items</h3>
+          <table class="line-items-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Amount</th>
+                <th>GST %</th>
+                <th>GST</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of inv.lineItems">
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>₹{{ item.rate | number:'1.0-0' }}</td>
+                <td>₹{{ item.amount | number:'1.0-0' }}</td>
+                <td>{{ item.gstRate }}%</td>
+                <td>₹{{ item.gstAmount | number:'1.0-0' }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr><td colspan="3">Subtotal</td><td colspan="3">₹{{ inv.subtotal | number:'1.0-0' }}</td></tr>
+              <tr><td colspan="3">GST</td><td colspan="3">₹{{ inv.gstAmount | number:'1.0-0' }}</td></tr>
+              <tr class="total-row"><td colspan="3">Total</td><td colspan="3">₹{{ inv.totalAmount | number:'1.0-0' }}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="card" *ngIf="inv.notes">
+          <h3>Notes</h3>
+          <p class="notes">{{ inv.notes }}</p>
+        </div>
+      </div>
+
+      <div class="side-col">
+        <div class="card">
+          <h3>Invoice Info</h3>
+          <div class="info-row"><span>Invoice Date</span><strong>{{ inv.invoiceDate | date:'dd MMM yyyy' }}</strong></div>
+          <div class="info-row"><span>Due Date</span><strong>{{ inv.dueDate | date:'dd MMM yyyy' }}</strong></div>
+          <div class="info-row"><span>GST Number</span><strong>{{ inv.gstNumber }}</strong></div>
+          <div class="info-row"><span>Period</span><strong>{{ inv.month }}/{{ inv.year }}</strong></div>
+          <mat-divider></mat-divider>
+          <div class="billing-address">
+            <span>Billing Address</span>
+            <pre>{{ inv.billingAddress }}</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Timeline</h3>
+          <div class="timeline">
+            <div class="timeline-item" *ngFor="let entry of inv.timeline">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <strong>{{ entry.action }}</strong>
+                <p>{{ entry.description }}</p>
+                <span>{{ entry.performedBy }} · {{ entry.performedAt | date:'dd MMM yyyy, hh:mm a' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

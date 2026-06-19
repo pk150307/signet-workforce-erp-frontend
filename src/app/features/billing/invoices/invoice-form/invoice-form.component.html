@@ -1,0 +1,90 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Invoice Form</h1>
+      <p class="page-header__subtitle">Create a manual invoice with line items and GST</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="card form-card">
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Client</mat-label>
+        <mat-select formControlName="clientId">
+          <mat-option *ngFor="let c of clients" [value]="c.id">{{ c.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Site</mat-label>
+        <mat-select formControlName="siteId">
+          <mat-option *ngFor="let s of filteredSites" [value]="s.id">{{ s.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Invoice Date</mat-label>
+        <input matInput [matDatepicker]="invPicker" formControlName="invoiceDate">
+        <mat-datepicker-toggle matSuffix [for]="invPicker"></mat-datepicker-toggle>
+        <mat-datepicker #invPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Due Date</mat-label>
+        <input matInput [matDatepicker]="duePicker" formControlName="dueDate">
+        <mat-datepicker-toggle matSuffix [for]="duePicker"></mat-datepicker-toggle>
+        <mat-datepicker #duePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <h3>Line Items</h3>
+    <div formArrayName="lineItems" class="line-items">
+      <div *ngFor="let item of lineItems.controls; let i = index" [formGroupName]="i" class="line-item-row">
+        <mat-form-field appearance="outline" class="desc-field">
+          <mat-label>Description</mat-label>
+          <input matInput formControlName="description">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Qty</mat-label>
+          <input matInput type="number" formControlName="quantity">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Rate</mat-label>
+          <input matInput type="number" formControlName="rate">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>GST %</mat-label>
+          <input matInput type="number" formControlName="gstRate">
+        </mat-form-field>
+        <div class="line-amount">₹{{ getLineAmount(i) | number:'1.0-0' }}</div>
+        <button mat-icon-button type="button" (click)="removeLineItem(i)" *ngIf="lineItems.length > 1">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <button mat-stroked-button type="button" (click)="addLineItem()">
+      <mat-icon>add</mat-icon> Add Line Item
+    </button>
+
+    <mat-form-field appearance="outline" class="notes-field">
+      <mat-label>Notes</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+    </mat-form-field>
+
+    <div class="totals">
+      <div><span>Subtotal</span><strong>₹{{ subtotal | number:'1.0-0' }}</strong></div>
+      <div><span>GST</span><strong>₹{{ totalGst | number:'1.0-0' }}</strong></div>
+      <div class="grand-total"><span>Total</span><strong>₹{{ grandTotal | number:'1.0-0' }}</strong></div>
+    </div>
+
+    <div class="form-actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+        <mat-icon>save</mat-icon> Create Invoice
+      </button>
+    </div>
+  </form>
+</div>

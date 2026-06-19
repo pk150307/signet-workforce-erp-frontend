@@ -1,0 +1,12 @@
+<div class="auth-layout">
+  <div class="auth-layout__card">
+    <a routerLink="/auth/login" class="auth-layout__back">
+      <mat-icon>arrow_back</mat-icon> Back to login
+    </a>
+    <h1 class="auth-layout__title">{{ title }}</h1>
+    @if (subtitle) {
+      <p class="auth-layout__subtitle">{{ subtitle }}</p>
+    }
+    <ng-content />
+  </div>
+</div>

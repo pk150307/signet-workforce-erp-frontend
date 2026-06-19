@@ -1,0 +1,67 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Invoice Generate</h1>
+      <p class="page-header__subtitle">Generate invoices for site billing periods</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
+    </div>
+  </div>
+
+  <div class="generate-layout">
+    <mat-card class="generate-card">
+      <form [formGroup]="form" (ngSubmit)="generate()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Month</mat-label>
+            <mat-select formControlName="month">
+              <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Year</mat-label>
+            <mat-select formControlName="year">
+              <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Scope</mat-label>
+            <mat-select formControlName="scope">
+              <mat-option value="all">All Sites</mat-option>
+              <mat-option value="selected">Selected Sites</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="site-list" *ngIf="form.value.scope === 'selected'">
+          <h4>Select Sites</h4>
+          <div class="site-item" *ngFor="let site of sites">
+            <mat-checkbox
+              [checked]="isSiteSelected(site.siteId)"
+              (change)="toggleSite(site.siteId, $event.checked)">
+              {{ site.siteName }} — {{ site.clientName }} ({{ site.headcount }} staff)
+            </mat-checkbox>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="generating()">
+            <mat-icon>auto_awesome</mat-icon> Generate Invoices
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="progress-card" *ngIf="generating()">
+      <h3>Generating Invoices...</h3>
+      <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
+      <p class="progress-text">{{ progress() | number:'1.0-0' }}% complete</p>
+      <p class="progress-result" *ngIf="result() as r">
+        {{ r.generated }} generated, {{ r.failed }} failed
+      </p>
+    </mat-card>
+  </div>
+</div>
