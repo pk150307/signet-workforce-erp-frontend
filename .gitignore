@@ -45,3 +45,7 @@ typings/
 *.temp
 *.cache
 .cache/
+
+backend/logs/
+logs/
+*.log
