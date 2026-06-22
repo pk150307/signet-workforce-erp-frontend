@@ -1,3 +1,38 @@
+export interface AttendanceSummary {
+  present: number;
+  absent: number;
+  onLeave: number;
+  late: number;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  employeeName: string;
+  employeeCode: string;
+  attendanceDate: string;
+  status: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  workingHours?: number;
+  siteName: string;
+}
+
+export interface AttendanceCorrectionRequest {
+  id: string;
+  employeeName: string;
+  date: string;
+  currentStatus: string;
+  requestedStatus: string;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+}
+
+export interface AttendanceQueryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
+
 export type RegisterStatus = 'draft' | 'locked';
 export type EmployeeRegisterRowStatus = 'not_started' | 'draft' | 'entered' | 'locked';
 
