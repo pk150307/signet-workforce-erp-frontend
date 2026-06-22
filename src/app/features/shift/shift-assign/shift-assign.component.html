@@ -9,9 +9,9 @@
     </button>
   </div>
 
-  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+  <app-skeleton-loader *ngIf="loading() || saving()" type="table" [rows]="6"></app-skeleton-loader>
 
-  <div *ngIf="!loading()">
+  <div *ngIf="!loading() && !saving()">
     <div class="card assign-config">
       <form [formGroup]="form">
         <div class="form-row">
@@ -84,7 +84,6 @@
     <div class="form-actions">
       <button mat-stroked-button type="button" (click)="router.navigate(['/shifts'])">Cancel</button>
       <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
-        <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
         Assign Shift ({{ selectedIds().size }})
       </button>
     </div>

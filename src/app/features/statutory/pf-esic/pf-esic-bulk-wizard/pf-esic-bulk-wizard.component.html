@@ -2,6 +2,9 @@
   <h2 mat-dialog-title>{{ title }}</h2>
 
   <mat-dialog-content>
+    @if (submitting()) {
+      <app-skeleton-loader type="card" [rows]="6"></app-skeleton-loader>
+    } @else {
     <mat-stepper #stepper>
       <!-- Step 1: Upload / Manual Entry -->
       <mat-step>
@@ -157,13 +160,11 @@
           <button mat-button matStepperPrevious type="button" [disabled]="submitting()">Back</button>
           <button mat-raised-button color="primary" type="button" (click)="submit()"
                   [disabled]="submitting() || (data.mode === 'update' && !validRows.length) || (data.mode === 'import' && !selectedFile() && !validRows.length)">
-            @if (submitting()) {
-              <mat-spinner diameter="18" />
-            }
             Submit
           </button>
         </div>
       </mat-step>
     </mat-stepper>
+    }
   </mat-dialog-content>
 </div>

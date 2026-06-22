@@ -9,8 +9,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 import { PfEsicService } from '../../../../core/services/pf-esic.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -43,8 +43,8 @@ const STATUS_VALUES: PfEsicStatus[] = ['Active', 'Inactive', 'Pending', 'Suspend
     MatInputModule,
     MatSelectModule,
     MatTableModule,
-    MatProgressSpinnerModule,
     MatDividerModule,
+    SkeletonLoaderComponent,
   ],
   templateUrl: './pf-esic-bulk-wizard.component.html',
   styleUrl: './pf-esic-bulk-wizard.component.less',

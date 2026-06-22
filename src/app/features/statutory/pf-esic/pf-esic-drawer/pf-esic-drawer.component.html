@@ -11,7 +11,7 @@
     </button>
   </div>
 
-  @if (loading()) {
+  @if (loading() || saving()) {
     <div class="pf-esic-drawer__loading">
       <app-skeleton-loader [rows]="8" type="card" />
     </div>
@@ -135,11 +135,7 @@
           Cancel
         </button>
         <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving()">
-          @if (saving()) {
-            <mat-spinner diameter="18" />
-          } @else {
-            <mat-icon>save</mat-icon>
-          }
+          <mat-icon>save</mat-icon>
           Save
         </button>
       </div>

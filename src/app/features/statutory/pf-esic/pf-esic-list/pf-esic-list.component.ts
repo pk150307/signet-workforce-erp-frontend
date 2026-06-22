@@ -15,14 +15,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PfEsicService } from '../../../../core/services/pf-esic.service';
+import { ClientsService } from '../../../../core/services/clients.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { BreadcrumbService } from '../../../../core/services/breadcrumb.service';
 import { PaginatedResult } from '../../../../core/models/api.models';
+import { ClientListItem } from '../../../../core/models/client.models';
 import { PfEsicEmployee, PfEsicQueryParams, PfEsicStatus } from '../../../../core/models/pf-esic.models';
+import { EmployeeStatus, EMPLOYEE_STATUS_LABELS } from '../../../../core/models/employee.models';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { PfEsicDrawerComponent } from '../pf-esic-drawer/pf-esic-drawer.component';
 import { PfEsicBulkWizardComponent, PfEsicBulkWizardData } from '../pf-esic-bulk-wizard/pf-esic-bulk-wizard.component';
+import { featureDialogConfig } from '../../../../core/utils/dialog.util';
 
 type TriStateFilter = 'all' | 'yes' | 'no';
 
@@ -56,8 +59,8 @@ export class PfEsicListComponent implements OnInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   private readonly pfEsicService = inject(PfEsicService);
+  private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
@@ -68,8 +71,9 @@ export class PfEsicListComponent implements OnInit {
   readonly selectedEmployeeId = signal<string | null>(null);
 
   readonly searchCtrl = new FormControl('');
+  readonly employeeStatusCtrl = new FormControl<EmployeeStatus | 'all'>(EmployeeStatus.Active);
   readonly statusCtrl = new FormControl<PfEsicStatus | null>(null);
-  readonly departmentCtrl = new FormControl<string | null>(null);
+  readonly clientCtrl = new FormControl<string | null>(null);
   readonly hasUanCtrl = new FormControl<TriStateFilter>('all');
   readonly hasPfCtrl = new FormControl<TriStateFilter>('all');
   readonly hasEsicCtrl = new FormControl<TriStateFilter>('all');
@@ -77,7 +81,8 @@ export class PfEsicListComponent implements OnInit {
   readonly displayedColumns = [
     'employeeCode',
     'fullName',
-    'department',
+    'clientCompanyName',
+    'aadhaarNumber',
     'uanNumber',
     'pfNumber',
     'esicNumber',
@@ -86,13 +91,17 @@ export class PfEsicListComponent implements OnInit {
   ];
 
   readonly statusOptions: PfEsicStatus[] = ['Active', 'Inactive', 'Pending', 'Suspended'];
+  readonly employeeStatusOptions = Object.entries(EMPLOYEE_STATUS_LABELS).map(([k, v]) => ({
+    value: +k as EmployeeStatus,
+    label: v,
+  }));
   readonly triStateOptions: { value: TriStateFilter; label: string }[] = [
     { value: 'all', label: 'All' },
     { value: 'yes', label: 'Yes' },
     { value: 'no', label: 'No' },
   ];
 
-  readonly departments = signal<string[]>([]);
+  readonly clients = signal<ClientListItem[]>([]);
 
   page = 1;
   pageSize = 20;
@@ -100,12 +109,8 @@ export class PfEsicListComponent implements OnInit {
   sortDir: 'asc' | 'desc' = 'asc';
 
   ngOnInit(): void {
-    this.breadcrumbService.setItems([
-      { label: 'Home', route: '/dashboard' },
-      { label: 'Statutory', route: '/statutory/pf-esic' },
-      { label: 'PF / ESIC' },
-    ]);
 
+    this.loadClients();
     this.loadData();
 
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
@@ -113,7 +118,12 @@ export class PfEsicListComponent implements OnInit {
       this.loadData();
     });
 
-    [this.statusCtrl, this.departmentCtrl, this.hasUanCtrl, this.hasPfCtrl, this.hasEsicCtrl].forEach(ctrl => {
+    this.employeeStatusCtrl.valueChanges.subscribe(() => {
+      this.page = 1;
+      this.loadData();
+    });
+
+    [this.statusCtrl, this.clientCtrl, this.hasUanCtrl, this.hasPfCtrl, this.hasEsicCtrl].forEach(ctrl => {
       ctrl.valueChanges.subscribe(() => {
         this.page = 1;
         this.loadData();
@@ -129,14 +139,12 @@ export class PfEsicListComponent implements OnInit {
     this.pfEsicService.getAll(params).subscribe({
       next: result => {
         this.data.set(result);
-        this.updateDepartments(result.items);
         this.usingMockData.set(false);
         this.loading.set(false);
       },
       error: () => {
         const mock = this.getMockData(params);
         this.data.set(mock);
-        this.updateDepartments(mock.items);
         this.usingMockData.set(true);
         this.error.set(true);
         this.loading.set(false);
@@ -198,8 +206,9 @@ export class PfEsicListComponent implements OnInit {
 
   clearFilters(): void {
     this.searchCtrl.setValue('');
+    this.employeeStatusCtrl.setValue(EmployeeStatus.Active);
     this.statusCtrl.setValue(null);
-    this.departmentCtrl.setValue(null);
+    this.clientCtrl.setValue(null);
     this.hasUanCtrl.setValue('all');
     this.hasPfCtrl.setValue('all');
     this.hasEsicCtrl.setValue('all');
@@ -208,8 +217,9 @@ export class PfEsicListComponent implements OnInit {
   hasActiveFilters(): boolean {
     return !!(
       this.searchCtrl.value ||
+      this.employeeStatusCtrl.value !== EmployeeStatus.Active ||
       this.statusCtrl.value ||
-      this.departmentCtrl.value ||
+      this.clientCtrl.value ||
       this.hasUanCtrl.value !== 'all' ||
       this.hasPfCtrl.value !== 'all' ||
       this.hasEsicCtrl.value !== 'all'
@@ -227,11 +237,10 @@ export class PfEsicListComponent implements OnInit {
   }
 
   private openWizard(mode: PfEsicBulkWizardData['mode']): void {
-    const ref = this.dialog.open(PfEsicBulkWizardComponent, {
+    const ref = this.dialog.open(PfEsicBulkWizardComponent, featureDialogConfig({
       width: '720px',
-      maxWidth: '95vw',
       data: { mode } satisfies PfEsicBulkWizardData,
-    });
+    }));
 
     ref.afterClosed().subscribe(reloaded => {
       if (reloaded) this.loadData();
@@ -243,8 +252,11 @@ export class PfEsicListComponent implements OnInit {
       page: this.page,
       pageSize: this.pageSize,
       search: this.searchCtrl.value || undefined,
+      employeeStatus: this.employeeStatusCtrl.value === 'all'
+        ? 'all'
+        : (this.employeeStatusCtrl.value ?? EmployeeStatus.Active),
       status: this.statusCtrl.value ?? undefined,
-      department: this.departmentCtrl.value ?? undefined,
+      clientId: this.clientCtrl.value ?? undefined,
       hasUan: this.triToBool(this.hasUanCtrl.value),
       hasPf: this.triToBool(this.hasPfCtrl.value),
       hasEsic: this.triToBool(this.hasEsicCtrl.value),
@@ -253,16 +265,17 @@ export class PfEsicListComponent implements OnInit {
     };
   }
 
+  private loadClients(): void {
+    this.clientsService.getAllForSelect().subscribe({
+      next: clients => this.clients.set(clients.filter(c => c.id && c.companyName)),
+      error: () => this.clients.set([]),
+    });
+  }
+
   private triToBool(value: TriStateFilter | null): boolean | undefined {
     if (value === 'yes') return true;
     if (value === 'no') return false;
     return undefined;
-  }
-
-  private updateDepartments(items: PfEsicEmployee[]): void {
-    const existing = new Set(this.departments());
-    items.forEach(item => existing.add(item.department));
-    this.departments.set([...existing].sort());
   }
 
   private getMockData(params: PfEsicQueryParams): PaginatedResult<PfEsicEmployee> {
@@ -282,6 +295,13 @@ export class PfEsicListComponent implements OnInit {
 
     if (params.status) {
       items = items.filter(e => e.status === params.status);
+    }
+
+    if (params.clientId) {
+      const clientName = this.clients().find(c => c.id === params.clientId)?.companyName;
+      if (clientName) {
+        items = items.filter(e => e.clientCompanyName === clientName);
+      }
     }
 
     if (params.department) {
@@ -330,7 +350,9 @@ export class PfEsicListComponent implements OnInit {
         fullName: 'Rajesh Kumar',
         department: 'Operations',
         designation: 'Supervisor',
+        clientCompanyName: 'Tata Realty',
         siteName: 'Mumbai HQ',
+        aadhaarNumber: '123456789012',
         uanNumber: '100012345678',
         pfNumber: 'MH/BAN/1234567/000/1234567',
         esicNumber: '12345678901234567',
@@ -346,7 +368,9 @@ export class PfEsicListComponent implements OnInit {
         fullName: 'Priya Sharma',
         department: 'Finance',
         designation: 'Accountant',
+        clientCompanyName: 'Reliance Industries',
         siteName: 'Delhi Branch',
+        aadhaarNumber: '987654321098',
         uanNumber: '100098765432',
         pfNumber: 'DL/DEL/7654321/000/7654321',
         esicNumber: '98765432109876543',
@@ -360,7 +384,9 @@ export class PfEsicListComponent implements OnInit {
         fullName: 'Amit Patel',
         department: 'Operations',
         designation: 'Technician',
+        clientCompanyName: 'Infosys Ltd',
         siteName: 'Pune Site',
+        aadhaarNumber: '111122223333',
         uanNumber: '100011112222',
         status: 'Pending',
       },
@@ -371,7 +397,9 @@ export class PfEsicListComponent implements OnInit {
         fullName: 'Sneha Reddy',
         department: 'HR',
         designation: 'HR Executive',
+        clientCompanyName: 'Tata Realty',
         siteName: 'Hyderabad',
+        aadhaarNumber: '444455556666',
         pfNumber: 'TS/HYD/1111111/000/1111111',
         esicNumber: '11111111111111111',
         effectiveDate: '2022-06-01',
@@ -384,6 +412,7 @@ export class PfEsicListComponent implements OnInit {
         fullName: 'Vikram Singh',
         department: 'Security',
         designation: 'Guard',
+        clientCompanyName: 'Reliance Industries',
         siteName: 'Chennai',
         status: 'Inactive',
       },
@@ -394,6 +423,8 @@ export class PfEsicListComponent implements OnInit {
         fullName: 'Anita Desai',
         department: 'Finance',
         designation: 'Analyst',
+        clientCompanyName: 'Infosys Ltd',
+        aadhaarNumber: '777788889999',
         uanNumber: '100033344455',
         pfNumber: 'GJ/AHD/3333333/000/3333333',
         esicNumber: '33333333333333333',

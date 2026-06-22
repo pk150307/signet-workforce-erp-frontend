@@ -21,10 +21,12 @@ const WEEKLY_OFF_OPTIONS = [
   'Sunday, Monday',
 ];
 
+import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-shift-form',
   standalone: true,
   imports: [
+    SkeletonLoaderComponent,
     NgIf,
     NgFor,
     ReactiveFormsModule,

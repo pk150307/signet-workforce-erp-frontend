@@ -1,1 +1,30 @@
-.code-chip { font-family: monospace; background: var(--color-divider); padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.filters-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  &__search {
+    flex: 1 1 220px;
+    min-width: 200px;
+  }
+
+  &__client {
+    flex: 1 1 200px;
+    min-width: 180px;
+    max-width: 280px;
+  }
+
+  &__status {
+    flex: 0 1 140px;
+    min-width: 120px;
+  }
+
+  &__clear {
+    margin-left: auto;
+    align-self: center;
+    height: 56px;
+  }
+}

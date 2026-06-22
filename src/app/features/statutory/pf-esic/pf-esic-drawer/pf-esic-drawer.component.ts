@@ -25,7 +25,7 @@ import { PfEsicService } from '../../../../core/services/pf-esic.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { PfEsicDetail, PfEsicStatus } from '../../../../core/models/pf-esic.models';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { ConfirmDialogData } from '../../../../shared/models/dialog.models';
+import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 const UAN_PATTERN = /^\d{12}$/;
@@ -124,17 +124,14 @@ export class PfEsicDrawerComponent implements OnChanges {
       return;
     }
 
-    const ref = this.dialog.open(ConfirmDialogComponent, {
-      width: '420px',
-      data: {
-        title: 'Save PF/ESIC Details',
-        message: 'Are you sure you want to save these statutory details?',
-        confirmLabel: 'Save',
-        cancelLabel: 'Cancel',
-        confirmColor: 'primary',
-        icon: 'save',
-      } satisfies ConfirmDialogData,
-    });
+    const ref = this.dialog.open(ConfirmDialogComponent, confirmDialogConfig({
+      title: 'Save PF/ESIC Details',
+      message: 'Are you sure you want to save these statutory details?',
+      confirmLabel: 'Save',
+      cancelLabel: 'Cancel',
+      confirmColor: 'primary',
+      icon: 'save',
+    }));
 
     ref.afterClosed().subscribe(confirmed => {
       if (!confirmed) return;

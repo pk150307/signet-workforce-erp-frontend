@@ -1,14 +1,192 @@
-<div class="page-container">
-  <div class="page-header"><div><h1 class="page-header__title">{{ site()?.siteName ?? 'Site Detail' }}</h1><p class="page-header__subtitle">{{ site()?.siteCode }} · {{ site()?.clientCompanyName }}</p></div>
-    <div class="page-header__actions"><button mat-stroked-button routerLink="/sites"><mat-icon>arrow_back</mat-icon> Back</button></div></div>
-  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="3"></app-skeleton-loader>
-  <div class="card detail-grid" *ngIf="!loading() && site() as s">
-    <div class="detail-item"><span class="detail-label">Address</span><span>{{ s.address }}, {{ s.city }}, {{ s.state }} - {{ s.pincode }}</span></div>
-    <div class="detail-item"><span class="detail-label">Supervisor</span><span>{{ s.supervisorName }}</span></div>
-    <div class="detail-item"><span class="detail-label">Contact</span><span>{{ s.contactPhone }}</span></div>
-    <div class="detail-item"><span class="detail-label">Headcount</span><span>{{ s.deployedHeadcount }} / {{ s.requiredHeadcount }}</span></div>
-    <div class="detail-item"><span class="detail-label">Contract</span><span>{{ s.contractStartDate }} — {{ s.contractEndDate }}</span></div>
-    <div class="detail-item"><span class="detail-label">Status</span><span class="badge" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">{{ s.isActive ? 'Active' : 'Inactive' }}</span></div>
-  </div>
-  <app-empty-state *ngIf="!loading() && !site()" icon="location_off" title="Site not found" description="The requested site could not be loaded."></app-empty-state>
+<div class="page-container site-detail">
+
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
+
+  @if (!loading() && !site()) {
+    <app-empty-state
+      icon="location_off"
+      title="Site not found"
+      description="The requested site could not be loaded.">
+      <button mat-stroked-button routerLink="/sites">Back to Sites</button>
+    </app-empty-state>
+  }
+
+  @if (!loading() && site(); as s) {
+    <div class="detail-nav">
+      <button mat-stroked-button type="button" routerLink="/sites">
+        <mat-icon>arrow_back</mat-icon> Back
+      </button>
+    </div>
+
+    <section class="site-profile">
+      <div class="site-profile__accent"></div>
+      <div class="site-profile__inner">
+        <div class="site-profile__main">
+          <div class="site-profile__avatar">{{ initials(s.siteName) }}</div>
+          <div class="site-profile__info">
+            <div class="site-profile__title-row">
+              <h1 class="site-profile__name">{{ s.siteName }}</h1>
+              <span class="badge" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">
+                {{ s.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="site-profile__chips">
+              <span class="meta-chip mono">{{ s.siteCode }}</span>
+              @if (s.clientId && s.clientCompanyName) {
+                <a class="meta-chip meta-chip--link" [routerLink]="['/clients', s.clientId]">
+                  <mat-icon>business</mat-icon>{{ s.clientCompanyName }}
+                </a>
+              }
+              <span class="meta-chip">
+                <mat-icon>location_on</mat-icon>{{ displayValue(s.city) }}, {{ displayValue(s.state) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="site-profile__actions">
+          @if (s.clientId) {
+            <a mat-stroked-button [routerLink]="['/clients', s.clientId]">
+              <mat-icon>business</mat-icon> Client
+            </a>
+          }
+          <a mat-stroked-button routerLink="/attendance">
+            <mat-icon>event_available</mat-icon> Attendance
+          </a>
+          <a mat-raised-button color="primary" [routerLink]="['/sites', s.id, 'edit']">
+            <mat-icon>edit</mat-icon> Edit
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>groups</mat-icon></div>
+        <div>
+          <div class="stat-card__value">
+            {{ s.deployedHeadcount }}<span class="kpi-sub"> / {{ s.requiredHeadcount || '—' }}</span>
+          </div>
+          <div class="stat-card__label">Deployed / Required</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>pie_chart</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ staffingPercent(s) }}%</div>
+          <div class="stat-card__label">Staffing Fulfilment</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange"><mat-icon>person_search</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ headcountGap(s) }}</div>
+          <div class="stat-card__label">Vacant Positions</div>
+        </div>
+      </div>
+    </div>
+
+    @if (isUnderstaffed(s)) {
+      <div class="alert-banner">
+        <mat-icon>warning_amber</mat-icon>
+        <span>
+          This site is understaffed by <strong>{{ headcountGap(s) }}</strong>
+          position(s). Required: {{ s.requiredHeadcount }}, deployed: {{ s.deployedHeadcount }}.
+        </span>
+      </div>
+    }
+
+    <div class="info-grid">
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>info</mat-icon> Overview</h3>
+        <div class="info-row">
+          <span class="info-label">Site Code</span>
+          <span class="info-value mono">{{ displayValue(s.siteCode) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Client</span>
+          @if (s.clientId && s.clientCompanyName) {
+            <a class="info-value info-link" [routerLink]="['/clients', s.clientId]">{{ s.clientCompanyName }}</a>
+          } @else {
+            <span class="info-value">{{ displayValue(s.clientCompanyName) }}</span>
+          }
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value">
+            <span class="badge badge--sm" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">
+              {{ s.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </span>
+        </div>
+        <div class="info-row info-row--stack">
+          <span class="info-label">Description</span>
+          <span class="info-value info-value--block">{{ displayValue(s.description) }}</span>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>place</mat-icon> Location</h3>
+        <div class="info-row info-row--stack">
+          <span class="info-label">Address</span>
+          <span class="info-value info-value--block">{{ displayValue(s.address) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">City</span>
+          <span class="info-value">{{ displayValue(s.city) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">State</span>
+          <span class="info-value">{{ displayValue(s.state) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">PIN Code</span>
+          <span class="info-value mono">{{ displayValue(s.pinCode) }}</span>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>person</mat-icon> Site Contact</h3>
+        <div class="info-row">
+          <span class="info-label">Supervisor</span>
+          <span class="info-value">{{ displayValue(s.contactPerson) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Contact Phone</span>
+          @if (s.contactPhone) {
+            <a class="info-value info-link" [href]="'tel:' + s.contactPhone">{{ s.contactPhone }}</a>
+          } @else {
+            <span class="info-value">—</span>
+          }
+        </div>
+        <div class="info-row">
+          <span class="info-label">Contact Email</span>
+          @if (s.contactEmail) {
+            <a class="info-value info-link" [href]="'mailto:' + s.contactEmail">{{ s.contactEmail }}</a>
+          } @else {
+            <span class="info-value">—</span>
+          }
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>groups</mat-icon> Workforce</h3>
+        <div class="info-row">
+          <span class="info-label">Required Headcount</span>
+          <span class="info-value">{{ s.requiredHeadcount }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Deployed Headcount</span>
+          <span class="info-value">{{ s.deployedHeadcount }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Vacant Positions</span>
+          <span class="info-value" [class.vacant-highlight]="headcountGap(s) > 0">{{ headcountGap(s) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Staffing Fulfilment</span>
+          <span class="info-value">{{ staffingPercent(s) }}%</span>
+        </div>
+      </div>
+    </div>
+  }
 </div>

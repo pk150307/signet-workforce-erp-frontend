@@ -1,0 +1,153 @@
+<div class="page-container site-form-page">
+
+  <app-skeleton-loader *ngIf="loading() || saving()" type="card" [rows]="8"></app-skeleton-loader>
+
+  @if (!loading() && !saving()) {
+    <header class="form-page-header">
+      <button mat-icon-button type="button" class="form-page-header__back" (click)="cancel()" matTooltip="Back to sites">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="form-page-header__text">
+        <h1>{{ isEdit() ? 'Edit Site' : 'Add Site' }}</h1>
+        <p>{{ isEdit() ? 'Update location, contact and workforce details' : 'Create a new client site with location and contact details' }}</p>
+      </div>
+    </header>
+
+    <div class="card form-card">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>apartment</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Basic Information</h2>
+              <p class="form-section__desc">Client assignment and site identity</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--2">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Client *</mat-label>
+                <mat-select formControlName="clientId" [compareWith]="compareSelectValue">
+                  @for (c of clients(); track c.id) {
+                    <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get('clientId')?.hasError('required') && form.get('clientId')?.touched) {
+                  <mat-error>Client is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Site Name *</mat-label>
+                <input matInput formControlName="siteName">
+                @if (form.get('siteName')?.hasError('required') && form.get('siteName')?.touched) {
+                  <mat-error>Site name is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
+              <mat-label>Description</mat-label>
+              <textarea matInput rows="2" formControlName="description" placeholder="Optional notes about this site"></textarea>
+            </mat-form-field>
+            <div class="status-toggle">
+              <mat-slide-toggle formControlName="isActive" color="primary">Active site</mat-slide-toggle>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>location_on</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Location</h2>
+              <p class="form-section__desc">Physical address where staff are deployed</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
+              <mat-label>Address *</mat-label>
+              <textarea matInput rows="2" formControlName="address"></textarea>
+              @if (form.get('address')?.hasError('required') && form.get('address')?.touched) {
+                <mat-error>Address is required</mat-error>
+              }
+            </mat-form-field>
+            <div class="form-grid form-grid--3">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>City *</mat-label>
+                <input matInput formControlName="city">
+                @if (form.get('city')?.hasError('required') && form.get('city')?.touched) {
+                  <mat-error>City is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>State *</mat-label>
+                <input matInput formControlName="state">
+                @if (form.get('state')?.hasError('required') && form.get('state')?.touched) {
+                  <mat-error>State is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Pin Code</mat-label>
+                <input matInput formControlName="pinCode">
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>person</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Site Contact</h2>
+              <p class="form-section__desc">On-site supervisor or point of contact</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--3">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Contact Person</mat-label>
+                <input matInput formControlName="contactPerson">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Contact Phone</mat-label>
+                <input matInput formControlName="contactPhone">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Contact Email</mat-label>
+                <input matInput type="email" formControlName="contactEmail">
+                @if (form.get('contactEmail')?.hasError('email') && form.get('contactEmail')?.touched) {
+                  <mat-error>Enter a valid email</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section form-section--last">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>groups</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Workforce</h2>
+              <p class="form-section__desc">Number of staff required at this site</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--1">
+              <mat-form-field appearance="outline" subscriptSizing="fixed" class="field-narrow">
+                <mat-label>Required Headcount</mat-label>
+                <input matInput type="number" min="0" formControlName="requiredHeadcount">
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <footer class="form-footer">
+          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Site') }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  }
+</div>

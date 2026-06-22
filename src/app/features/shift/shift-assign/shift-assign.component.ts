@@ -34,10 +34,12 @@ const MOCK_EMPLOYEES: MockEmployee[] = [
   { id: '6', employeeCode: 'EMP006', fullName: 'Pooja Verma', department: 'Sales', currentShift: 'General Shift' },
 ];
 
+import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-shift-assign',
   standalone: true,
   imports: [
+    SkeletonLoaderComponent,
     NgIf,
     NgFor,
     RouterLink,

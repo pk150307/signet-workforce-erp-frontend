@@ -18,12 +18,12 @@
           <button mat-stroked-button type="button" (click)="exportCsv()">
             <mat-icon>download</mat-icon> Export CSV
           </button>
-          <button mat-stroked-button type="button" color="primary" (click)="openBulkUpdate()">
+          <!-- <button mat-stroked-button type="button" color="primary" (click)="openBulkUpdate()">
             <mat-icon>edit_note</mat-icon> Bulk Update
           </button>
           <button mat-raised-button color="primary" type="button" (click)="openBulkImport()">
             <mat-icon>upload</mat-icon> Bulk Import
-          </button>
+          </button> -->
         </div>
       </div>
 
@@ -34,8 +34,8 @@
         </div>
       }
 
-      <div class="filter-bar">
-        <mat-form-field appearance="outline" class="filter-bar__search">
+      <div class="filters-card card pf-esic-list__filters">
+        <mat-form-field appearance="outline" class="pf-esic-list__search" subscriptSizing="dynamic">
           <mat-label>Search employees</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input matInput [formControl]="searchCtrl" autocomplete="off" />
@@ -46,61 +46,67 @@
           }
         </mat-form-field>
 
-        <div class="filter-bar__filters">
-          <mat-form-field appearance="outline" class="pf-esic-list__filter">
-            <mat-label>Status</mat-label>
-            <mat-select [formControl]="statusCtrl">
-              <mat-option [value]="null">All Statuses</mat-option>
-              @for (status of statusOptions; track status) {
-                <mat-option [value]="status">{{ status }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="pf-esic-list__filter-client" subscriptSizing="dynamic">
+          <mat-label>Client</mat-label>
+          <mat-select [formControl]="clientCtrl">
+            <mat-option [value]="null">All Clients</mat-option>
+            @for (c of clients(); track c.id) {
+              <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline" class="pf-esic-list__filter">
-            <mat-label>Department</mat-label>
-            <mat-select [formControl]="departmentCtrl">
-              <mat-option [value]="null">All Departments</mat-option>
-              @for (dept of departments(); track dept) {
-                <mat-option [value]="dept">{{ dept }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="pf-esic-list__filter-status" subscriptSizing="dynamic">
+          <mat-label>Employee Status</mat-label>
+          <mat-select [formControl]="employeeStatusCtrl">
+            <mat-option [value]="'all'">All Statuses</mat-option>
+            @for (opt of employeeStatusOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline" class="pf-esic-list__filter pf-esic-list__filter--sm">
-            <mat-label>Has UAN</mat-label>
-            <mat-select [formControl]="hasUanCtrl">
-              @for (opt of triStateOptions; track opt.value) {
-                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="pf-esic-list__filter-status" subscriptSizing="dynamic">
+          <mat-label>PF / ESIC Status</mat-label>
+          <mat-select [formControl]="statusCtrl">
+            <mat-option [value]="null">All PF/ESIC Statuses</mat-option>
+            @for (status of statusOptions; track status) {
+              <mat-option [value]="status">{{ status }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline" class="pf-esic-list__filter pf-esic-list__filter--sm">
-            <mat-label>Has PF</mat-label>
-            <mat-select [formControl]="hasPfCtrl">
-              @for (opt of triStateOptions; track opt.value) {
-                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <mat-form-field appearance="outline" class="pf-esic-list__filter-tri" subscriptSizing="dynamic">
+          <mat-label>Has UAN</mat-label>
+          <mat-select [formControl]="hasUanCtrl">
+            @for (opt of triStateOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline" class="pf-esic-list__filter pf-esic-list__filter--sm">
-            <mat-label>Has ESIC</mat-label>
-            <mat-select [formControl]="hasEsicCtrl">
-              @for (opt of triStateOptions; track opt.value) {
-                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        </div>
+        <mat-form-field appearance="outline" class="pf-esic-list__filter-tri" subscriptSizing="dynamic">
+          <mat-label>Has PF</mat-label>
+          <mat-select [formControl]="hasPfCtrl">
+            @for (opt of triStateOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="pf-esic-list__filter-tri" subscriptSizing="dynamic">
+          <mat-label>Has ESIC</mat-label>
+          <mat-select [formControl]="hasEsicCtrl">
+            @for (opt of triStateOptions; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
         @if (hasActiveFilters()) {
-          <div class="filter-bar__actions">
-            <button mat-icon-button type="button" matTooltip="Clear filters" (click)="clearFilters()">
-              <mat-icon>filter_alt_off</mat-icon>
-            </button>
-          </div>
+          <button mat-stroked-button type="button" class="pf-esic-list__clear" (click)="clearFilters()">
+            Clear filters
+          </button>
         }
       </div>
 
@@ -121,7 +127,8 @@
             </button>
           </app-empty-state>
         } @else {
-          <mat-table [dataSource]="data()!.items" matSort (matSortChange)="onSortChange($event)">
+          <div class="pf-esic-list__table-wrap">
+            <mat-table [dataSource]="data()!.items" matSort class="pf-esic-list__table" (matSortChange)="onSortChange($event)">
             <ng-container matColumnDef="employeeCode">
               <mat-header-cell *matHeaderCellDef mat-sort-header="employeeCode">Code</mat-header-cell>
               <mat-cell *matCellDef="let row">
@@ -134,17 +141,22 @@
               <mat-cell *matCellDef="let row">
                 <div class="pf-esic-list__emp">
                   <div class="pf-esic-list__avatar">{{ row.fullName.charAt(0) }}</div>
-                  <div>
-                    <div class="pf-esic-list__name">{{ row.fullName }}</div>
+                  <div class="pf-esic-list__emp-text">
+                    <div class="pf-esic-list__name" [matTooltip]="row.fullName">{{ row.fullName }}</div>
                     <div class="pf-esic-list__designation">{{ row.designation }}</div>
                   </div>
                 </div>
               </mat-cell>
             </ng-container>
 
-            <ng-container matColumnDef="department">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="department">Department</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.department }}</mat-cell>
+            <ng-container matColumnDef="clientCompanyName">
+              <mat-header-cell *matHeaderCellDef mat-sort-header="clientCompanyName">Client</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.clientCompanyName || '—' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="aadhaarNumber">
+              <mat-header-cell *matHeaderCellDef mat-sort-header="aadhaarNumber">Aadhaar</mat-header-cell>
+              <mat-cell *matCellDef="let row">{{ row.aadhaarNumber || '—' }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="uanNumber">
@@ -182,7 +194,8 @@
               class="pf-esic-list__row"
               (click)="openDrawer(row)"
             ></mat-row>
-          </mat-table>
+            </mat-table>
+          </div>
 
           <mat-paginator
             [length]="data()?.totalCount ?? 0"

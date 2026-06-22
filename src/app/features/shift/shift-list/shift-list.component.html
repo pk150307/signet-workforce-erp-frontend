@@ -32,19 +32,20 @@
     </div>
     <div class="filter-bar__actions">
       <button mat-stroked-button (click)="clearFilters()">Clear</button>
-      <button mat-icon-button (click)="load()"><mat-icon>refresh</mat-icon></button>
+      <button mat-icon-button (click)="load()" aria-label="Refresh"><mat-icon>refresh</mat-icon></button>
     </div>
   </div>
 
-  <div class="card card--flush">
-    <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
-    <div class="empty-state" *ngIf="!loading() && data()?.items?.length === 0">
+  <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
+
+  <div class="card card--flush" *ngIf="!loading()">
+    <div class="empty-state" *ngIf="data()?.items?.length === 0">
       <mat-icon>schedule</mat-icon>
       <h3>No shifts configured</h3>
       <p>Create shift definitions with timing and weekly off settings.</p>
       <button mat-raised-button color="primary" routerLink="/shifts/new">Add Shift</button>
     </div>
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="shiftCode">
         <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
         <mat-cell *matCellDef="let s"><span class="code-chip">{{ s.shiftCode }}</span></mat-cell>
@@ -84,7 +85,7 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
         <mat-cell *matCellDef="let s">
-          <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
+          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More actions"><mat-icon>more_vert</mat-icon></button>
           <mat-menu #menu>
             <button mat-menu-item (click)="editShift(s.id)"><mat-icon>edit</mat-icon> Edit</button>
             <button mat-menu-item routerLink="/shifts/assign" [queryParams]="{ shiftId: s.id }">
@@ -98,7 +99,7 @@
       <mat-row *matRowDef="let row; columns: cols;"></mat-row>
     </mat-table>
     <mat-paginator
-      *ngIf="!loading() && (data()?.totalCount ?? 0) > 0"
+      *ngIf="(data()?.totalCount ?? 0) > 0"
       [length]="data()?.totalCount ?? 0"
       [pageSize]="pageSize"
       [pageIndex]="page - 1"

@@ -6,9 +6,9 @@
     <button mat-stroked-button (click)="router.navigate(['/shifts'])">Cancel</button>
   </div>
 
-  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
+  <app-skeleton-loader *ngIf="loading() || saving()" type="card" [rows]="6"></app-skeleton-loader>
 
-  <div class="card form-card" *ngIf="!loading()">
+  <div class="card form-card" *ngIf="!loading() && !saving()">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="form-row">
         <mat-form-field appearance="outline">
@@ -53,7 +53,6 @@
       <div class="form-actions">
         <button mat-stroked-button type="button" (click)="router.navigate(['/shifts'])">Cancel</button>
         <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
           {{ isEdit() ? 'Save Changes' : 'Create Shift' }}
         </button>
       </div>
