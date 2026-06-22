@@ -86,6 +86,20 @@ export class ClientsService {
     );
   }
 
+  /** Fresh site list for a client detail view (not cached). */
+  getSitesForClient(clientId: string): Observable<SiteListItem[]> {
+    const pageSize = 100;
+    return this.getSites(clientId, 1, pageSize).pipe(
+      expand(result =>
+        result.hasNextPage
+          ? this.getSites(clientId, result.page + 1, pageSize)
+          : EMPTY,
+      ),
+      map(result => result.items),
+      reduce((acc, items) => acc.concat(items), [] as SiteListItem[]),
+    );
+  }
+
   getSitesForSelect(clientId: string): Observable<SiteListItem[]> {
     return cachedLookup('client-sites', clientId, () => {
       const pageSize = 20;

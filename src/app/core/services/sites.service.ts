@@ -65,6 +65,7 @@ export class SitesService {
     return this.http.post<{ id: string; siteCode: string }>(this.base, data).pipe(
       tap(res => {
         invalidateLookupCache('sites');
+        invalidateLookupCache('clients');
         if (data.clientId) {
           invalidateLookupKey('client-sites', data.clientId);
         }
@@ -76,6 +77,7 @@ export class SitesService {
     return this.http.put<unknown>(`${this.base}/${id}`, data).pipe(
       tap(() => {
         invalidateLookupCache('sites');
+        invalidateLookupCache('clients');
         if (data.clientId) {
           invalidateLookupKey('client-sites', data.clientId);
         }
@@ -83,9 +85,17 @@ export class SitesService {
     );
   }
 
-  delete(id: string) {
+  delete(id: string, clientId?: string) {
     return this.http.delete<void>(`${this.base}/${id}`).pipe(
-      tap(() => invalidateLookupCache('sites')),
+      tap(() => {
+        invalidateLookupCache('sites');
+        invalidateLookupCache('clients');
+        if (clientId) {
+          invalidateLookupKey('client-sites', clientId);
+        } else {
+          invalidateLookupCache('client-sites');
+        }
+      }),
     );
   }
 

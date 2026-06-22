@@ -48,10 +48,12 @@ export class DesignationService {
     );
   }
 
-  getNextCode(departmentId: string): Observable<{ code: string }> {
-    return this.http.get<unknown>(`${this.base}/next-code`, {
-      params: { departmentId },
-    }).pipe(
+  getNextCode(departmentId: string, clientId?: string): Observable<{ code: string }> {
+    let params = new HttpParams().set('departmentId', departmentId);
+    if (clientId) {
+      params = params.set('clientId', clientId);
+    }
+    return this.http.get<unknown>(`${this.base}/next-code`, { params }).pipe(
       map(res => {
         const payload = (res as { data?: { code?: string }; code?: string });
         const code = payload.data?.code ?? payload.code ?? '';
