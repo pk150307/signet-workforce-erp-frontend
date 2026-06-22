@@ -1,90 +1,123 @@
-<div class="page-container">
-  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="8"></app-skeleton-loader>
-
-  <ng-container *ngIf="!loading() && invoice() as inv">
-    <div class="page-header">
+<div class="page-container billing-page" *ngIf="!loading() && invoice() as inv; else loadingOrNotFound">
+  <section class="detail-hero">
+    <div class="detail-hero__main">
+      <button mat-icon-button routerLink="/billing/invoices" class="back-btn" aria-label="Back to invoices"><mat-icon>arrow_back</mat-icon></button>
       <div>
-        <h1 class="page-header__title">{{ inv.invoiceNumber }}</h1>
-        <p class="page-header__subtitle">
-          {{ inv.clientName }} · {{ inv.siteName }}
-          <span class="badge" [ngClass]="'badge--' + getStatusClass(inv.status)">{{ inv.status }}</span>
-        </p>
+        <p class="eyebrow">Tax Invoice</p>
+        <h1>{{ inv.invoiceNumber }}</h1>
+        <p>{{ inv.clientName }} · {{ inv.siteName }}</p>
       </div>
-      <div class="page-header__actions">
-        <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
-        <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
-        <button mat-stroked-button (click)="downloadPdf()"><mat-icon>picture_as_pdf</mat-icon> PDF</button>
-        <button mat-raised-button color="primary" (click)="emailInvoice()"><mat-icon>email</mat-icon> Email</button>
+      <span class="status-badge" [ngClass]="'status-badge--' + getStatusClass(inv.status)">{{ statusLabel(inv.status) }}</span>
+    </div>
+    <div class="detail-hero__actions">
+      <button mat-stroked-button *ngIf="canEdit(inv)" [routerLink]="['/billing/invoices', inv.id, 'edit']"><mat-icon>edit</mat-icon> Edit</button>
+      <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
+      <button mat-stroked-button (click)="downloadPdf()"><mat-icon>download</mat-icon> Download</button>
+      <button mat-stroked-button color="warn" (click)="deleteInvoice()"><mat-icon>delete</mat-icon> Delete</button>
+      <button mat-raised-button color="primary" (click)="emailInvoice()" *ngIf="inv.status !== 'Cancelled' && inv.status !== 'Paid'">
+        <mat-icon>email</mat-icon> Email
+      </button>
+      <button mat-raised-button [matMenuTriggerFor]="statusMenu" *ngIf="availableActions(inv).length">
+        Update Status <mat-icon>expand_more</mat-icon>
+      </button>
+      <mat-menu #statusMenu="matMenu">
+        <button mat-menu-item *ngFor="let action of availableActions(inv)" (click)="transitionStatus(action)">
+          <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+        </button>
+      </mat-menu>
+    </div>
+  </section>
+
+  <section class="summary-cards">
+    <div class="summary-card"><span>Subtotal</span><strong>₹{{ inv.subtotal | number:'1.0-0' }}</strong></div>
+    <div class="summary-card"><span>GST ({{ inv.gstRate }}%)</span><strong>₹{{ inv.gstAmount | number:'1.0-0' }}</strong></div>
+    <div class="summary-card"><span>Paid</span><strong>₹{{ inv.paidAmount | number:'1.0-0' }}</strong></div>
+    <div class="summary-card summary-card--accent"><span>Balance Due</span><strong>₹{{ inv.balanceAmount | number:'1.0-0' }}</strong></div>
+  </section>
+
+  <div class="detail-layout">
+    <div class="main-col">
+      <div class="panel">
+        <div class="panel__header"><h3>Line Items</h3><span>{{ inv.lineItems.length }} items</span></div>
+        <table class="line-items-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>HSN/SAC</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of inv.lineItems">
+              <td>{{ item.description }}</td>
+              <td>{{ item.hsnSacCode ?? '998519' }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>₹{{ item.rate | number:'1.2-2' }}</td>
+              <td>₹{{ item.amount | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="4">Subtotal</td><td>₹{{ inv.subtotal | number:'1.2-2' }}</td></tr>
+            <tr><td colspan="4">GST ({{ inv.gstRate }}%)</td><td>₹{{ inv.gstAmount | number:'1.2-2' }}</td></tr>
+            <tr class="total-row"><td colspan="4">Total</td><td>₹{{ inv.totalAmount | number:'1.2-2' }}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="panel" *ngIf="inv.notes">
+        <h3>Notes</h3>
+        <p class="notes">{{ inv.notes }}</p>
+      </div>
+
+      <div class="panel" *ngIf="inv.termsAndConditions">
+        <h3>Terms & Conditions</h3>
+        <p class="notes">{{ inv.termsAndConditions }}</p>
       </div>
     </div>
 
-    <div class="detail-layout">
-      <div class="main-col">
-        <div class="card">
-          <h3>Line Items</h3>
-          <table class="line-items-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>Qty</th>
-                <th>Rate</th>
-                <th>Amount</th>
-                <th>GST %</th>
-                <th>GST</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of inv.lineItems">
-                <td>{{ item.description }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>₹{{ item.rate | number:'1.0-0' }}</td>
-                <td>₹{{ item.amount | number:'1.0-0' }}</td>
-                <td>{{ item.gstRate }}%</td>
-                <td>₹{{ item.gstAmount | number:'1.0-0' }}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr><td colspan="3">Subtotal</td><td colspan="3">₹{{ inv.subtotal | number:'1.0-0' }}</td></tr>
-              <tr><td colspan="3">GST</td><td colspan="3">₹{{ inv.gstAmount | number:'1.0-0' }}</td></tr>
-              <tr class="total-row"><td colspan="3">Total</td><td colspan="3">₹{{ inv.totalAmount | number:'1.0-0' }}</td></tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div class="card" *ngIf="inv.notes">
-          <h3>Notes</h3>
-          <p class="notes">{{ inv.notes }}</p>
+    <div class="side-col">
+      <div class="panel">
+        <h3>Invoice Info</h3>
+        <div class="info-row"><span>Invoice Date</span><strong>{{ inv.invoiceDate | apiDate }}</strong></div>
+        <div class="info-row"><span>Due Date</span><strong>{{ inv.dueDate | apiDate }}</strong></div>
+        <div class="info-row"><span>GST Number</span><strong>{{ inv.gstNumber || '—' }}</strong></div>
+        <div class="info-row"><span>Period</span><strong>{{ inv.month }}/{{ inv.year }}</strong></div>
+        <mat-divider></mat-divider>
+        <div class="billing-address">
+          <span>Billing Address</span>
+          <pre>{{ inv.billingAddress || '—' }}</pre>
         </div>
       </div>
 
-      <div class="side-col">
-        <div class="card">
-          <h3>Invoice Info</h3>
-          <div class="info-row"><span>Invoice Date</span><strong>{{ inv.invoiceDate | date:'dd MMM yyyy' }}</strong></div>
-          <div class="info-row"><span>Due Date</span><strong>{{ inv.dueDate | date:'dd MMM yyyy' }}</strong></div>
-          <div class="info-row"><span>GST Number</span><strong>{{ inv.gstNumber }}</strong></div>
-          <div class="info-row"><span>Period</span><strong>{{ inv.month }}/{{ inv.year }}</strong></div>
-          <mat-divider></mat-divider>
-          <div class="billing-address">
-            <span>Billing Address</span>
-            <pre>{{ inv.billingAddress }}</pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Timeline</h3>
-          <div class="timeline">
-            <div class="timeline-item" *ngFor="let entry of inv.timeline">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>{{ entry.action }}</strong>
-                <p>{{ entry.description }}</p>
-                <span>{{ entry.performedBy }} · {{ entry.performedAt | date:'dd MMM yyyy, hh:mm a' }}</span>
-              </div>
+      <div class="panel">
+        <h3>Activity Timeline</h3>
+        <div class="timeline" *ngIf="inv.timeline?.length; else noTimeline">
+          <div class="timeline-item" *ngFor="let entry of inv.timeline">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <strong>{{ entry.action }}</strong>
+              <p>{{ entry.description }}</p>
+              <span>{{ entry.performedBy }} · {{ entry.performedAt | apiDate:'short' }}</span>
             </div>
           </div>
         </div>
+        <ng-template #noTimeline>
+          <p class="empty-hint">No activity recorded yet.</p>
+        </ng-template>
       </div>
     </div>
-  </ng-container>
+  </div>
 </div>
+
+<ng-template #loadingOrNotFound>
+  <div class="page-container billing-page">
+    <app-skeleton-loader *ngIf="loading()" type="card" [rows]="8"></app-skeleton-loader>
+    <div class="empty-state" *ngIf="!loading() && notFound()">
+      <h2>Invoice not found</h2>
+      <p>The invoice may have been removed or the link is invalid.</p>
+      <a mat-stroked-button routerLink="/billing/invoices">Back to Invoices</a>
+    </div>
+  </div>
+</ng-template>

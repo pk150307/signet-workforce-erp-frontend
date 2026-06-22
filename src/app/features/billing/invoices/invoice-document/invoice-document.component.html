@@ -1,0 +1,96 @@
+<div class="invoice-document">
+  <header class="doc-header">
+    <div class="company">
+      <h1>{{ inv.company?.companyName }}</h1>
+      <p class="company-address">{{ companyAddress() }}</p>
+      <p *ngIf="inv.company?.gstNumber || inv.company?.panNumber">
+        <span *ngIf="inv.company?.gstNumber">GSTIN: {{ inv.company?.gstNumber }}</span>
+        <span *ngIf="inv.company?.panNumber"> · PAN: {{ inv.company?.panNumber }}</span>
+      </p>
+      <p *ngIf="inv.company?.email || inv.company?.phone">
+        {{ inv.company?.email }}<span *ngIf="inv.company?.email && inv.company?.phone"> · </span>{{ inv.company?.phone }}
+      </p>
+    </div>
+    <div class="doc-meta">
+      <h2>TAX INVOICE</h2>
+      <p class="inv-number">{{ inv.invoiceNumber }}</p>
+      <span class="status-pill">{{ statusLabel(inv.status) }}</span>
+    </div>
+  </header>
+
+  <section class="meta-grid">
+    <div><span>Invoice Date</span><strong>{{ inv.invoiceDate | apiDate }}</strong></div>
+    <div><span>Due Date</span><strong>{{ inv.dueDate | apiDate }}</strong></div>
+    <div><span>Billing Period</span><strong>{{ inv.month }}/{{ inv.year }}</strong></div>
+    <div><span>Site</span><strong>{{ inv.siteName }}</strong></div>
+    <div><span>Place of Supply</span><strong>{{ inv.clientState ?? '—' }}</strong></div>
+    <div><span>Balance Due</span><strong>₹{{ inv.balanceAmount | number:'1.2-2' }}</strong></div>
+  </section>
+
+  <section class="parties">
+    <div class="party">
+      <h4>Bill To</h4>
+      <strong>{{ inv.clientName }}</strong>
+      <pre>{{ inv.billingAddress }}</pre>
+      <p>GSTIN: {{ inv.gstNumber || inv.clientGstNumber || '—' }}</p>
+    </div>
+    <div class="party party--summary">
+      <h4>Invoice Summary</h4>
+      <div class="summary-row"><span>Taxable Value</span><span>₹{{ inv.subtotal | number:'1.2-2' }}</span></div>
+      <div class="summary-row"><span>GST ({{ inv.gstRate }}%)</span><span>₹{{ inv.gstAmount | number:'1.2-2' }}</span></div>
+      <div class="summary-row"><span>Paid</span><span>₹{{ inv.paidAmount | number:'1.2-2' }}</span></div>
+      <div class="summary-row summary-row--total"><span>Grand Total</span><span>₹{{ inv.totalAmount | number:'1.2-2' }}</span></div>
+    </div>
+  </section>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Description of Services</th>
+        <th>HSN/SAC</th>
+        <th>Qty</th>
+        <th>Rate</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of inv.lineItems; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ item.description }}</td>
+        <td>{{ item.hsnSacCode ?? '998519' }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>₹{{ item.rate | number:'1.2-2' }}</td>
+        <td>₹{{ item.amount | number:'1.2-2' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="totals-wrap">
+    <div class="amount-words">
+      <strong>Amount in words:</strong> ₹{{ inv.totalAmount | number:'1.2-2' }} only
+    </div>
+    <div class="totals-box">
+      <div class="totals-row"><span>Subtotal</span><span>₹{{ inv.subtotal | number:'1.2-2' }}</span></div>
+      <div class="totals-row"><span>CGST ({{ inv.gstRate / 2 }}%)</span><span>₹{{ inv.gstAmount / 2 | number:'1.2-2' }}</span></div>
+      <div class="totals-row"><span>SGST ({{ inv.gstRate / 2 }}%)</span><span>₹{{ inv.gstAmount / 2 | number:'1.2-2' }}</span></div>
+      <div class="totals-row"><span>Total GST</span><span>₹{{ inv.gstAmount | number:'1.2-2' }}</span></div>
+      <div class="totals-row totals-row--grand"><span>Grand Total</span><span>₹{{ inv.totalAmount | number:'1.2-2' }}</span></div>
+    </div>
+  </div>
+
+  <section class="notes" *ngIf="inv.notes">
+    <h4>Notes</h4>
+    <p>{{ inv.notes }}</p>
+  </section>
+
+  <section class="notes" *ngIf="inv.termsAndConditions">
+    <h4>Terms & Conditions</h4>
+    <p>{{ inv.termsAndConditions }}</p>
+  </section>
+
+  <footer class="doc-footer">
+    <p>This is a computer-generated tax invoice and is valid without signature.</p>
+    <p *ngIf="inv.company?.email">For payment queries: {{ inv.company?.email }}</p>
+  </footer>
+</div>

@@ -1,0 +1,294 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Attendance Register</h1>
+      @if (grid(); as g) {
+        <p class="page-header__subtitle">{{ g.register.clientName }} — {{ monthNames[g.register.month - 1] }} {{ g.register.year }}</p>
+      } @else {
+        <p class="page-header__subtitle">
+          {{ clientLabel(filters.value.clientId) }} — {{ monthNames[filters.value.month - 1] }} {{ filters.value.year }}
+        </p>
+      }
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/attendance"><mat-icon>arrow_back</mat-icon> Back</button>
+    </div>
+  </div>
+
+  <div class="card filter-card">
+    <form [formGroup]="filters" class="filter-row">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Client</mat-label>
+        <mat-select formControlName="clientId" [disabled]="clientsLoading()">
+          @for (c of clients(); track c.id) {
+            <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Month</mat-label>
+        <mat-select formControlName="month">
+          @for (m of monthNames; track m; let i = $index) {
+            <mat-option [value]="i + 1">{{ m }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Year</mat-label>
+        <mat-select formControlName="year">
+          @for (y of years; track y) {
+            <mat-option [value]="y">{{ y }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </div>
+
+  @if (loading()) {
+    <app-skeleton-loader type="table" [rows]="8"></app-skeleton-loader>
+  }
+
+  @if (!loading() && grid(); as g) {
+    @if (isLocked()) {
+      <div class="locked-banner">
+        <mat-icon>lock</mat-icon>
+        <div>
+          <strong>This register is locked</strong>
+          <span>Submitted by {{ g.register.submittedBy }} on {{ g.register.submittedAt | date:'medium' }}</span>
+        </div>
+        <button mat-stroked-button (click)="showUnlockDialog.set(true)">Unlock to Edit</button>
+      </div>
+    }
+
+    @if (!isLocked()) {
+      <div class="hint-banner card">
+        <mat-icon>info</mat-icon>
+        <span>
+          Mark each day, enter <strong>OT Hours</strong>, <strong>Night Allowance</strong>, and <strong>Punctuality Award</strong>, then <strong>Submit</strong> the row (or import Excel — data saves immediately).
+          When every cell is marked, use <strong>Submit &amp; Lock</strong>.
+        </span>
+      </div>
+    }
+
+    <div class="toolbar card">
+      <div class="legend">
+        <span class="legend-item cell--present">P</span> Present
+        <span class="legend-item cell--absent">A</span> Absent
+        <span class="legend-item cell--leave">L</span> Leave
+        <span class="legend-item cell--half">HD</span> Half Day
+        <span class="legend-item cell--holiday">H</span> Holiday
+        <span class="legend-item cell--weekoff">WO</span> Week Off
+        <span class="legend-item cell--empty">-</span> Not Marked
+      </div>
+      @if (!isLocked()) {
+        <div class="toolbar-actions">
+          <button mat-stroked-button (click)="bulk('mark_sundays')">Mark Sundays</button>
+          <button mat-stroked-button (click)="bulk('mark_all_present')">All Present</button>
+          <button mat-stroked-button (click)="bulk('clear_unmarked')">Clear All</button>
+          <button mat-stroked-button (click)="downloadTemplate()"><mat-icon>download</mat-icon> Template</button>
+          <button mat-stroked-button (click)="exportRegister()"><mat-icon>table_view</mat-icon> Export</button>
+          <label class="upload-btn">
+            <mat-icon>upload_file</mat-icon> Import
+            <input type="file" accept=".xlsx,.xlsm,.csv" hidden (change)="onFileSelected($event)">
+          </label>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="openLockDialog()"
+            [disabled]="!canLockRegister()"
+            [title]="lockBlockReason()">
+            <mat-icon>lock</mat-icon> Submit & Lock
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (!isLocked() && lockBlockReason()) {
+      <div class="lock-hint card">
+        <mat-icon>info_outline</mat-icon>
+        <span>{{ lockBlockReason() }}</span>
+        <span class="lock-hint__stats">
+          {{ g.register.markedCells }} / {{ g.register.totalEmployees * g.register.totalDays }} cells marked
+        </span>
+      </div>
+    }
+
+    @if (showImportPanel() && importPreview(); as prev) {
+      <div class="import-panel card">
+        <strong>Import preview:</strong> {{ prev.valid }} employees, {{ prev.cells }} cells, {{ prev.errors }} errors.
+        <span class="import-hint">Format: Emp ID | Emp Name | 01-Apr-26 … | OT Hours | Night Allowance | Punctuality Award</span>
+        <div class="import-actions">
+          <button mat-stroked-button (click)="showImportPanel.set(false)">Cancel</button>
+          <button mat-raised-button color="primary" (click)="applyImport()" [disabled]="prev.valid === 0">Apply to Register</button>
+        </div>
+      </div>
+    }
+
+    <div class="register-shell card card--flush">
+      <div class="register-frame">
+        <!-- Fixed employee column -->
+        <div class="register-panel register-panel--emp">
+          <div class="register-cell register-cell--head">Employee</div>
+          @for (emp of g.employees; track emp.employeeId) {
+            <div class="register-cell register-cell--emp" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
+              <strong>{{ emp.employeeName }}</strong>
+              <small>{{ emp.employeeCode }}</small>
+              @if (pendingChanges()[emp.employeeId]) {
+                <span class="unsaved-badge">Unsaved</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Scrollable day columns -->
+        <div class="register-panel register-panel--days">
+          <div class="register-days-track">
+            <div class="register-cell register-cell--head register-cell--days">
+              @for (date of g.dates; track date) {
+                <div class="register-day register-day--head" [class.register-day--sun]="isSunday(date)" [title]="dayLabel(date)">
+                  <span class="day-num">{{ dayNumber(date) }}</span>
+                  <span class="day-dow">{{ dayWeekday(date) }}</span>
+                </div>
+              }
+            </div>
+            @for (emp of g.employees; track emp.employeeId) {
+              <div class="register-cell register-cell--days" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
+                @for (date of g.dates; track date) {
+                  <div class="register-day" [class.register-day--sun]="isSunday(date)">
+                    @if (isLocked()) {
+                      <div
+                        class="att-chip att-chip--readonly"
+                        [ngClass]="cellClass(getCellValue(emp.employeeId, date))"
+                        [title]="statusTitle(getCellValue(emp.employeeId, date))">
+                        {{ cellShort(getCellValue(emp.employeeId, date)) }}
+                      </div>
+                    } @else {
+                      <div class="att-chip" [ngClass]="cellClass(getCellValue(emp.employeeId, date))">
+                        <select
+                          class="att-select"
+                          [ngModel]="cellSelectValue(getCellValue(emp.employeeId, date))"
+                          (ngModelChange)="onCellChange(emp.employeeId, date, $event)"
+                          [disabled]="isLocked()"
+                          [title]="statusTitle(getCellValue(emp.employeeId, date))">
+                          @for (opt of statusOptions; track opt.label) {
+                            <option [value]="opt.value ?? ''">{{ cellShort(opt.value) }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Fixed OT / allowances + Save column -->
+        <div class="register-panel register-panel--tail">
+          <div class="register-cell register-cell--head register-cell--tail">
+            <span class="register-ot-head">OT (₹)</span>
+            <span class="register-ot-head">Night</span>
+            <span class="register-ot-head">PA</span>
+            <span class="register-action-head">Save</span>
+          </div>
+          @for (emp of g.employees; track emp.employeeId) {
+            <div class="register-cell register-cell--tail" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
+              <div class="register-ot">
+                @if (isLocked()) {
+                  <span class="ot-readonly">{{ getExtras(emp.employeeId).overtimeHours || '—' }}</span>
+                } @else {
+                  <input
+                    type="number"
+                    class="ot-input"
+                    min="0"
+                    step="0.5"
+                    [ngModel]="getExtras(emp.employeeId).overtimeHours"
+                    (ngModelChange)="onExtraChange(emp.employeeId, 'overtimeHours', $event)"
+                    [disabled]="isLocked()">
+                }
+              </div>
+              <div class="register-ot">
+                @if (isLocked()) {
+                  <span class="ot-readonly">{{ getExtras(emp.employeeId).nightAllowance || '—' }}</span>
+                } @else {
+                  <input
+                    type="number"
+                    class="ot-input"
+                    min="0"
+                    step="1"
+                    [ngModel]="getExtras(emp.employeeId).nightAllowance"
+                    (ngModelChange)="onExtraChange(emp.employeeId, 'nightAllowance', $event)"
+                    [disabled]="isLocked()">
+                }
+              </div>
+              <div class="register-ot">
+                @if (isLocked()) {
+                  <span class="ot-readonly">{{ getExtras(emp.employeeId).punctualityAward || '—' }}</span>
+                } @else {
+                  <input
+                    type="number"
+                    class="ot-input"
+                    min="0"
+                    step="1"
+                    [ngModel]="getExtras(emp.employeeId).punctualityAward"
+                    (ngModelChange)="onExtraChange(emp.employeeId, 'punctualityAward', $event)"
+                    [disabled]="isLocked()">
+                }
+              </div>
+              <div class="register-action">
+                @if (!isLocked()) {
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    class="submit-row-btn"
+                    [disabled]="!pendingChanges()[emp.employeeId] || submittingEmployeeId() === emp.employeeId"
+                    (click)="submitEmployee(emp.employeeId)">
+                    @if (submittingEmployeeId() === emp.employeeId) {
+                      <mat-spinner diameter="16"></mat-spinner>
+                    } @else {
+                      Submit
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (showLockDialog()) {
+      <div class="dialog-overlay">
+        <div class="dialog card">
+          <h3>Submit & Lock Register</h3>
+          <p>{{ g.register.markedCells }} of {{ g.register.totalEmployees * g.register.totalDays }} cells marked.</p>
+          @if (g.register.unmarkedCells > 0) {
+            <p class="dialog-warn">{{ g.register.unmarkedCells }} cell(s) still unmarked.</p>
+          }
+          <mat-checkbox [formControl]="verified">I have verified this register against the client sheet</mat-checkbox>
+          <div class="dialog-actions">
+            <button mat-stroked-button (click)="showLockDialog.set(false)">Cancel</button>
+            <button mat-raised-button color="primary" (click)="confirmLock()" [disabled]="saving() || !canLockRegister()">Lock Register</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (showUnlockDialog()) {
+      <div class="dialog-overlay">
+        <div class="dialog card">
+          <h3>Unlock Register</h3>
+          <p>A reason is required to unlock this register. This will be logged for audit.</p>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Reason for unlock</mat-label>
+            <textarea matInput rows="3" [formControl]="unlockReason"></textarea>
+          </mat-form-field>
+          <div class="dialog-actions">
+            <button mat-stroked-button (click)="showUnlockDialog.set(false)">Cancel</button>
+            <button mat-raised-button color="warn" (click)="confirmUnlock()" [disabled]="saving()">Unlock</button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

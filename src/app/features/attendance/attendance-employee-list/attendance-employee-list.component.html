@@ -1,0 +1,138 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Attendance Register</h1>
+      <p class="page-header__subtitle">Client-wise monthly attendance for field staff</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-raised-button color="primary" (click)="openRegister()" [disabled]="!filters.value.clientId">
+        <mat-icon>grid_on</mat-icon> Open Register
+      </button>
+    </div>
+  </div>
+
+  <div class="card filter-card">
+    <form [formGroup]="filters" class="filter-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Client</mat-label>
+        <mat-select formControlName="clientId">
+          @for (c of clients(); track c.id) {
+            <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Month</mat-label>
+        <mat-select formControlName="month">
+          @for (m of monthNames; track m; let i = $index) {
+            <mat-option [value]="i + 1">{{ m }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Year</mat-label>
+        <mat-select formControlName="year">
+          @for (y of years; track y) {
+            <mat-option [value]="y">{{ y }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+
+    @if (register(); as reg) {
+      <div class="register-banner" [class.register-banner--locked]="reg.status === 'locked'">
+        <mat-icon>{{ reg.status === 'locked' ? 'lock' : 'edit_note' }}</mat-icon>
+        <div>
+          <strong>{{ reg.clientName }} — {{ monthNames[reg.month - 1] }} {{ reg.year }}</strong>
+          <span>{{ reg.markedCells }} / {{ reg.totalEmployees * reg.totalDays }} cells marked</span>
+          @if (reg.status === 'locked') {
+            <span>Locked by {{ reg.lockedBy }} on {{ reg.lockedAt | date:'medium' }}</span>
+          }
+        </div>
+        <span class="badge" [class.badge--active]="reg.status === 'draft'" [class.badge--inactive]="reg.status === 'locked'">
+          {{ reg.status === 'locked' ? 'Locked' : 'Draft' }}
+        </span>
+      </div>
+    }
+  </div>
+
+  @if (clientsLoading() || loading()) {
+    <app-skeleton-loader type="table" [rows]="6"></app-skeleton-loader>
+  }
+
+  @if (!clientsLoading() && !loading()) {
+  <div class="card card--flush">
+
+    @if (!filters.value.clientId) {
+      <div class="empty-state"><p>Select a client to view attendance.</p></div>
+    }
+
+    @if (filters.value.clientId && items().length === 0) {
+      <div class="empty-state"><p>No active employees found for this client.</p></div>
+    }
+
+    @if (items().length) {
+    <table mat-table [dataSource]="items()">
+      <ng-container matColumnDef="employee">
+        <th mat-header-cell *matHeaderCellDef>Employee</th>
+        <td mat-cell *matCellDef="let e">
+          <strong>{{ e.employeeName }}</strong><br>
+          <small>{{ e.employeeCode }}</small>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="department">
+        <th mat-header-cell *matHeaderCellDef>Department</th>
+        <td mat-cell *matCellDef="let e">{{ e.departmentName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="site">
+        <th mat-header-cell *matHeaderCellDef>Site</th>
+        <td mat-cell *matCellDef="let e">{{ e.siteName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="present">
+        <th mat-header-cell *matHeaderCellDef>P</th>
+        <td mat-cell *matCellDef="let e">{{ e.presentCount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="absent">
+        <th mat-header-cell *matHeaderCellDef>A</th>
+        <td mat-cell *matCellDef="let e">{{ e.absentCount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="leave">
+        <th mat-header-cell *matHeaderCellDef>L</th>
+        <td mat-cell *matCellDef="let e">{{ e.leaveCount + e.halfDayCount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="overtime">
+        <th mat-header-cell *matHeaderCellDef>OT (₹)</th>
+        <td mat-cell *matCellDef="let e">{{ e.overtimeHours != null ? (e.overtimeHours | number:'1.0-0') : '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="night">
+        <th mat-header-cell *matHeaderCellDef>Night</th>
+        <td mat-cell *matCellDef="let e">{{ e.nightAllowance || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="punctuality">
+        <th mat-header-cell *matHeaderCellDef>PA</th>
+        <td mat-cell *matCellDef="let e">{{ e.punctualityAward || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="unmarked">
+        <th mat-header-cell *matHeaderCellDef>Unmarked</th>
+        <td mat-cell *matCellDef="let e">{{ e.unmarkedCount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let e">
+          <span class="status-chip status-chip--{{ e.rowStatus }}">{{ rowStatusLabel(e.rowStatus) }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let e">
+          <button mat-button [routerLink]="['/attendance/employees', e.employeeId]"
+            [queryParams]="{ month: filters.value.month, year: filters.value.year }">View</button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="cols"></tr>
+      <tr mat-row *matRowDef="let row; columns: cols"></tr>
+    </table>
+    }
+  </div>
+  }
+</div>

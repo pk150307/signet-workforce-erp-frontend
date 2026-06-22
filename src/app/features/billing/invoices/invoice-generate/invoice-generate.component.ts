@@ -6,19 +6,22 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatInputModule } from '@angular/material/input';
+import { finalize } from 'rxjs';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
-import { BreadcrumbService } from '../../../../core/services/breadcrumb.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { getMockSiteBillingSummary } from '../invoice.mock';
+import { InvoicePreview, SiteBillingSummary } from '../../../../core/models/invoice.models';
 
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-invoice-generate',
   standalone: true,
   imports: [
+    SkeletonLoaderComponent,
     NgIf,
     NgFor,
     DecimalPipe,
@@ -28,9 +31,10 @@ import { getMockSiteBillingSummary } from '../invoice.mock';
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressBarModule,
-    MatCheckboxModule,
     MatCardModule,
+    MatProgressSpinnerModule,
+    MatChipsModule,
+    MatInputModule,
   ],
   templateUrl: './invoice-generate.component.html',
   styleUrl: './invoice-generate.component.less',
@@ -38,13 +42,14 @@ import { getMockSiteBillingSummary } from '../invoice.mock';
 export class InvoiceGenerateComponent implements OnInit {
 
   private readonly invoiceService = inject(InvoiceService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
 
+  readonly loadingSites = signal(true);
+  readonly loadingPreview = signal(false);
   readonly generating = signal(false);
-  readonly progress = signal(0);
-  readonly result = signal<{ generated: number; failed: number } | null>(null);
+  readonly sites = signal<SiteBillingSummary[]>([]);
+  readonly preview = signal<InvoicePreview | null>(null);
 
   readonly months = [
     { value: 1, label: 'January' }, { value: 2, label: 'February' }, { value: 3, label: 'March' },
@@ -52,72 +57,72 @@ export class InvoiceGenerateComponent implements OnInit {
     { value: 7, label: 'July' }, { value: 8, label: 'August' }, { value: 9, label: 'September' },
     { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' },
   ];
-  readonly years = [2024, 2025, 2026];
-  readonly sites = getMockSiteBillingSummary();
-  readonly selectedSiteIds = signal<string[]>([]);
+  readonly years = [2024, 2025, 2026, 2027];
 
   readonly form = new FormGroup({
     month: new FormControl(new Date().getMonth() + 1, { nonNullable: true, validators: Validators.required }),
     year: new FormControl(new Date().getFullYear(), { nonNullable: true, validators: Validators.required }),
-    scope: new FormControl<'all' | 'selected'>('all', { nonNullable: true }),
+    siteId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    gstRate: new FormControl(18, { nonNullable: true, validators: Validators.required }),
   });
 
   ngOnInit() {
-    this.breadcrumbService.setItems([
-      { label: 'Billing', route: '/billing/dashboard' },
-      { label: 'Invoices', route: '/billing/invoices' },
-      { label: 'Generate' },
-    ]);
-    this.selectedSiteIds.set(this.sites.map(s => s.siteId));
+    this.loadSites();
   }
 
-  toggleSite(siteId: string, checked: boolean) {
-    const current = this.selectedSiteIds();
-    this.selectedSiteIds.set(
-      checked ? [...current, siteId] : current.filter(id => id !== siteId)
-    );
+  loadSites() {
+    this.loadingSites.set(true);
+    this.invoiceService.getGenerateSites().pipe(
+      finalize(() => this.loadingSites.set(false)),
+    ).subscribe({
+      next: sites => this.sites.set(sites),
+      error: () => this.notification.error('Failed to load sites.'),
+    });
   }
 
-  isSiteSelected(siteId: string): boolean {
-    return this.selectedSiteIds().includes(siteId);
-  }
+  loadPreview() {
+    if (this.form.invalid) return;
+    const { month, year, siteId, gstRate } = this.form.getRawValue();
+    this.loadingPreview.set(true);
+    this.preview.set(null);
 
-  generate() {
-    if (this.form.invalid || this.generating()) return;
-
-    this.generating.set(true);
-    this.progress.set(0);
-    this.result.set(null);
-
-    const { month, year, scope } = this.form.getRawValue();
-    const siteIds = scope === 'selected' ? this.selectedSiteIds() : undefined;
-
-    this.simulateProgress();
-
-    this.invoiceService.generateBySites({ month, year, siteIds }).subscribe({
-      next: (res) => {
-        this.progress.set(100);
-        this.result.set(res);
-        this.notification.success(`${res.generated} invoice(s) generated.`);
-        setTimeout(() => this.router.navigate(['/billing/invoices']), 1500);
-      },
-      error: () => {
-        this.progress.set(100);
-        this.result.set({ generated: siteIds?.length ?? this.sites.length, failed: 0 });
-        this.notification.success('Invoices generated (demo mode).');
-        setTimeout(() => this.router.navigate(['/billing/invoices']), 1500);
+    this.invoiceService.previewForSite(siteId, month, year, gstRate).pipe(
+      finalize(() => this.loadingPreview.set(false)),
+    ).subscribe({
+      next: (data) => this.preview.set(data),
+      error: (err) => {
+        this.notification.error(err?.error?.message ?? 'Failed to load invoice preview.');
       },
     });
   }
 
-  private simulateProgress() {
-    const interval = setInterval(() => {
-      const current = this.progress();
-      if (current >= 90) {
-        clearInterval(interval);
-        return;
-      }
-      this.progress.set(current + Math.random() * 12);
-    }, 400);
+  generate() {
+    const preview = this.preview();
+    if (!preview || preview.alreadyInvoiced || this.generating()) return;
+
+    const { month, year, siteId, gstRate } = this.form.getRawValue();
+    this.generating.set(true);
+
+    this.invoiceService.generateForSite({ siteId, month, year, gstRate }).pipe(
+      finalize(() => this.generating.set(false)),
+    ).subscribe({
+      next: (res) => {
+        this.notification.success(`Invoice ${res.invoiceNumber} generated successfully.`);
+        this.router.navigate(['/billing/invoices', res.invoiceId]);
+      },
+      error: (err) => {
+        this.notification.error(err?.error?.message ?? 'Failed to generate invoice.');
+      },
+    });
+  }
+
+  categoryLabel(category: string): string {
+    const map: Record<string, string> = {
+      manpower: 'Manpower',
+      overtime: 'Overtime',
+      pf: 'PF',
+      esi: 'ESIC',
+    };
+    return map[category] ?? category;
   }
 }

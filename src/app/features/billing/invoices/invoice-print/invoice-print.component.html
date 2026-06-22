@@ -1,76 +1,23 @@
-<div class="print-toolbar no-print" *ngIf="invoice()">
-  <button mat-raised-button color="primary" (click)="print()">
-    <mat-icon>print</mat-icon> Print
-  </button>
+<div class="print-toolbar no-print">
+  <div class="print-toolbar__left">
+    <strong>Invoice Preview</strong>
+    <span *ngIf="invoice() as inv">{{ inv.invoiceNumber }}</span>
+  </div>
+  <div class="print-toolbar__actions">
+    <button mat-stroked-button (click)="downloadPdf()" [disabled]="!invoice() || downloading()">
+      <mat-icon>picture_as_pdf</mat-icon>
+      {{ downloading() ? 'Generating…' : 'Download PDF' }}
+    </button>
+    <button mat-raised-button color="primary" (click)="print()" [disabled]="!invoice()">
+      <mat-icon>print</mat-icon> Print
+    </button>
+  </div>
 </div>
 
-<div class="invoice-document" *ngIf="invoice() as inv">
-  <header class="doc-header">
-    <div class="company">
-      <h1>Signet Workforce Services Pvt Ltd</h1>
-      <p>123 Business Park, Andheri East, Mumbai 400093</p>
-      <p>GSTIN: 27AABCS1429B1Z5</p>
-    </div>
-    <div class="doc-meta">
-      <h2>TAX INVOICE</h2>
-      <p><strong>{{ inv.invoiceNumber }}</strong></p>
-      <p>Date: {{ inv.invoiceDate | date:'dd MMM yyyy' }}</p>
-      <p>Due: {{ inv.dueDate | date:'dd MMM yyyy' }}</p>
-    </div>
-  </header>
+<div class="loading-state no-print" *ngIf="loading()">
+  <app-skeleton-loader type="card" [rows]="10"></app-skeleton-loader>
+</div>
 
-  <section class="parties">
-    <div class="party">
-      <h4>Bill To</h4>
-      <strong>{{ inv.clientName }}</strong>
-      <pre>{{ inv.billingAddress }}</pre>
-      <p>GSTIN: {{ inv.gstNumber }}</p>
-    </div>
-    <div class="party">
-      <h4>Site</h4>
-      <strong>{{ inv.siteName }}</strong>
-      <p>Period: {{ inv.month }}/{{ inv.year }}</p>
-      <p>Status: {{ inv.status }}</p>
-    </div>
-  </section>
-
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Description</th>
-        <th>Qty</th>
-        <th>Rate</th>
-        <th>Amount</th>
-        <th>GST %</th>
-        <th>GST</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let item of inv.lineItems; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ item.description }}</td>
-        <td>{{ item.quantity }}</td>
-        <td>₹{{ item.rate | number:'1.2-2' }}</td>
-        <td>₹{{ item.amount | number:'1.2-2' }}</td>
-        <td>{{ item.gstRate }}%</td>
-        <td>₹{{ item.gstAmount | number:'1.2-2' }}</td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr><td colspan="4">Subtotal</td><td colspan="3">₹{{ inv.subtotal | number:'1.2-2' }}</td></tr>
-      <tr><td colspan="4">GST</td><td colspan="3">₹{{ inv.gstAmount | number:'1.2-2' }}</td></tr>
-      <tr class="total"><td colspan="4">Total Amount</td><td colspan="3">₹{{ inv.totalAmount | number:'1.2-2' }}</td></tr>
-    </tfoot>
-  </table>
-
-  <section class="notes" *ngIf="inv.notes">
-    <h4>Notes</h4>
-    <p>{{ inv.notes }}</p>
-  </section>
-
-  <footer class="doc-footer">
-    <p>This is a computer-generated tax invoice.</p>
-    <p>For payment queries: billing&#64;signetworkforce.com</p>
-  </footer>
+<div class="invoice-preview-wrap" *ngIf="!loading() && invoice() as inv">
+  <app-invoice-document [inv]="inv" />
 </div>

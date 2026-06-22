@@ -1,152 +1,66 @@
 :host {
   display: block;
-  background: #fff;
   min-height: 100vh;
+  background: var(--color-bg);
 }
 
 .print-toolbar {
-  padding: 16px 24px;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.invoice-document {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 40px;
-  font-family: 'Inter', sans-serif;
-  color: #1a2332;
-}
-
-.doc-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  border-bottom: 2px solid #1565c0;
-  padding-bottom: 20px;
-  margin-bottom: 24px;
+  gap: 16px;
+  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 
-  .company h1 {
-    margin: 0;
-    font-size: 18px;
-    color: #1565c0;
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    strong { font-size: 14px; color: var(--color-text-primary); }
+    span { font-size: 12px; color: var(--color-text-secondary); }
   }
 
-  .company p {
-    margin: 4px 0 0;
-    font-size: 11px;
-    color: #5a6478;
-  }
-
-  .doc-meta {
-    text-align: right;
-
-    h2 {
-      margin: 0;
-      font-size: 20px;
-      letter-spacing: 1px;
-    }
-
-    p {
-      margin: 4px 0 0;
-      font-size: 12px;
-    }
+  &__actions {
+    display: flex;
+    gap: 10px;
   }
 }
 
-.parties {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-
-  h4 {
-    margin: 0 0 8px;
-    font-size: 10px;
-    text-transform: uppercase;
-    color: #8b96a9;
-  }
-
-  pre {
-    margin: 8px 0;
-    font-family: inherit;
-    font-size: 12px;
-    white-space: pre-wrap;
-    color: #5a6478;
-  }
-
-  p {
-    margin: 4px 0;
-    font-size: 12px;
-  }
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 50vh;
+  color: var(--color-text-secondary);
 }
 
-.items-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 24px;
-
-  th {
-    background: #1565c0;
-    color: #fff;
-    padding: 8px;
-    font-size: 11px;
-    text-align: left;
-  }
-
-  td {
-    padding: 8px;
-    font-size: 12px;
-    border-bottom: 1px solid #f0f2f5;
-  }
-
-  tfoot td {
-    text-align: right;
-    font-weight: 600;
-    border-bottom: none;
-    padding: 6px 8px;
-  }
-
-  .total td {
-    font-size: 14px;
-    color: #1565c0;
-    border-top: 2px solid #1565c0;
-    padding-top: 10px;
-  }
-}
-
-.notes {
-  margin-bottom: 24px;
-
-  h4 {
-    margin: 0 0 8px;
-    font-size: 12px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 12px;
-    color: #5a6478;
-  }
-}
-
-.doc-footer {
-  text-align: center;
-  font-size: 10px;
-  color: #8b96a9;
-  border-top: 1px solid #e0e4ea;
-  padding-top: 16px;
-
-  p {
-    margin: 4px 0;
-  }
+.invoice-preview-wrap {
+  max-width: 920px;
+  margin: 24px auto 40px;
+  box-shadow: var(--shadow-lg);
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
 }
 
 @media print {
+  :host {
+    background: #fff;
+  }
+
   .no-print {
     display: none !important;
   }
 
-  .invoice-document {
-    padding: 20px;
+  .invoice-preview-wrap {
+    margin: 0;
+    max-width: none;
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
   }
 }

@@ -1,0 +1,75 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">{{ calendar()?.employeeName ?? 'Employee Attendance' }}</h1>
+      @if (calendar(); as c) {
+        <p class="page-header__subtitle">{{ c.employeeCode }} · {{ c.clientName }} · {{ c.siteName }}</p>
+      }
+    </div>
+    <button mat-stroked-button routerLink="/attendance"><mat-icon>arrow_back</mat-icon> Back</button>
+  </div>
+
+  <div class="card filter-row">
+    <mat-form-field appearance="outline">
+      <mat-label>Month</mat-label>
+      <mat-select [formControl]="monthCtrl">
+        @for (m of monthNames; track m; let i = $index) {
+          <mat-option [value]="i + 1">{{ m }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Year</mat-label>
+      <mat-select [formControl]="yearCtrl">
+        @for (y of years; track y) {
+          <mat-option [value]="y">{{ y }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading()) {
+    <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+    <app-skeleton-loader type="table" [rows]="8"></app-skeleton-loader>
+  }
+
+  @if (!loading() && calendar(); as c) {
+    <div class="detail-layout">
+      <div class="card summary-card">
+        <h3>Summary — {{ monthNames[c.month - 1] }} {{ c.year }}</h3>
+        <div class="summary-grid">
+          <div><span>Present</span><strong>{{ c.summary.present }}</strong></div>
+          <div><span>Absent</span><strong>{{ c.summary.absent }}</strong></div>
+          <div><span>Leave</span><strong>{{ c.summary.leave }}</strong></div>
+          <div><span>Half Day</span><strong>{{ c.summary.halfDay }}</strong></div>
+          <div><span>Holiday</span><strong>{{ c.summary.holiday }}</strong></div>
+          <div><span>Week Off</span><strong>{{ c.summary.weekOff }}</strong></div>
+          <div><span>Unmarked</span><strong>{{ c.summary.unmarked }}</strong></div>
+          <div><span>Overtime Earned (₹)</span><strong>{{ c.summary.overtimeHours | number:'1.0-0' }}</strong></div>
+          <div><span>Night Allowance</span><strong>{{ c.summary.nightAllowance | number:'1.0-0' }}</strong></div>
+          <div><span>Punctuality Award</span><strong>{{ c.summary.punctualityAward | number:'1.0-0' }}</strong></div>
+          <div><span>Working Days</span><strong>{{ c.summary.workingDays }}</strong></div>
+        </div>
+        <p class="register-status">Register: <strong>{{ c.registerStatus === 'locked' ? 'Locked' : 'Draft' }}</strong></p>
+      </div>
+
+      <div class="card calendar-card">
+        <h3>Day-wise Calendar</h3>
+        <div class="calendar-grid">
+          @for (d of c.days; track d.date) {
+            <div class="cal-day" [class.cal-day--sun]="d.dayOfWeek === 0">
+              <div class="cal-day__head">
+                <span class="cal-day__num">{{ d.day }}</span>
+                <span class="cal-day__dow">{{ weekDayLabel(d.dayOfWeek) }}</span>
+              </div>
+              <div class="cal-day__status" [ngClass]="cellClass(d.status)">
+                {{ cellShort(d.status) }}
+              </div>
+              <small>{{ d.statusLabel }}</small>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

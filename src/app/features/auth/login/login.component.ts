@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,12 +10,13 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { DEFAULT_COMPANY_LOGO } from '../../../core/constants/company.constants';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
-    NgIf,
     ReactiveFormsModule,
     RouterLink,
     MatFormFieldModule,
@@ -39,6 +39,23 @@ export class LoginComponent implements OnInit {
   readonly loading = signal(false);
   readonly hidePassword = signal(true);
   readonly year = new Date().getFullYear();
+  readonly appName = environment.appName;
+  readonly appVersion = environment.appVersion;
+  readonly logoUrl = DEFAULT_COMPANY_LOGO;
+
+  readonly stats = [
+    { value: 'Multi-site', label: 'Centralised ops' },
+    { value: 'Statutory', label: 'PF · ESIC · GST' },
+    { value: 'Real-time', label: 'Live attendance' },
+  ];
+
+  readonly features = [
+    { icon: 'groups', title: 'Workforce', desc: 'Employees, sites & org chart' },
+    { icon: 'schedule', title: 'Attendance', desc: 'Shifts, leave & registers' },
+    { icon: 'payments', title: 'Payroll', desc: 'Payslips & compliance' },
+    { icon: 'receipt_long', title: 'Billing', desc: 'Invoices & client sites' },
+  ];
+
   private returnUrl = '/dashboard';
 
   readonly form = this.fb.nonNullable.group({

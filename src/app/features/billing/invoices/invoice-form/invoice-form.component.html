@@ -1,28 +1,49 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1 class="page-header__title">Invoice Form</h1>
-      <p class="page-header__subtitle">Create a manual invoice with line items and GST</p>
+      <h1 class="page-header__title">Create Invoice</h1>
+      <p class="page-header__subtitle">Select client and site, then pick departments from configured client rates</p>
     </div>
     <div class="page-header__actions">
       <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
     </div>
   </div>
 
+  @if (loadingClients() || loadingInvoice()) {
+    <app-skeleton-loader type="card" [rows]="8"></app-skeleton-loader>
+  } @else {
   <form [formGroup]="form" (ngSubmit)="submit()" class="card form-card">
     <div class="form-grid">
       <mat-form-field appearance="outline">
         <mat-label>Client</mat-label>
-        <mat-select formControlName="clientId">
-          <mat-option *ngFor="let c of clients" [value]="c.id">{{ c.name }}</mat-option>
+        <mat-select formControlName="clientId" [compareWith]="compareSelectValue">
+          @if (loadingClients()) {
+            <mat-option disabled>Loading clients…</mat-option>
+          } @else {
+            @for (c of clients(); track c.id) {
+              <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+            }
+          }
         </mat-select>
+        @if (form.get('clientId')?.hasError('required') && form.get('clientId')?.touched) {
+          <mat-error>Client is required</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Site</mat-label>
-        <mat-select formControlName="siteId">
-          <mat-option *ngFor="let s of filteredSites" [value]="s.id">{{ s.name }}</mat-option>
+        <mat-select formControlName="siteId" [compareWith]="compareSelectValue" [disabled]="!form.value.clientId || loadingSites()">
+          @if (loadingSites()) {
+            <mat-option disabled>Loading sites…</mat-option>
+          } @else {
+            @for (s of sites(); track s.id) {
+              <mat-option [value]="s.id">{{ s.siteName }} — {{ s.city }}</mat-option>
+            }
+          }
         </mat-select>
+        @if (form.get('siteId')?.hasError('required') && form.get('siteId')?.touched) {
+          <mat-error>Site is required</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -41,19 +62,45 @@
     </div>
 
     <h3>Line Items</h3>
-    <div formArrayName="lineItems" class="line-items">
+    <app-skeleton-loader *ngIf="loadingRates()" type="table" [rows]="3"></app-skeleton-loader>
+    <p class="hint empty-hint" *ngIf="!loadingRates() && form.value.siteId && billableDepartments().length === 0">
+      No departments with rates found for this site. Add rates when creating the client.
+    </p>
+
+    <div formArrayName="lineItems" class="line-items" *ngIf="!loadingRates()">
       <div *ngFor="let item of lineItems.controls; let i = index" [formGroupName]="i" class="line-item-row">
-        <mat-form-field appearance="outline" class="desc-field">
-          <mat-label>Description</mat-label>
-          <input matInput formControlName="description">
+        <mat-form-field appearance="outline" class="dept-field">
+          <mat-label>Department</mat-label>
+          <mat-select
+            formControlName="departmentId"
+            [compareWith]="compareSelectValue"
+            [disabled]="!billableDepartments().length || loadingRates()"
+            (selectionChange)="onDepartmentSelected(i, $event.value)">
+            @for (dept of getDepartmentOptionsForRow(i); track dept.departmentId) {
+              <mat-option [value]="dept.departmentId">
+                {{ dept.departmentName }}
+                @if (dept.ratePerMonth != null) {
+                  — ₹{{ dept.ratePerMonth | number:'1.0-0' }}/mo
+                } @else if (dept.ratePerDay != null) {
+                  — ₹{{ dept.ratePerDay | number:'1.0-0' }}/day
+                }
+                @if (dept.quantity > 1) {
+                  · {{ dept.quantity }} at site
+                }
+              </mat-option>
+            }
+          </mat-select>
+          @if (item.get('departmentId')?.hasError('required') && item.get('departmentId')?.touched) {
+            <mat-error>Required</mat-error>
+          }
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Qty</mat-label>
-          <input matInput type="number" formControlName="quantity">
+          <input matInput type="number" formControlName="quantity" min="1">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Rate</mat-label>
-          <input matInput type="number" formControlName="rate">
+          <input matInput type="number" formControlName="rate" min="0">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>GST %</mat-label>
@@ -66,7 +113,7 @@
       </div>
     </div>
 
-    <button mat-stroked-button type="button" (click)="addLineItem()">
+    <button mat-stroked-button type="button" (click)="addLineItem()" [disabled]="!canAddLineItem()">
       <mat-icon>add</mat-icon> Add Line Item
     </button>
 
@@ -82,9 +129,10 @@
     </div>
 
     <div class="form-actions">
-      <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-        <mat-icon>save</mat-icon> Create Invoice
+      <button mat-raised-button color="primary" type="submit" [disabled]="saving() || loadingClients() || loadingRates()">
+        <mat-icon>save</mat-icon> {{ saving() ? 'Creating…' : 'Create Invoice' }}
       </button>
     </div>
   </form>
+  }
 </div>

@@ -1,0 +1,80 @@
+.filter-row {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card, .calendar-card {
+  padding: 16px;
+
+  h3 { margin: 0 0 16px; font-size: 1rem; color: var(--color-text-primary); }
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    span { font-size: 0.75rem; color: var(--color-text-muted); }
+    strong { font-size: 1.25rem; color: var(--color-text-primary); }
+  }
+}
+
+.register-status {
+  margin-top: 16px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 8px;
+}
+
+.cal-day {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  background: var(--color-surface);
+
+  &--sun { background: var(--att-leave-bg); }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+  }
+
+  &__num { font-weight: 700; font-size: 0.875rem; color: var(--color-text-primary); }
+  &__dow { color: var(--color-text-muted); }
+
+  &__status {
+    width: 100%;
+    padding: 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  small { font-size: 0.65rem; color: var(--color-text-muted); }
+}
+
+.loading-state { padding: 64px; display: flex; justify-content: center; }

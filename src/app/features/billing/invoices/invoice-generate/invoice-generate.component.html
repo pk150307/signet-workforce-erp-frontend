@@ -1,67 +1,120 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">Invoice Generate</h1>
-      <p class="page-header__subtitle">Generate invoices for site billing periods</p>
+<div class="page-container billing-page">
+  <section class="billing-hero">
+    <div class="billing-hero__content">
+      <div class="billing-hero__icon"><mat-icon>auto_awesome</mat-icon></div>
+      <div>
+        <h1>Auto Generate Invoice</h1>
+        <p>Pick month, year and site. We pull attendance, overtime, department rates, PF/ESIC and GST automatically.</p>
+      </div>
     </div>
-    <div class="page-header__actions">
+    <div class="billing-hero__actions">
+      <button mat-stroked-button routerLink="/billing/invoices/new"><mat-icon>edit_note</mat-icon> Manual Invoice</button>
       <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
     </div>
-  </div>
+  </section>
 
   <div class="generate-layout">
-    <mat-card class="generate-card">
-      <form [formGroup]="form" (ngSubmit)="generate()">
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Month</mat-label>
-            <mat-select formControlName="month">
-              <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+    <mat-card class="panel form-panel">
+      <h3>1. Select billing period & site</h3>
+      @if (loadingSites()) {
+        <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+      } @else {
+      <form [formGroup]="form" class="form-grid" (ngSubmit)="loadPreview()">
+        <mat-form-field appearance="outline">
+          <mat-label>Month</mat-label>
+          <mat-select formControlName="month">
+            <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Year</mat-label>
-            <mat-select formControlName="year">
-              <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Year</mat-label>
+          <mat-select formControlName="year">
+            <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Scope</mat-label>
-            <mat-select formControlName="scope">
-              <mat-option value="all">All Sites</mat-option>
-              <mat-option value="selected">Selected Sites</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
+        <mat-form-field appearance="outline" class="span-2">
+          <mat-label>Site</mat-label>
+          <mat-select formControlName="siteId">
+            <mat-option *ngFor="let site of sites()" [value]="site.siteId">
+              {{ site.siteName }} — {{ site.clientName }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
 
-        <div class="site-list" *ngIf="form.value.scope === 'selected'">
-          <h4>Select Sites</h4>
-          <div class="site-item" *ngFor="let site of sites">
-            <mat-checkbox
-              [checked]="isSiteSelected(site.siteId)"
-              (change)="toggleSite(site.siteId, $event.checked)">
-              {{ site.siteName }} — {{ site.clientName }} ({{ site.headcount }} staff)
-            </mat-checkbox>
-          </div>
-        </div>
+        <mat-form-field appearance="outline">
+          <mat-label>GST Rate (%)</mat-label>
+          <input matInput type="number" formControlName="gstRate" min="0" max="28">
+        </mat-form-field>
 
-        <div class="form-actions">
-          <button mat-raised-button color="primary" type="submit" [disabled]="generating()">
-            <mat-icon>auto_awesome</mat-icon> Generate Invoices
+        <div class="form-actions span-2">
+          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loadingPreview() || loadingSites()">
+            <mat-icon>preview</mat-icon>
+            {{ loadingPreview() ? 'Calculating…' : 'Preview Invoice' }}
           </button>
         </div>
       </form>
+      }
     </mat-card>
 
-    <mat-card class="progress-card" *ngIf="generating()">
-      <h3>Generating Invoices...</h3>
-      <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
-      <p class="progress-text">{{ progress() | number:'1.0-0' }}% complete</p>
-      <p class="progress-result" *ngIf="result() as r">
-        {{ r.generated }} generated, {{ r.failed }} failed
-      </p>
+    <mat-card class="panel preview-panel" *ngIf="loadingPreview()">
+      <app-skeleton-loader type="card" [rows]="6"></app-skeleton-loader>
+    </mat-card>
+
+    <mat-card class="panel preview-panel" *ngIf="!loadingPreview() && preview() as p">
+      <div class="preview-header">
+        <div>
+          <p class="eyebrow">Step 2 · Review & generate</p>
+          <h3>{{ p.clientName }} · {{ p.siteName }}</h3>
+          <p>{{ p.employeeCount }} employees · {{ p.totalManDays }} man-days · {{ p.totalOvertimeHours }} OT hrs · {{ p.workingDays }} working days</p>
+        </div>
+        <mat-chip-set>
+          <mat-chip *ngIf="p.alreadyInvoiced" color="warn">Already invoiced</mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <div class="stat-cards">
+        <div class="stat-card"><span>Subtotal</span><strong>₹{{ p.subTotal | number:'1.0-0' }}</strong></div>
+        <div class="stat-card"><span>GST ({{ p.gstRate }}%)</span><strong>₹{{ p.gstAmount | number:'1.0-0' }}</strong></div>
+        <div class="stat-card"><span>Employer PF</span><strong>₹{{ p.totalEmployerPf | number:'1.0-0' }}</strong></div>
+        <div class="stat-card"><span>Employer ESIC</span><strong>₹{{ p.totalEmployerEsi | number:'1.0-0' }}</strong></div>
+        <div class="stat-card stat-card--total"><span>Total</span><strong>₹{{ p.totalAmount | number:'1.0-0' }}</strong></div>
+      </div>
+
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of p.lineItems">
+            <td><span class="type-badge">{{ categoryLabel(item.category) }}</span></td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.unitRate | number:'1.2-2' }}</td>
+            <td>₹{{ item.amount | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="preview-actions">
+        <button mat-raised-button color="primary" (click)="generate()" [disabled]="generating() || p.alreadyInvoiced || !p.lineItems.length">
+          <mat-icon>receipt_long</mat-icon>
+          {{ generating() ? 'Generating…' : 'Generate Invoice' }}
+        </button>
+      </div>
+    </mat-card>
+
+    <mat-card class="panel preview-panel preview-panel--empty" *ngIf="!loadingPreview() && !preview()">
+      <mat-icon>insights</mat-icon>
+      <h3>Preview will appear here</h3>
+      <p>Select a site and billing period, then click Preview Invoice to see calculated line items.</p>
     </mat-card>
   </div>
 </div>
