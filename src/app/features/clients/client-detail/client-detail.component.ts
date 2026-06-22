@@ -58,7 +58,7 @@ export class ClientDetailComponent implements OnInit {
 
     forkJoin({
       client: this.clientsService.getById(id),
-      sites: this.clientsService.getSitesForSelect(id).pipe(catchError(() => of([] as SiteListItem[]))),
+      sites: this.clientsService.getSitesForClient(id).pipe(catchError(() => of([] as SiteListItem[]))),
       departments: this.departmentService.getAllForSelect({ clientId: id, isActive: true }).pipe(
         catchError(() => of([] as DepartmentListItem[])),
       ),

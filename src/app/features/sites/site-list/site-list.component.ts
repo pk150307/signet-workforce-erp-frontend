@@ -119,7 +119,7 @@ export class SiteListComponent implements OnInit {
       }),
     ).afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
-      this.sitesService.delete(site.id).subscribe({
+      this.sitesService.delete(site.id, site.clientId).subscribe({
         next: () => {
           this.notification.success('Site deleted.');
           this.load();

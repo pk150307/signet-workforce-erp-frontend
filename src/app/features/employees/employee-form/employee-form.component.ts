@@ -252,8 +252,13 @@ export class EmployeeFormComponent implements OnInit {
       return;
     }
 
+    const clientId = this.employmentForm.get('clientId')?.value ?? '';
     this.designationsLoading.set(true);
-    this.designationService.getAllForSelect({ departmentId, isActive: true }).subscribe({
+    this.designationService.getAllForSelect({
+      clientId: clientId || undefined,
+      departmentId,
+      isActive: true,
+    }).subscribe({
       next: items => {
         this.designations.set(items.filter(d => d.designationCode && d.designationName));
         this.designationsLoading.set(false);
@@ -462,6 +467,7 @@ export class EmployeeFormComponent implements OnInit {
             sites: this.sitesService.getAllForSelect({ clientId: emp.clientId }),
             departments: this.departmentService.getAllForSelect({ clientId: emp.clientId, isActive: true }),
             designations: this.designationService.getAllForSelect({
+              clientId: emp.clientId,
               departmentId: emp.departmentId,
               isActive: true,
             }),

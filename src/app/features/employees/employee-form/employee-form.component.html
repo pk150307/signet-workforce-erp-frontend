@@ -285,8 +285,8 @@
                 <mat-label>Department</mat-label>
                 <mat-select formControlName="departmentId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue" [disabled]="!employmentForm.value.clientId">
                   <mat-option value="">{{ employmentForm.value.clientId ? 'Select department' : 'Select client first' }}</mat-option>
-                  @for (d of departments(); track d.departmentCode) {
-                    <mat-option [value]="d.departmentCode">{{ d.departmentName }}</mat-option>
+                  @for (d of departments(); track d.id) {
+                    <mat-option [value]="d.id">{{ d.departmentName }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -304,8 +304,8 @@
                   <mat-option value="">
                     {{ designationsLoading() ? 'Loading…' : (employmentForm.value.departmentId ? 'Select designation' : 'Select department first') }}
                   </mat-option>
-                  @for (d of designations(); track d.designationCode) {
-                    <mat-option [value]="d.designationCode">{{ d.designationName }}</mat-option>
+                  @for (d of designations(); track d.id) {
+                    <mat-option [value]="d.id">{{ d.designationName }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -320,8 +320,8 @@
                   <mat-option value="">
                     {{ gradesLoading() ? 'Loading…' : (employmentForm.value.designationId ? 'Select pay grade (optional)' : 'Select designation first') }}
                   </mat-option>
-                  @for (g of designationGrades(); track g.gradeCode) {
-                    <mat-option [value]="g.gradeCode">{{ g.gradeCode }} — {{ g.gradeName }}</mat-option>
+                  @for (g of designationGrades(); track g.id) {
+                    <mat-option [value]="g.id">{{ g.gradeCode }} — {{ g.gradeName }}</mat-option>
                   }
                 </mat-select>
                 @if (selectedGradeGross() != null) {

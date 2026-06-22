@@ -158,7 +158,8 @@ export class DesignationFormComponent implements OnInit {
   }
 
   private suggestDesignationCode(departmentId: string) {
-    this.designationService.getNextCode(departmentId).subscribe({
+    const clientId = this.form.getRawValue().clientId ?? '';
+    this.designationService.getNextCode(departmentId, clientId || undefined).subscribe({
       next: ({ code }) => this.form.patchValue({ designationCode: code }, { emitEvent: false }),
       error: () => this.notification.warning('Could not suggest a designation code.'),
     });

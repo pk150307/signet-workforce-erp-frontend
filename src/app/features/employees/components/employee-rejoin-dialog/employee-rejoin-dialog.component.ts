@@ -59,6 +59,7 @@ export class EmployeeRejoinDialogComponent implements OnInit {
   readonly departments = signal<DepartmentListItem[]>([]);
   readonly designations = signal<DesignationListItem[]>([]);
   readonly sites = signal<SiteListItem[]>([]);
+  private clientId = '';
 
   readonly form = this.fb.group({
     joiningDate: [new Date(), Validators.required],
@@ -80,6 +81,7 @@ export class EmployeeRejoinDialogComponent implements OnInit {
       employee: this.employeeService.getById(this.data.employee.id),
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: ({ departments, sites, employee }) => {
+        this.clientId = employee.clientId ?? '';
         this.departments.set(departments.filter(d => d.id && d.departmentName));
         this.sites.set(sites.filter(s => s.id && s.siteName));
         this.form.patchValue({
@@ -101,7 +103,11 @@ export class EmployeeRejoinDialogComponent implements OnInit {
       return;
     }
 
-    this.designationService.getAllForSelect({ departmentId, isActive: true }).subscribe({
+    this.designationService.getAllForSelect({
+      clientId: this.clientId || undefined,
+      departmentId,
+      isActive: true,
+    }).subscribe({
       next: items => {
         this.designations.set(items.filter(d => d.id && d.designationName));
         if (preferredDesignationId) {
