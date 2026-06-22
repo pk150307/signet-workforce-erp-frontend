@@ -1,192 +1,664 @@
-<div class="page-container">
+<div class="page-container employee-form-page">
 
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">{{ isEdit() ? 'Edit Employee' : 'Add Employee' }}</h1>
-      <p class="page-header__subtitle">{{ isEdit() ? 'Update employee information' : 'Fill in the details to create a new employee record' }}</p>
+  @if (submitted(); as result) {
+    <div class="confirmation-panel">
+      <div class="confirmation-panel__icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <h1 class="confirmation-panel__title">Employee Created Successfully</h1>
+      <p class="confirmation-panel__subtitle">
+        The employee record has been created and is now active in the system.
+      </p>
+
+      <div class="confirmation-panel__details">
+        <div class="confirmation-panel__row">
+          <span>Employee ID</span>
+          <strong>{{ result.employeeCode }}</strong>
+        </div>
+        <div class="confirmation-panel__row">
+          <span>Name</span>
+          <strong>{{ result.fullName }}</strong>
+        </div>
+        <div class="confirmation-panel__row">
+          <span>Status</span>
+          <app-employee-status-badge [status]="result.status"></app-employee-status-badge>
+        </div>
+      </div>
+
+      <div class="confirmation-panel__actions">
+        <button mat-stroked-button (click)="addAnother()">
+          <mat-icon>person_add</mat-icon> Add Another Employee
+        </button>
+        <button mat-raised-button color="primary" [routerLink]="['/employees', result.id]">
+          <mat-icon>visibility</mat-icon> View Profile
+        </button>
+      </div>
     </div>
-    <div class="page-header__actions">
-      <button mat-stroked-button (click)="cancel()" [disabled]="saving()">Cancel</button>
+  } @else if (loading() || lookupsLoading() || saving() || savingDraft()) {
+    <app-skeleton-loader type="card" [rows]="8"></app-skeleton-loader>
+  } @else {
+    <header class="form-page-header">
+      <button mat-icon-button type="button" class="form-page-header__back" (click)="cancel()" [disabled]="saving()" matTooltip="Go back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="form-page-header__text">
+        <h1>{{ isEdit() ? 'Edit Employee' : 'Add Employee' }}</h1>
+        <p>{{ isEdit() ? 'Update employee information across all sections' : 'Complete the 5-step onboarding wizard to create a new employee record' }}</p>
+      </div>
+      <div class="form-page-header__actions">
+        @if (!isEdit()) {
+          <button mat-stroked-button type="button" (click)="saveDraft()" [disabled]="savingDraft()">
+            <mat-icon>draft</mat-icon>
+            Save Draft
+          </button>
+        }
+        <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+      </div>
+    </header>
+
+    <div class="employee-form__body">
+      <div class="wizard-card">
+      <mat-stepper
+        #stepper
+        class="employee-stepper"
+        [linear]="!isEdit()"
+        [orientation]="stepperOrientation()"
+        animationDuration="0">
+
+        <!-- Step 1: Personal Details -->
+        <mat-step label="Personal Details">
+          <ng-template matStepContent>
+          <form [formGroup]="personalForm" class="step-form">
+            <div class="step-panel__header">
+              <div class="step-panel__icon"><mat-icon>person</mat-icon></div>
+              <div>
+                <h2 class="step-panel__title">Personal Details</h2>
+                <p class="step-hint">Only first name and mobile are required. All other fields are optional.</p>
+              </div>
+            </div>
+
+            <div class="step-panel__body">
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>First Name</mat-label>
+                <input matInput formControlName="firstName">
+                @if (personalForm.get('firstName')?.hasError('required') && personalForm.get('firstName')?.touched) {
+                  <mat-error>First name is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Last Name</mat-label>
+                <input matInput formControlName="lastName">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row form-row--dob">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Date of Birth</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="dobPicker"
+                  formControlName="dateOfBirth"
+                  [max]="maxDateOfBirth"
+                  (click)="dobPicker.open()"
+                  readonly>
+                <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+                <mat-datepicker #dobPicker startView="multi-year"></mat-datepicker>
+              </mat-form-field>
+
+              <div class="gender-field">
+                <span class="gender-field__label">Gender</span>
+                <mat-radio-group
+                  formControlName="gender"
+                  class="gender-field__group"
+                  aria-label="Gender">
+                  @for (opt of genderOptions; track opt.value) {
+                    <mat-radio-button [value]="opt.value">{{ opt.label }}</mat-radio-button>
+                  }
+                </mat-radio-group>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Mobile</mat-label>
+                <mat-icon matPrefix>phone</mat-icon>
+                <input matInput formControlName="phone" maxlength="10">
+                @if (personalForm.get('phone')?.hasError('required') && personalForm.get('phone')?.touched) {
+                  <mat-error>Mobile number is required</mat-error>
+                } @else if (personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched) {
+                  <mat-error>Enter a valid 10-digit mobile number</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Email</mat-label>
+                <mat-icon matPrefix>email</mat-icon>
+                <input matInput type="email" formControlName="email">
+                @if (personalForm.get('email')?.hasError('email') && personalForm.get('email')?.touched) {
+                  <mat-error>Enter a valid email address</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="step-subsection">
+              <div class="step-subsection__head">
+                <mat-icon>home</mat-icon>
+                <h3 class="section-label">Address</h3>
+              </div>
+
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+              <mat-label>Present Address</mat-label>
+              <textarea matInput formControlName="presentAddress" rows="2"></textarea>
+            </mat-form-field>
+
+            <div class="copy-address-row">
+              <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+                <mat-label>Permanent Address</mat-label>
+                <textarea matInput formControlName="permanentAddress" rows="2"></textarea>
+              </mat-form-field>
+              <button mat-stroked-button type="button" (click)="copyPresentToPermanent()">
+                <mat-icon>content_copy</mat-icon> Same as present
+              </button>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>City</mat-label>
+                <input matInput formControlName="city">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>State</mat-label>
+                <input matInput formControlName="state">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>PIN Code</mat-label>
+                <input matInput formControlName="pinCode" maxlength="6">
+                @if (personalForm.get('pinCode')?.invalid && personalForm.get('pinCode')?.touched) {
+                  <mat-error>Enter a valid 6-digit PIN</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            </div>
+
+            <div class="step-subsection">
+              <div class="step-subsection__head">
+                <mat-icon>contact_emergency</mat-icon>
+                <h3 class="section-label">Emergency Contact</h3>
+              </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Contact Name</mat-label>
+                <input matInput formControlName="emergencyContactName">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Relationship</mat-label>
+                <input matInput formControlName="emergencyContactRelationship">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Contact Phone</mat-label>
+                <input matInput formControlName="emergencyContactPhone" maxlength="10">
+                @if (personalForm.get('emergencyContactPhone')?.invalid && personalForm.get('emergencyContactPhone')?.touched) {
+                  <mat-error>Enter a valid 10-digit mobile number</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            </div>
+            </div>
+
+            <div class="step-footer">
+              @if (!isEdit()) {
+                <button mat-stroked-button type="button" (click)="saveDraft()" [disabled]="savingDraft()">
+                  <mat-icon>draft</mat-icon> Save Draft
+                </button>
+              }
+              <span class="step-actions__spacer"></span>
+              <button mat-raised-button color="primary" matStepperNext [disabled]="!isMinimumValid()">
+                Next <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </form>
+          </ng-template>
+        </mat-step>
+
+        <!-- Step 2: Employment Details -->
+        <mat-step label="Employment">
+          <ng-template matStepContent>
+          <form [formGroup]="employmentForm" class="step-form">
+            <div class="step-panel__header">
+              <div class="step-panel__icon"><mat-icon>work</mat-icon></div>
+              <div>
+                <h2 class="step-panel__title">Employment Details</h2>
+                <p class="step-hint">Select client and site, then set department, designation, and manager.</p>
+              </div>
+            </div>
+
+            <div class="step-panel__body">
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Employee ID</mat-label>
+                <mat-icon matPrefix>badge</mat-icon>
+                <input matInput formControlName="employeeCode" readonly>
+                <mat-hint>Auto-assigned sequentially (SS-00001, SS-00002, …)</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Joining Date</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="joinPicker"
+                  formControlName="joiningDate"
+                  (click)="joinPicker.open()"
+                  (focus)="joinPicker.open()"
+                  readonly>
+                <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
+                <mat-datepicker #joinPicker startView="month"></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Client *</mat-label>
+                <mat-select formControlName="clientId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue">
+                  @for (c of clients(); track c.id) {
+                    <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+                  }
+                </mat-select>
+                @if (employmentForm.get('clientId')?.hasError('required') && employmentForm.get('clientId')?.touched) {
+                  <mat-error>Client is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Site *</mat-label>
+                <mat-select formControlName="siteId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue" [disabled]="!employmentForm.value.clientId">
+                  @for (s of filteredSites(); track s.id) {
+                    <mat-option [value]="s.id">{{ s.siteName }} — {{ s.city }}</mat-option>
+                  }
+                </mat-select>
+                @if (employmentForm.get('siteId')?.hasError('required') && employmentForm.get('siteId')?.touched) {
+                  <mat-error>Site is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Department</mat-label>
+                <mat-select formControlName="departmentId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue" [disabled]="!employmentForm.value.clientId">
+                  <mat-option value="">{{ employmentForm.value.clientId ? 'Select department' : 'Select client first' }}</mat-option>
+                  @for (d of departments(); track d.departmentCode) {
+                    <mat-option [value]="d.departmentCode">{{ d.departmentName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Designation</mat-label>
+                <mat-select
+                  formControlName="designationId"
+                  panelClass="employee-form-select-panel"
+                  [compareWith]="compareSelectValue"
+                  [disabled]="!employmentForm.value.departmentId || designationsLoading()"
+                >
+                  <mat-option value="">
+                    {{ designationsLoading() ? 'Loading…' : (employmentForm.value.departmentId ? 'Select designation' : 'Select department first') }}
+                  </mat-option>
+                  @for (d of designations(); track d.designationCode) {
+                    <mat-option [value]="d.designationCode">{{ d.designationName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Pay Grade</mat-label>
+                <mat-select
+                  formControlName="designationGradeId"
+                  panelClass="employee-form-select-panel"
+                  [compareWith]="compareSelectValue"
+                  [disabled]="!employmentForm.value.designationId || gradesLoading()"
+                >
+                  <mat-option value="">
+                    {{ gradesLoading() ? 'Loading…' : (employmentForm.value.designationId ? 'Select pay grade (optional)' : 'Select designation first') }}
+                  </mat-option>
+                  @for (g of designationGrades(); track g.gradeCode) {
+                    <mat-option [value]="g.gradeCode">{{ g.gradeCode }} — {{ g.gradeName }}</mat-option>
+                  }
+                </mat-select>
+                @if (selectedGradeGross() != null) {
+                  <mat-hint>Gross from grade: ₹{{ selectedGradeGross() | number:'1.0-0' }}</mat-hint>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Reporting Manager</mat-label>
+                <mat-select formControlName="reportingManagerId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue">
+                  <mat-option value="">None</mat-option>
+                  @for (m of managers(); track m.id) {
+                    <mat-option [value]="m.id">{{ m.fullName }} ({{ m.employeeCode }})</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Employment Type</mat-label>
+                <mat-select formControlName="employmentType" panelClass="employee-form-select-panel" canSelectNullableOptions [compareWith]="compareSelectValue">
+                  @for (opt of employmentTypeOptions; track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            </div>
+
+            <div class="step-footer">
+              <button mat-stroked-button matStepperPrevious>
+                <mat-icon>arrow_back</mat-icon> Back
+              </button>
+              <span class="step-actions__spacer"></span>
+              <button mat-raised-button color="primary" matStepperNext>
+                Next <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </form>
+          </ng-template>
+        </mat-step>
+
+        <!-- Step 3: Statutory & Bank -->
+        <mat-step label="Statutory & Bank">
+          <ng-template matStepContent>
+          <form [formGroup]="statutoryForm" class="step-form">
+            <div class="step-panel__header">
+              <div class="step-panel__icon"><mat-icon>account_balance</mat-icon></div>
+              <div>
+                <h2 class="step-panel__title">Statutory & Bank</h2>
+                <p class="step-hint">Enter Aadhaar, PAN, UAN/PF/ESIC numbers and bank details for payroll integration.</p>
+              </div>
+            </div>
+
+            <div class="step-panel__body">
+            <div class="step-subsection">
+              <div class="step-subsection__head">
+                <mat-icon>verified_user</mat-icon>
+                <h3 class="section-label">Statutory Details</h3>
+              </div>
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Aadhaar Number</mat-label>
+                <input matInput formControlName="aadhaarNumber" maxlength="12">
+                @if (statutoryForm.get('aadhaarNumber')?.invalid && statutoryForm.get('aadhaarNumber')?.touched) {
+                  <mat-error>Enter a valid 12-digit Aadhaar number</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>PAN Number</mat-label>
+                <input matInput formControlName="panNumber" maxlength="10" style="text-transform:uppercase">
+                @if (statutoryForm.get('panNumber')?.invalid && statutoryForm.get('panNumber')?.touched) {
+                  <mat-error>Enter a valid PAN (e.g. ABCDE1234F)</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>UAN Number</mat-label>
+                <input matInput formControlName="uanNumber" maxlength="12">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>PF Number</mat-label>
+                <input matInput formControlName="pfNumber">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>ESIC Number</mat-label>
+                <input matInput formControlName="esicNumber">
+              </mat-form-field>
+            </div>
+            </div>
+
+            <div class="step-subsection">
+              <div class="step-subsection__head">
+                <mat-icon>account_balance_wallet</mat-icon>
+                <h3 class="section-label">Bank Details</h3>
+              </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Bank Name</mat-label>
+                <input matInput formControlName="bankName">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Account Holder Name</mat-label>
+                <input matInput formControlName="accountHolderName">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Account Number</mat-label>
+                <input matInput formControlName="accountNumber">
+                @if (statutoryForm.get('accountNumber')?.invalid && statutoryForm.get('accountNumber')?.touched) {
+                  <mat-error>Enter a valid account number</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>IFSC Code</mat-label>
+                <input matInput formControlName="ifscCode" maxlength="11" style="text-transform:uppercase">
+                @if (statutoryForm.get('ifscCode')?.invalid && statutoryForm.get('ifscCode')?.touched) {
+                  <mat-error>Enter a valid IFSC code</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            </div>
+
+            <div class="info-banner">
+              <mat-icon>info</mat-icon>
+              Statutory details will sync with PF/ESIC module and lock after final submission.
+            </div>
+            </div>
+
+            <div class="step-footer">
+              <button mat-stroked-button matStepperPrevious>
+                <mat-icon>arrow_back</mat-icon> Back
+              </button>
+              <span class="step-actions__spacer"></span>
+              <button mat-raised-button color="primary" matStepperNext>
+                Next <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </form>
+          </ng-template>
+        </mat-step>
+
+        <!-- Step 4: Documents -->
+        <mat-step label="Documents">
+          <ng-template matStepContent>
+          <div class="step-form">
+            <div class="step-panel__header">
+              <div class="step-panel__icon"><mat-icon>folder</mat-icon></div>
+              <div>
+                <h2 class="step-panel__title">Documents</h2>
+                <p class="step-hint">Upload profile photo and supporting documents. All documents are optional.</p>
+              </div>
+            </div>
+
+            <div class="step-panel__body">
+            <div class="documents-grid">
+              @for (type of optionalDocTypes; track type) {
+                <app-document-upload
+                  [label]="docLabels[type]"
+                  [documentType]="type"
+                  [fileName]="getDocument(type)?.fileName ?? null"
+                  [previewUrl]="getDocument(type)?.previewUrl ?? null"
+                  [uploading]="uploadingDocKey() === type"
+                  (fileSelected)="onDocumentSelected($event)"
+                  (removeFile)="onDocumentRemove(type)">
+                </app-document-upload>
+              }
+            </div>
+
+            @if (additionalDocuments.length > 0) {
+              <div class="step-subsection">
+                <div class="step-subsection__head">
+                  <mat-icon>attach_file</mat-icon>
+                  <h3 class="section-label">Additional Documents</h3>
+                </div>
+              <div class="documents-grid">
+                @for (doc of additionalDocuments; track doc.key) {
+                  <app-document-upload
+                    [label]="doc.label"
+                    documentType="other"
+                    [fileName]="doc.fileName || null"
+                    [previewUrl]="doc.previewUrl"
+                    [uploading]="uploadingDocKey() === doc.key"
+                    (fileSelected)="onDocumentSelected($event, doc.key)"
+                    (removeFile)="onDocumentRemove(doc.key)">
+                  </app-document-upload>
+                }
+              </div>
+              </div>
+            }
+
+            <button mat-stroked-button type="button" class="add-doc-btn" (click)="addAdditionalDocument()">
+              <mat-icon>add</mat-icon> Add Another Document
+            </button>
+            </div>
+
+            <div class="step-footer">
+              <button mat-stroked-button matStepperPrevious>
+                <mat-icon>arrow_back</mat-icon> Back
+              </button>
+              <span class="step-actions__spacer"></span>
+              <button mat-raised-button color="primary" matStepperNext>
+                Next <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+          </ng-template>
+        </mat-step>
+
+        <!-- Step 5: Review & Submit -->
+        <mat-step label="Review">
+          <ng-template matStepContent>
+          <div class="step-form review-step">
+            <div class="step-panel__header">
+              <div class="step-panel__icon"><mat-icon>fact_check</mat-icon></div>
+              <div>
+                <h2 class="step-panel__title">Review & Submit</h2>
+                <p class="step-hint">Review all details before submitting. Use Edit to jump back to any section.</p>
+              </div>
+            </div>
+
+            <div class="step-panel__body">
+            <div class="warning-banner">
+              <mat-icon>warning</mat-icon>
+              Statutory fields (Aadhaar, PAN, UAN, PF, ESIC) will be locked after submission and cannot be changed without admin approval.
+            </div>
+
+            <!-- Personal -->
+            <div class="review-section" [class.review-section--invalid]="!isStepValid(0)">
+              <div class="review-section__header">
+                <h3>Personal Details</h3>
+                <button mat-button type="button" (click)="goToStep(0)">
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+              </div>
+              <div class="review-grid">
+                <div><span>Name</span><strong>{{ personalForm.value.firstName }} {{ personalForm.value.lastName }}</strong></div>
+                <div><span>DOB</span><strong>{{ personalForm.value.dateOfBirth | safeDate:'dd MMM yyyy' }}</strong></div>
+                <div><span>Gender</span><strong>{{ personalForm.value.gender ? genderLabels[personalForm.value.gender] : '—' }}</strong></div>
+                <div><span>Mobile</span><strong>{{ personalForm.value.phone }}</strong></div>
+                <div><span>Email</span><strong>{{ personalForm.value.email }}</strong></div>
+                <div><span>City</span><strong>{{ personalForm.value.city }}, {{ personalForm.value.state }}</strong></div>
+                <div class="review-grid__full"><span>Address</span><strong>{{ personalForm.value.presentAddress }}</strong></div>
+                <div><span>Emergency</span><strong>{{ personalForm.value.emergencyContactName }} ({{ personalForm.value.emergencyContactRelationship }}) — {{ personalForm.value.emergencyContactPhone }}</strong></div>
+              </div>
+            </div>
+
+            <!-- Employment -->
+            <div class="review-section">
+              <div class="review-section__header">
+                <h3>Employment Details</h3>
+                <button mat-button type="button" (click)="goToStep(1)">
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+              </div>
+              <div class="review-grid">
+                <div><span>Employee ID</span><strong>{{ employmentForm.value.employeeCode }}</strong></div>
+                <div><span>Joining Date</span><strong>{{ employmentForm.value.joiningDate | safeDate:'dd MMM yyyy' }}</strong></div>
+                <div><span>Client</span><strong>{{ getClientName(employmentForm.value.clientId!) }}</strong></div>
+                <div><span>Site</span><strong>{{ getSiteName(employmentForm.value.siteId!) }}</strong></div>
+                <div><span>Department</span><strong>{{ getDepartmentName(employmentForm.value.departmentId!) }}</strong></div>
+                <div><span>Designation</span><strong>{{ getDesignationName(employmentForm.value.designationId!) }}</strong></div>
+                <div><span>Pay Grade</span><strong>{{ employmentForm.value.designationGradeId ? getGradeLabel(employmentForm.value.designationGradeId) : '—' }}</strong></div>
+                <div><span>Manager</span><strong>{{ employmentForm.value.reportingManagerId ? getManagerName(employmentForm.value.reportingManagerId) : '—' }}</strong></div>
+                <div><span>Employment Type</span><strong>{{ employmentLabels[employmentForm.value.employmentType!] }}</strong></div>
+              </div>
+            </div>
+
+            <!-- Statutory -->
+            <div class="review-section">
+              <div class="review-section__header">
+                <h3>Statutory & Bank Details</h3>
+                <button mat-button type="button" (click)="goToStep(2)">
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+              </div>
+              <div class="review-grid">
+                <div><span>Aadhaar</span><strong>{{ statutoryForm.value.aadhaarNumber }}</strong></div>
+                <div><span>PAN</span><strong>{{ statutoryForm.value.panNumber | uppercase }}</strong></div>
+                <div><span>UAN</span><strong>{{ statutoryForm.value.uanNumber || '—' }}</strong></div>
+                <div><span>PF</span><strong>{{ statutoryForm.value.pfNumber || '—' }}</strong></div>
+                <div><span>ESIC</span><strong>{{ statutoryForm.value.esicNumber || '—' }}</strong></div>
+                <div><span>Bank</span><strong>{{ statutoryForm.value.bankName }}</strong></div>
+                <div><span>Account</span><strong>{{ statutoryForm.value.accountNumber }}</strong></div>
+                <div><span>IFSC</span><strong>{{ statutoryForm.value.ifscCode | uppercase }}</strong></div>
+              </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="review-section">
+              <div class="review-section__header">
+                <h3>Documents</h3>
+                <button mat-button type="button" (click)="goToStep(3)">
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+              </div>
+              <div class="review-docs">
+                @for (doc of uploadedDocuments; track doc.key) {
+                  <div class="review-doc-item">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>{{ doc.label }} — {{ doc.fileName }}</span>
+                  </div>
+                }
+                @if (uploadedDocuments.length === 0) {
+                  <div class="review-doc-item">
+                    <mat-icon>info</mat-icon>
+                    <span>No documents uploaded</span>
+                  </div>
+                }
+              </div>
+            </div>
+            </div>
+
+            <div class="step-footer">
+              <button mat-stroked-button matStepperPrevious>
+                <mat-icon>arrow_back</mat-icon> Back
+              </button>
+              <span class="step-actions__spacer"></span>
+              <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
+                <mat-icon>check</mat-icon>
+                {{ isEdit() ? 'Save Changes' : 'Submit Employee' }}
+              </button>
+            </div>
+          </div>
+          </ng-template>
+        </mat-step>
+
+      </mat-stepper>
+      </div>
     </div>
-  </div>
-
-  <div class="loading-state" *ngIf="loading()">
-    <mat-spinner diameter="36"></mat-spinner>
-  </div>
-
-  <mat-stepper class="employee-stepper" [linear]="!isEdit()" orientation="horizontal" animationDuration="0" *ngIf="!loading()" #stepper>
-
-    <!-- Step 1: Personal Info -->
-    <mat-step [stepControl]="personalForm" label="Personal Info">
-      <form [formGroup]="personalForm" class="step-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>First Name *</mat-label>
-            <input matInput formControlName="firstName">
-            <mat-error *ngIf="personalForm.get('firstName')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Last Name *</mat-label>
-            <input matInput formControlName="lastName">
-            <mat-error *ngIf="personalForm.get('lastName')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Email *</mat-label>
-            <mat-icon matPrefix>email</mat-icon>
-            <input matInput type="email" formControlName="email">
-            <mat-error *ngIf="personalForm.get('email')?.hasError('required')">Required</mat-error>
-            <mat-error *ngIf="personalForm.get('email')?.hasError('email')">Invalid email</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Phone *</mat-label>
-            <mat-icon matPrefix>phone</mat-icon>
-            <input matInput formControlName="phone">
-            <mat-error *ngIf="personalForm.get('phone')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Date of Birth *</mat-label>
-            <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth">
-            <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
-            <mat-datepicker #dobPicker></mat-datepicker>
-            <mat-error *ngIf="personalForm.get('dateOfBirth')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Gender *</mat-label>
-            <mat-select formControlName="gender">
-              <mat-option *ngFor="let opt of genderOptions" [value]="opt.value">{{ opt.label }}</mat-option>
-            </mat-select>
-            <mat-error *ngIf="personalForm.get('gender')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="step-actions">
-          <button mat-raised-button color="primary" matStepperNext [disabled]="personalForm.invalid">
-            Next <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </form>
-    </mat-step>
-
-    <!-- Step 2: Employment -->
-    <mat-step [stepControl]="employmentForm" label="Employment">
-      <form [formGroup]="employmentForm" class="step-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Joining Date *</mat-label>
-            <input matInput [matDatepicker]="joinPicker" formControlName="joiningDate">
-            <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
-            <mat-datepicker #joinPicker></mat-datepicker>
-            <mat-error *ngIf="employmentForm.get('joiningDate')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Employment Type *</mat-label>
-            <mat-select formControlName="employmentType">
-              <mat-option *ngFor="let opt of employmentTypeOptions" [value]="opt.value">{{ opt.label }}</mat-option>
-            </mat-select>
-            <mat-error *ngIf="employmentForm.get('employmentType')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Department *</mat-label>
-            <mat-select formControlName="departmentId">
-              <mat-option value="dept-001">Operations</mat-option>
-              <mat-option value="dept-002">Security</mat-option>
-              <mat-option value="dept-003">Housekeeping</mat-option>
-              <mat-option value="dept-004">Administration</mat-option>
-            </mat-select>
-            <mat-error *ngIf="employmentForm.get('departmentId')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Designation *</mat-label>
-            <mat-select formControlName="designationId">
-              <mat-option value="des-001">Security Guard</mat-option>
-              <mat-option value="des-002">Supervisor</mat-option>
-              <mat-option value="des-003">Housekeeping Staff</mat-option>
-              <mat-option value="des-004">Manager</mat-option>
-            </mat-select>
-            <mat-error *ngIf="employmentForm.get('designationId')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="step-actions">
-          <button mat-stroked-button matStepperPrevious>
-            <mat-icon>arrow_back</mat-icon> Back
-          </button>
-          <button mat-raised-button color="primary" matStepperNext [disabled]="employmentForm.invalid">
-            Next <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </form>
-    </mat-step>
-
-    <!-- Step 3: Address -->
-    <mat-step label="Address">
-      <form [formGroup]="addressForm" class="step-form">
-        <mat-form-field appearance="outline" style="width:100%">
-          <mat-label>Present Address</mat-label>
-          <textarea matInput formControlName="presentAddress" rows="2"></textarea>
-        </mat-form-field>
-        <mat-form-field appearance="outline" style="width:100%">
-          <mat-label>Permanent Address</mat-label>
-          <textarea matInput formControlName="permanentAddress" rows="2"></textarea>
-        </mat-form-field>
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>City</mat-label>
-            <input matInput formControlName="city">
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>State</mat-label>
-            <input matInput formControlName="state">
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>PIN Code</mat-label>
-            <input matInput formControlName="pinCode">
-          </mat-form-field>
-        </div>
-        <div class="step-actions">
-          <button mat-stroked-button matStepperPrevious><mat-icon>arrow_back</mat-icon> Back</button>
-          <button mat-raised-button color="primary" matStepperNext>Next <mat-icon>arrow_forward</mat-icon></button>
-        </div>
-      </form>
-    </mat-step>
-
-    <!-- Step 4: Salary -->
-    <mat-step [stepControl]="salaryForm" label="Salary">
-      <form [formGroup]="salaryForm" class="step-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Basic Salary (₹) *</mat-label>
-            <mat-icon matPrefix>currency_rupee</mat-icon>
-            <input matInput type="number" formControlName="basicSalary">
-            <mat-error *ngIf="salaryForm.get('basicSalary')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Gross Salary (₹) *</mat-label>
-            <mat-icon matPrefix>currency_rupee</mat-icon>
-            <input matInput type="number" formControlName="grossSalary">
-            <mat-error *ngIf="salaryForm.get('grossSalary')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="step-actions">
-          <button mat-stroked-button matStepperPrevious><mat-icon>arrow_back</mat-icon> Back</button>
-          <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
-            <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
-            <mat-icon *ngIf="!saving()">{{ isEdit() ? 'save' : 'person_add' }}</mat-icon>
-            {{ isEdit() ? 'Save Changes' : 'Create Employee' }}
-          </button>
-        </div>
-      </form>
-    </mat-step>
-
-  </mat-stepper>
+  }
 </div>

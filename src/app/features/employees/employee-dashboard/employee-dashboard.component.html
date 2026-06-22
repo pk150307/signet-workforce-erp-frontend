@@ -1,0 +1,164 @@
+<div class="page-container employee-dashboard">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Employee Dashboard</h1>
+      <p class="page-header__subtitle">Workforce overview — headcount, joiners, exits, and recent activity</p>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button (click)="loadDashboard()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-stroked-button routerLink="/employees/list">
+        <mat-icon>list</mat-icon> View All
+      </button>
+      <button mat-raised-button color="primary" routerLink="/employees/new">
+        <mat-icon>person_add</mat-icon> Add Employee
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <app-skeleton-loader type="stats" [rows]="6"></app-skeleton-loader>
+    <div class="dashboard-skeleton-charts">
+      <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+      <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+    </div>
+  }
+
+  @if (!loading() && stats(); as s) {
+    @if (apiUnavailable()) {
+      <div class="offline-banner">
+        <mat-icon>cloud_off</mat-icon>
+        <span>Server unavailable — showing sample dashboard data.</span>
+      </div>
+    }
+
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>groups</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.totalEmployees }}</div>
+          <div class="stat-card__label">Total Employees</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>check_circle</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.activeEmployees }}</div>
+          <div class="stat-card__label">Active</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--red"><mat-icon>person_off</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.leftEmployees }}</div>
+          <div class="stat-card__label">Left</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange"><mat-icon>draft</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.draftEmployees }}</div>
+          <div class="stat-card__label">Draft</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--teal"><mat-icon>person_add</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.newJoinersThisMonth }}</div>
+          <div class="stat-card__label">New Joiners</div>
+          <div class="stat-card__trend up">This month</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple"><mat-icon>exit_to_app</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ s.exitsThisMonth }}</div>
+          <div class="stat-card__label">Exits this Month</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <h3 class="section-title"><mat-icon>donut_large</mat-icon> Headcount by Department</h3>
+        <highcharts-chart
+          [Highcharts]="Highcharts"
+          [options]="departmentChartOptions()"
+          class="employee-dashboard__chart" />
+      </div>
+
+      <div class="card">
+        <h3 class="section-title"><mat-icon>bar_chart</mat-icon> Joiners vs Exits (6 Months)</h3>
+        <highcharts-chart
+          [Highcharts]="Highcharts"
+          [options]="headcountChartOptions()"
+          class="employee-dashboard__chart" />
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="card">
+        <div class="section-header">
+          <h3 class="section-title"><mat-icon>person</mat-icon> Recent Employees</h3>
+          <a mat-button routerLink="/employees/list">View all</a>
+        </div>
+
+        @if (recentEmployees().length === 0) {
+          <div class="empty-inline">
+            <mat-icon>people_outline</mat-icon>
+            <p>No recent employees</p>
+          </div>
+        } @else {
+          <div class="recent-list">
+            @for (emp of recentEmployees(); track emp.id) {
+              <app-employee-card
+                [employee]="emp"
+                [showMeta]="false"
+                (cardClick)="viewEmployee($event)" />
+            }
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <h3 class="section-title"><mat-icon>history</mat-icon> Recent Activities</h3>
+        </div>
+
+        @if (recentActivities().length === 0) {
+          <div class="empty-inline">
+            <mat-icon>history</mat-icon>
+            <p>No recent activity</p>
+          </div>
+        } @else {
+          <div class="activity-list">
+            @for (activity of recentActivities(); track activity.id) {
+              <div class="activity-item">
+                <div class="activity-item__icon" [class]="'activity-item__icon--' + getActivityIconClass(activity.type)">
+                  <mat-icon>{{ getActivityIcon(activity.type) }}</mat-icon>
+                </div>
+                <div class="activity-item__body">
+                  <div class="activity-item__title">{{ activity.description }}</div>
+                  <div class="activity-item__meta">
+                    <span>{{ activity.employeeName }} ({{ activity.employeeCode }})</span>
+                    <span class="activity-item__dot">·</span>
+                    <span>{{ activity.performedBy }}</span>
+                  </div>
+                </div>
+                <div class="activity-item__time">
+                  {{ activity.performedAt | safeDate:'dd MMM, hh:mm a' }}
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

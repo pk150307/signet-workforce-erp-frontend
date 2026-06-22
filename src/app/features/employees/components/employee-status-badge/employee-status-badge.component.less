@@ -1,0 +1,33 @@
+@import "./employee-status-badge.config.less";
+
+.employee-status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: @badge-font-size;
+  font-weight: 600;
+  padding: @badge-padding-y @badge-padding-x;
+  border-radius: @badge-radius;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+
+  &--draft {
+    background: rgba(139, 150, 169, 0.15);
+    color: var(--color-text-secondary);
+  }
+
+  &--active {
+    background: rgba(46, 125, 50, 0.12);
+    color: var(--color-success);
+  }
+
+  &--left {
+    background: rgba(198, 40, 40, 0.12);
+    color: var(--color-danger);
+  }
+
+  &--rejoined {
+    background: rgba(2, 119, 189, 0.12);
+    color: var(--color-info);
+  }
+}

@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Mark Employee as Left</h2>
+
+<mat-dialog-content>
+  <p class="dialog-intro">
+    Record exit for <strong>{{ data.employee.fullName }}</strong> ({{ data.employee.employeeCode }}).
+  </p>
+
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Last Working Date</mat-label>
+      <input matInput [matDatepicker]="lwdPicker" formControlName="lastWorkingDate">
+      <mat-datepicker-toggle matSuffix [for]="lwdPicker"></mat-datepicker-toggle>
+      <mat-datepicker #lwdPicker></mat-datepicker>
+      @if (form.controls.lastWorkingDate.hasError('required') && form.controls.lastWorkingDate.touched) {
+        <mat-error>Required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Reason</mat-label>
+      <mat-select formControlName="reason">
+        @for (reason of reasons; track reason) {
+          <mat-option [value]="reason">{{ reason }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.reason.hasError('required') && form.controls.reason.touched) {
+        <mat-error>Required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Remarks (optional)</mat-label>
+      <textarea matInput rows="3" formControlName="remarks"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+  <button mat-raised-button color="warn" type="button" (click)="submit()" [disabled]="saving()">
+    {{ saving() ? 'Saving…' : 'Mark as Left' }}
+  </button>
+</mat-dialog-actions>

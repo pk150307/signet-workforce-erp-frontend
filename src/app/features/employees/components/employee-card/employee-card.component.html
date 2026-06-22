@@ -1,0 +1,29 @@
+<button type="button" class="employee-card" (click)="onClick()">
+  <app-employee-avatar
+    [name]="employee.fullName"
+    [photoUrl]="employee.profilePhotoUrl"
+    size="md">
+  </app-employee-avatar>
+
+  <div class="employee-card__body">
+    <div class="employee-card__header">
+      <span class="employee-card__name">{{ employee.fullName }}</span>
+      <app-employee-status-badge [status]="employee.status"></app-employee-status-badge>
+    </div>
+
+    <div class="employee-card__code">{{ employee.employeeCode }}</div>
+
+    @if (showMeta) {
+      <div class="employee-card__meta">
+        <span><mat-icon>business</mat-icon>{{ employee.department }}</span>
+        <span><mat-icon>work</mat-icon>{{ employee.designation }}</span>
+        @if (employee.siteName) {
+          <span><mat-icon>location_on</mat-icon>{{ employee.siteName }}</span>
+        }
+        <span><mat-icon>event</mat-icon>{{ employee.joiningDate | safeDate:'dd MMM yyyy' }}</span>
+      </div>
+    }
+  </div>
+
+  <mat-icon class="employee-card__arrow">chevron_right</mat-icon>
+</button>

@@ -1,0 +1,72 @@
+@import "./employee-card.config.less";
+
+.employee-card {
+  display: flex;
+  align-items: center;
+  gap: @card-gap;
+  width: 100%;
+  padding: @card-padding;
+  border: 1px solid var(--color-border);
+  border-radius: @card-radius;
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: box-shadow var(--transition), border-color var(--transition);
+
+  &:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: rgba(21, 101, 192, 0.35);
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  &__code {
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__arrow {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+}

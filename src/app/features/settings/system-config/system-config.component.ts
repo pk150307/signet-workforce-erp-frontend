@@ -9,7 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { SettingsService } from '../../../core/services/settings.service';
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 
@@ -34,7 +33,6 @@ export class SystemConfigComponent implements OnInit {
 
   private readonly fb = inject(FormBuilder);
   private readonly settingsService = inject(SettingsService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly notification = inject(NotificationService);
 
   readonly loading = signal(true);
@@ -52,10 +50,6 @@ export class SystemConfigComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.breadcrumbService.setItems([
-      { label: 'Settings', route: '/settings' },
-      { label: 'System Config' },
-    ]);
     this.load();
   }
 

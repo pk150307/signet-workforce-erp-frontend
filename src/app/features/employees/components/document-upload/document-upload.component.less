@@ -1,0 +1,104 @@
+@import "./document-upload.config.less";
+
+.document-upload {
+  border: 2px dashed var(--color-border);
+  border-radius: @upload-border-radius;
+  min-height: @upload-min-height;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  background: var(--color-surface);
+  text-align: center;
+
+  &:hover,
+  &--dragover {
+    border-color: var(--color-primary);
+    background: rgba(21, 101, 192, 0.04);
+  }
+
+  &--filled {
+    border-style: solid;
+    cursor: default;
+
+    &:hover {
+      background: var(--color-surface);
+    }
+  }
+
+  &__icon {
+    font-size: @upload-icon-size;
+    width: @upload-icon-size;
+    height: @upload-icon-size;
+    color: var(--color-text-muted);
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+
+    strong {
+      font-size: 13px;
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__req {
+    color: var(--color-danger);
+    margin-left: 2px;
+  }
+
+  &__preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  &__thumb {
+    width: @upload-preview-size;
+    height: @upload-preview-size;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__file-icon {
+    font-size: @upload-preview-size;
+    width: @upload-preview-size;
+    height: @upload-preview-size;
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
+  &__name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  &__remove {
+    flex-shrink: 0;
+  }
+}

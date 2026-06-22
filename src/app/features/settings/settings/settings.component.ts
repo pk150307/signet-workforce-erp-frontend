@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 
 interface SettingsCard {
   icon: string;
@@ -23,8 +22,6 @@ interface SettingsCard {
 })
 export class SettingsComponent implements OnInit {
 
-  private readonly breadcrumbService = inject(BreadcrumbService);
-
   readonly cards: SettingsCard[] = [
     { icon: 'admin_panel_settings', title: 'Roles', description: 'Manage user roles and access levels', route: '/settings/roles', color: '#1565C0' },
     { icon: 'lock', title: 'Permissions', description: 'Configure module-level permissions', route: '/settings/permissions', color: '#512da8' },
@@ -35,6 +32,5 @@ export class SettingsComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.breadcrumbService.setItems([{ label: 'Settings' }]);
   }
 }

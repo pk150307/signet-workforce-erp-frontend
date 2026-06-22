@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>Rejoin Employee</h2>
+
+<mat-dialog-content>
+  <p class="dialog-intro">
+    Reactivate <strong>{{ data.employee.fullName }}</strong> ({{ data.employee.employeeCode }}) with new employment details.
+  </p>
+
+  @if (loading() || saving()) {
+    <app-skeleton-loader type="card" [rows]="5"></app-skeleton-loader>
+  } @else {
+    <form [formGroup]="form" class="dialog-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Rejoin Date</mat-label>
+        <input matInput [matDatepicker]="joinPicker" formControlName="joiningDate">
+        <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
+        <mat-datepicker #joinPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Department</mat-label>
+        <mat-select formControlName="departmentId">
+          @for (dept of departments(); track dept.id) {
+            <mat-option [value]="dept.id">{{ dept.departmentName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Designation</mat-label>
+        <mat-select formControlName="designationId" [disabled]="!form.value.departmentId">
+          @for (des of designations(); track des.id) {
+            <mat-option [value]="des.id">{{ des.designationName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Site (optional)</mat-label>
+        <mat-select formControlName="siteId">
+          <mat-option value="">None</mat-option>
+          @for (site of sites(); track site.id) {
+            <mat-option [value]="site.id">{{ site.siteName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox formControlName="reuseEmployeeCode">
+        Reuse existing employee code ({{ data.employee.employeeCode }})
+      </mat-checkbox>
+    </form>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" (click)="submit()" [disabled]="saving() || loading()">
+    Rejoin Employee
+  </button>
+</mat-dialog-actions>

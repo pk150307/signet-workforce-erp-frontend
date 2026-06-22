@@ -3,7 +3,6 @@ import { KeyValuePipe, NgFor, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ReportsService } from '../../../core/services/reports.service';
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PayrollReportData } from '../../../core/models/reports.models';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
@@ -18,13 +17,11 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 })
 export class PayrollReportComponent implements OnInit {
   private readonly reportsService = inject(ReportsService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly notification = inject(NotificationService);
   readonly loading = signal(true);
   readonly report = signal<PayrollReportData | null>(null);
 
   ngOnInit() {
-    this.breadcrumbService.setItems([{ label: 'Reports', route: '/reports' }, { label: 'Payroll' }]);
     this.load();
   }
 

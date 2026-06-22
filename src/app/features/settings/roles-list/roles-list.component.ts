@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { SettingsService } from '../../../core/services/settings.service';
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PaginatedResult } from '../../../core/models/api.models';
 import { RoleListItem } from '../../../core/models/settings.models';
@@ -39,7 +38,6 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 export class RolesListComponent implements OnInit {
 
   private readonly service = inject(SettingsService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly notification = inject(NotificationService);
 
   readonly loading = signal(true);
@@ -52,7 +50,6 @@ export class RolesListComponent implements OnInit {
   pageSize = 20;
 
   ngOnInit() {
-    this.breadcrumbService.setItems([{"label":"Settings","route":"/settings"},{"label":"Roles"}]);
     this.load();
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
       this.page = 1;

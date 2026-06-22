@@ -1,0 +1,43 @@
+<div
+  class="document-upload"
+  [class.document-upload--dragover]="dragOver()"
+  [class.document-upload--filled]="fileName"
+  [class.document-upload--required]="required"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+  (click)="fileInput.click()">
+
+  <input
+    #fileInput
+    type="file"
+    hidden
+    [accept]="accept"
+    (change)="onFileInput($event)" />
+
+  @if (uploading) {
+    <mat-spinner diameter="28"></mat-spinner>
+  } @else if (fileName) {
+    <div class="document-upload__preview">
+      @if (previewUrl && (previewUrl.startsWith('data:image') || previewUrl.startsWith('blob:'))) {
+        <img [src]="previewUrl" [alt]="fileName" class="document-upload__thumb">
+      } @else {
+        <mat-icon class="document-upload__file-icon">description</mat-icon>
+      }
+      <div class="document-upload__info">
+        <span class="document-upload__name">{{ fileName }}</span>
+        <span class="document-upload__label">{{ label }}</span>
+      </div>
+      <button mat-icon-button type="button" class="document-upload__remove" (click)="onRemove($event)" aria-label="Remove document">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  } @else {
+    <mat-icon class="document-upload__icon">cloud_upload</mat-icon>
+    <div class="document-upload__text">
+      <strong>{{ label }}</strong>
+      @if (required) { <span class="document-upload__req">*</span> }
+      <span>{{ hint }}</span>
+    </div>
+  }
+</div>
