@@ -19,20 +19,27 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
-import { BreadcrumbService } from '../../../../core/services/breadcrumb.service';
+import { PayslipPdfService } from '../../../../core/services/payslip-pdf.service';
+import { ClientsService } from '../../../../core/services/clients.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { PaginatedResult } from '../../../../core/models/api.models';
 import { PayslipListItem, PayslipStatus } from '../../../../core/models/payslip.models';
+import { ClientListItem } from '../../../../core/models/client.models';
 import {
-  PAYSLIP_DEPARTMENTS,
   PAYSLIP_MONTHS,
   PAYSLIP_STATUS_OPTIONS,
-  getMockPayslipList,
   getPayslipStatusClass,
 } from '../payslip.mock';
+
+interface PayslipStatusAction {
+  status: PayslipStatus;
+  label: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-payslip-list',
@@ -66,25 +73,26 @@ import {
 export class PayslipListComponent implements OnInit {
 
   private readonly payslipService = inject(PayslipService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
+  private readonly payslipPdfService = inject(PayslipPdfService);
+  private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
 
   readonly loading = signal(true);
-  readonly usingMock = signal(false);
+  readonly downloadingPdf = signal(false);
   readonly data = signal<PaginatedResult<PayslipListItem> | null>(null);
+  readonly clients = signal<ClientListItem[]>([]);
   readonly selection = new SelectionModel<PayslipListItem>(true, []);
 
   readonly months = PAYSLIP_MONTHS;
-  readonly years = [2024, 2025, 2026];
-  readonly departments = PAYSLIP_DEPARTMENTS;
+  readonly years = this.buildYearOptions();
   readonly statusOptions = PAYSLIP_STATUS_OPTIONS;
 
   readonly searchCtrl = new FormControl('');
-  readonly monthCtrl = new FormControl(new Date().getMonth() + 1);
-  readonly yearCtrl = new FormControl(new Date().getFullYear());
-  readonly departmentCtrl = new FormControl<string | null>(null);
+  readonly monthCtrl = new FormControl(this.currentMonth());
+  readonly yearCtrl = new FormControl(this.currentYear());
+  readonly clientCtrl = new FormControl<string | null>(null);
   readonly statusCtrl = new FormControl<PayslipStatus | null>(null);
 
   readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
@@ -93,12 +101,11 @@ export class PayslipListComponent implements OnInit {
   pageSize = 20;
 
   ngOnInit() {
-    this.breadcrumbService.setItems([
-      { label: 'Payroll', route: '/payroll' },
-      { label: 'Salary Slips' },
-    ]);
-
     this.loadData();
+
+    this.clientsService.getAllForSelect().subscribe({
+      next: clients => this.clients.set(clients),
+    });
 
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
       this.page = 1;
@@ -107,7 +114,7 @@ export class PayslipListComponent implements OnInit {
 
     this.monthCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
     this.yearCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.departmentCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
+    this.clientCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
     this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
   }
 
@@ -115,25 +122,15 @@ export class PayslipListComponent implements OnInit {
     this.loading.set(true);
     this.selection.clear();
 
-    this.payslipService.getAll({
-      page: this.page,
-      pageSize: this.pageSize,
-      search: this.searchCtrl.value || undefined,
-      month: this.monthCtrl.value ?? undefined,
-      year: this.yearCtrl.value ?? undefined,
-      departmentId: this.departmentCtrl.value ?? undefined,
-      status: this.statusCtrl.value ?? undefined,
-    }).subscribe({
+    this.payslipService.getAll(this.currentQuery()).subscribe({
       next: (result) => {
         this.data.set(result);
-        this.usingMock.set(false);
         this.loading.set(false);
       },
       error: () => {
-        this.data.set(getMockPayslipList(this.page, this.pageSize));
-        this.usingMock.set(true);
+        this.data.set({ items: [], page: 1, pageSize: this.pageSize, totalCount: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false });
         this.loading.set(false);
-        this.notification.info('Showing sample payslip data.');
+        this.notification.error('Failed to load payslips.');
       },
     });
   }
@@ -167,41 +164,124 @@ export class PayslipListComponent implements OnInit {
     this.router.navigate(['/payroll/payslips', id]);
   }
 
-  downloadPayslip(item: PayslipListItem) {
-    this.payslipService.downloadPdf(item.id).subscribe({
-      next: (blob) => this.saveBlob(blob, `payslip-${item.employeeCode}-${item.month}-${item.year}.pdf`),
-      error: () => {
-        this.notification.warning('PDF download unavailable. Opening print view.');
-        window.open(`/payroll/payslips/${item.id}/print`, '_blank');
+  availableActions(item: PayslipListItem): PayslipStatusAction[] {
+    const map: Record<PayslipStatus, PayslipStatusAction[]> = {
+      Draft: [
+        { status: 'Generated', label: 'Mark Generated', icon: 'task_alt' },
+        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+      ],
+      Generated: [
+        { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
+        { status: 'Downloaded', label: 'Mark Downloaded', icon: 'download_done' },
+        { status: 'Failed', label: 'Mark Failed', icon: 'error_outline' },
+        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+      ],
+      Sent: [
+        { status: 'Downloaded', label: 'Mark Downloaded', icon: 'download_done' },
+        { status: 'Failed', label: 'Mark Failed', icon: 'error_outline' },
+        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+      ],
+      Failed: [
+        { status: 'Generated', label: 'Retry / Regenerate', icon: 'refresh' },
+        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+      ],
+      Downloaded: [],
+      Cancelled: [],
+    };
+    return map[item.status] ?? [];
+  }
+
+  canDelete(item: PayslipListItem): boolean {
+    return ['Draft', 'Generated', 'Failed', 'Cancelled'].includes(item.status);
+  }
+
+  transitionStatus(item: PayslipListItem, action: PayslipStatusAction) {
+    this.payslipService.updateStatus(item.id, { status: action.status }).subscribe({
+      next: () => {
+        this.notification.success(`Payslip marked as ${action.status}.`);
+        this.loadData();
       },
+      error: (err) => this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Status update failed.'),
+    });
+  }
+
+  deletePayslip(item: PayslipListItem) {
+    if (!this.canDelete(item)) {
+      this.notification.warning('Cancel sent or downloaded payslips before deleting.');
+      return;
+    }
+
+    this.dialog.open(
+      ConfirmDialogComponent,
+      confirmDialogConfig({
+        title: 'Delete Payslip',
+        message: `Delete payslip for ${item.employeeName}? This action cannot be undone.`,
+        confirmLabel: 'Delete',
+        icon: 'delete',
+        confirmColor: 'warn',
+      }),
+    ).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.payslipService.delete(item.id).subscribe({
+        next: () => {
+          this.notification.success('Payslip deleted.');
+          this.loadData();
+        },
+        error: (err) => this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Delete failed.'),
+      });
+    });
+  }
+
+  downloadPayslip(item: PayslipListItem) {
+    if (this.downloadingPdf()) return;
+
+    this.downloadingPdf.set(true);
+    this.payslipPdfService.downloadById(item.id).then(() => {
+      this.notification.success(`${item.employeeCode} payslip downloaded.`);
+      this.loadData();
+    }).catch(() => {
+      this.notification.warning('PDF download unavailable. Opening print view.');
+      window.open(this.payslipService.getPrintUrl(item.id), '_blank');
+    }).finally(() => {
+      this.downloadingPdf.set(false);
     });
   }
 
   emailPayslip(item: PayslipListItem) {
     this.payslipService.emailPayslip(item.id).subscribe({
-      next: () => this.notification.success(`Payslip emailed to ${item.employeeName}.`),
-      error: () => this.notification.success(`Payslip queued for ${item.employeeName} (demo mode).`),
+      next: () => {
+        this.notification.success(`Payslip emailed to ${item.employeeName}.`);
+        this.loadData();
+      },
+      error: (err) => this.notification.error(err?.error?.detail ?? 'Failed to email payslip.'),
     });
   }
 
-  bulkDownload() {
+  bulkDownloadSelected() {
     const ids = this.selection.selected.map(s => s.id);
     if (!ids.length) return;
+    this.runBulkDownload(ids, `payslips-selected-${ids.length}.pdf`);
+  }
 
-    this.dialog.open(ConfirmDialogComponent, {
-      width: '420px',
-      data: {
-        title: 'Bulk Download',
-        message: `Download ${ids.length} payslip(s) as PDF?`,
-        confirmLabel: 'Download',
-        icon: 'download',
+  downloadAllFiltered() {
+    if (this.downloadingPdf()) return;
+
+    this.downloadingPdf.set(true);
+    this.payslipService.getAllForPeriod(this.currentQuery()).subscribe({
+      next: (items) => {
+        if (!items.length) {
+          this.notification.warning('No payslips match the current filters.');
+          this.downloadingPdf.set(false);
+          return;
+        }
+        const month = this.monthCtrl.value ?? this.currentMonth();
+        const year = this.yearCtrl.value ?? this.currentYear();
+        this.runBulkDownload(items.map(i => i.id), `payslips-${month}-${year}.pdf`);
       },
-    }).afterClosed().subscribe(confirmed => {
-      if (!confirmed) return;
-      this.payslipService.bulkAction({ payslipIds: ids, action: 'download' }).subscribe({
-        next: () => this.notification.success(`${ids.length} payslip(s) downloaded.`),
-        error: () => this.notification.success(`${ids.length} payslip(s) queued for download (demo mode).`),
-      });
+      error: () => {
+        this.notification.error('Failed to load payslips for download.');
+        this.downloadingPdf.set(false);
+      },
     });
   }
 
@@ -209,35 +289,80 @@ export class PayslipListComponent implements OnInit {
     const ids = this.selection.selected.map(s => s.id);
     if (!ids.length) return;
 
-    this.dialog.open(ConfirmDialogComponent, {
-      width: '420px',
-      data: {
+    this.dialog.open(
+      ConfirmDialogComponent,
+      confirmDialogConfig({
         title: 'Bulk Email',
         message: `Email ${ids.length} payslip(s) to employees?`,
         confirmLabel: 'Send',
         icon: 'email',
-      },
-    }).afterClosed().subscribe(confirmed => {
+      }),
+    ).afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
       this.payslipService.bulkAction({ payslipIds: ids, action: 'email' }).subscribe({
-        next: () => this.notification.success(`${ids.length} payslip(s) emailed.`),
-        error: () => this.notification.success(`${ids.length} payslip(s) queued for email (demo mode).`),
+        next: (res: unknown) => {
+          const data = (res as { data?: { processed?: number } })?.data ?? res as { processed?: number };
+          this.notification.success(`${data.processed ?? ids.length} payslip(s) emailed.`);
+          this.loadData();
+        },
+        error: () => this.notification.error('Bulk email failed.'),
       });
     });
   }
 
   clearFilters() {
     this.searchCtrl.setValue('');
-    this.departmentCtrl.setValue(null);
+    this.clientCtrl.setValue(null);
     this.statusCtrl.setValue(null);
+    this.monthCtrl.setValue(this.currentMonth());
+    this.yearCtrl.setValue(this.currentYear());
   }
 
-  private saveBlob(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  private runBulkDownload(ids: string[], filename: string) {
+    this.dialog.open(
+      ConfirmDialogComponent,
+      confirmDialogConfig({
+        title: 'Bulk Download',
+        message: `Download ${ids.length} payslip(s) as a single PDF?`,
+        confirmLabel: 'Download',
+        icon: 'download',
+      }),
+    ).afterClosed().subscribe(confirmed => {
+      if (!confirmed) {
+        this.downloadingPdf.set(false);
+        return;
+      }
+      this.payslipPdfService.downloadMany(ids, filename).then(() => {
+        this.notification.success(`${ids.length} payslip(s) downloaded.`);
+        this.loadData();
+      }).catch(() => {
+        this.notification.error('Bulk download failed.');
+      }).finally(() => {
+        this.downloadingPdf.set(false);
+      });
+    });
+  }
+
+  private currentQuery() {
+    return {
+      search: this.searchCtrl.value || undefined,
+      month: this.monthCtrl.value ?? undefined,
+      year: this.yearCtrl.value ?? undefined,
+      clientId: this.clientCtrl.value ?? undefined,
+      status: this.statusCtrl.value ?? undefined,
+    };
+  }
+
+  private currentMonth(): number {
+    return new Date().getMonth() + 1;
+  }
+
+  private currentYear(): number {
+    return new Date().getFullYear();
+  }
+
+  private buildYearOptions(): number[] {
+    const y = this.currentYear();
+    return [y - 1, y, y + 1];
   }
 }

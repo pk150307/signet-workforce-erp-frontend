@@ -7,10 +7,17 @@ export const DESIGNATION_ROUTES: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Add Designation' },
     loadComponent: () => import('./designation-form/designation-form.component').then(m => m.DesignationFormComponent),
   },
   {
     path: ':id/edit',
+    data: { breadcrumb: 'Edit Designation' },
     loadComponent: () => import('./designation-form/designation-form.component').then(m => m.DesignationFormComponent),
+  },
+  {
+    path: ':id',
+    data: { breadcrumb: 'Designation Details' },
+    loadComponent: () => import('./designation-detail/designation-detail.component').then(m => m.DesignationDetailComponent),
   },
 ];

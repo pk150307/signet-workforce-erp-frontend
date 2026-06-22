@@ -9,7 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { LeaveService } from '../../../core/services/leave.service';
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { PaginatedResult } from '../../../core/models/api.models';
 import { LeaveType } from '../../../core/models/leave.models';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -19,14 +18,12 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
   templateUrl: './leave-types.component.html', styleUrl: './leave-types.component.less' })
 export class LeaveTypesComponent implements OnInit {
   private readonly leaveService = inject(LeaveService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
   readonly loading = signal(true);
   readonly data = signal<PaginatedResult<LeaveType> | null>(null);
   readonly searchCtrl = new FormControl('');
   readonly cols = ["leaveCode","leaveName","maxDays","isPaid","isActive"];
   page = 1; pageSize = 20;
   ngOnInit() {
-    this.breadcrumbService.setItems([{ label: 'Leave', route: '/leave' }, { label: 'Types' }]);
     this.load();
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => { this.page = 1; this.load(); });
   }

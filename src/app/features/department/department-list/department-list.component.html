@@ -1,105 +1,184 @@
-<div class="page-container">
+<div class="page-container department-list-page">
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Departments</h1>
-      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} departments</p>
+      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 | number }} departments</p>
     </div>
     <div class="page-header__actions">
-      <mat-button-toggle-group [value]="viewMode()" (change)="viewMode.set($event.value)">
-        <mat-button-toggle value="table"><mat-icon>table_rows</mat-icon> Table</mat-button-toggle>
-        <mat-button-toggle value="hierarchy"><mat-icon>account_tree</mat-icon> Hierarchy</mat-button-toggle>
-      </mat-button-toggle-group>
-      <button mat-raised-button color="primary" routerLink="/departments/new">
+      <button mat-stroked-button type="button" matTooltip="Refresh" (click)="load()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" [routerLink]="addDepartmentLink()" [queryParams]="addDepartmentQueryParams()">
         <mat-icon>add</mat-icon> Add Department
       </button>
     </div>
   </div>
 
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-bar__search">
-      <mat-label>Search departments...</mat-label>
+  <div class="filters-card card department-list__filters">
+    <mat-form-field appearance="outline" class="department-list__search" subscriptSizing="dynamic">
+      <mat-label>Search departments</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl">
+      <input matInput [formControl]="searchCtrl" autocomplete="off" placeholder="Name or code">
+      @if (searchCtrl.value) {
+        <button matSuffix mat-icon-button type="button" (click)="searchCtrl.setValue('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
-    <div class="filter-bar__filters">
-      <mat-form-field appearance="outline" style="width: 160px;">
-        <mat-label>Status</mat-label>
-        <mat-select [formControl]="statusCtrl">
-          <mat-option [value]="null">All</mat-option>
-          <mat-option [value]="true">Active</mat-option>
-          <mat-option [value]="false">Inactive</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-    <div class="filter-bar__actions">
-      <button mat-stroked-button (click)="clearFilters()">Clear</button>
-      <button mat-icon-button (click)="load()"><mat-icon>refresh</mat-icon></button>
-    </div>
+
+    <mat-form-field appearance="outline" class="department-list__status" subscriptSizing="dynamic">
+      <mat-label>Client</mat-label>
+      <mat-select [formControl]="clientCtrl">
+        <mat-option value="">Select client</mat-option>
+        @for (c of clients(); track c.id) {
+          <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="department-list__status" subscriptSizing="dynamic">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusCtrl">
+        <mat-option [value]="null">All Statuses</mat-option>
+        <mat-option [value]="true">Active</mat-option>
+        <mat-option [value]="false">Inactive</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    @if (hasActiveFilters()) {
+      <button mat-stroked-button type="button" class="department-list__clear" (click)="clearFilters()">
+        Clear filters
+      </button>
+    }
   </div>
 
-  <div class="hierarchy-placeholder card" *ngIf="viewMode() === 'hierarchy'">
-    <mat-icon>account_tree</mat-icon>
-    <h3>Hierarchy View</h3>
-    <p>Interactive org chart coming soon. Switch to table view to manage departments.</p>
-  </div>
-
-  <div class="card card--flush" *ngIf="viewMode() === 'table'">
-    <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
-    <div class="empty-state" *ngIf="!loading() && data()?.items?.length === 0">
-      <mat-icon>corporate_fare</mat-icon>
-      <h3>No departments found</h3>
-      <p>Create your first department to organize your workforce.</p>
-      <button mat-raised-button color="primary" routerLink="/departments/new">Add Department</button>
+  @if (viewMode() === 'hierarchy') {
+    <div class="department-list__hierarchy card">
+      <mat-icon>account_tree</mat-icon>
+      <h3>Hierarchy View</h3>
+      <p>Interactive org chart coming soon. Switch to table view to manage departments.</p>
     </div>
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
-      <ng-container matColumnDef="departmentCode">
-        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-        <mat-cell *matCellDef="let d"><span class="code-chip">{{ d.departmentCode }}</span></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="departmentName">
-        <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
-        <mat-cell *matCellDef="let d"><strong>{{ d.departmentName }}</strong></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="parentDepartmentName">
-        <mat-header-cell *matHeaderCellDef>Parent</mat-header-cell>
-        <mat-cell *matCellDef="let d">{{ d.parentDepartmentName || '—' }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="headOfDepartment">
-        <mat-header-cell *matHeaderCellDef>Head</mat-header-cell>
-        <mat-cell *matCellDef="let d">{{ d.headOfDepartment || '—' }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="employeeCount">
-        <mat-header-cell *matHeaderCellDef>Employees</mat-header-cell>
-        <mat-cell *matCellDef="let d">{{ d.employeeCount }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let d">
-          <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
-            {{ d.isActive ? 'Active' : 'Inactive' }}
-          </span>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let d">
-          <button mat-icon-button [matMenuTriggerFor]="menu"><mat-icon>more_vert</mat-icon></button>
-          <mat-menu #menu>
-            <button mat-menu-item (click)="editDepartment(d.id)"><mat-icon>edit</mat-icon> Edit</button>
-            <button mat-menu-item (click)="deleteDepartment(d)"><mat-icon>delete</mat-icon> Delete</button>
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-    </mat-table>
-    <mat-paginator
-      *ngIf="!loading() && (data()?.totalCount ?? 0) > 0"
-      [length]="data()?.totalCount ?? 0"
-      [pageSize]="pageSize"
-      [pageIndex]="page - 1"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="onPageChange($event)">
-    </mat-paginator>
-  </div>
+  }
+
+  @if (loading()) {
+    <app-skeleton-loader type="table" [rows]="6"></app-skeleton-loader>
+  }
+
+  @if (!loading() && !clientCtrl.value) {
+    <div class="card department-list__hierarchy">
+      <mat-icon>business</mat-icon>
+      <h3>Select a client</h3>
+      <p>Departments are configured per client. Choose a client above to view and manage their org structure.</p>
+    </div>
+  }
+
+  @if (!loading() && viewMode() === 'table' && clientCtrl.value) {
+    <div class="card card--flush">
+      @if ((data()?.items?.length ?? 0) === 0) {
+        <app-empty-state
+          icon="corporate_fare"
+          title="No departments found"
+          description="Create your first department to organize your workforce."
+        >
+          <button mat-raised-button color="primary" [routerLink]="addDepartmentLink()" [queryParams]="addDepartmentQueryParams()">
+            <mat-icon>add</mat-icon> Add Department
+          </button>
+        </app-empty-state>
+      } @else {
+        <div class="department-list__table-wrap">
+          <mat-table [dataSource]="data()?.items ?? []" class="department-list__table">
+            <ng-container matColumnDef="departmentCode">
+              <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+              <mat-cell *matCellDef="let d">
+                <span class="department-list__code">{{ d.departmentCode }}</span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="departmentName">
+              <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
+              <mat-cell *matCellDef="let d">
+                <div class="department-list__name-cell">
+                  <div class="department-list__avatar">{{ d.departmentName.charAt(0) }}</div>
+                  <strong class="department-list__name">{{ d.departmentName }}</strong>
+                </div>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="clientName">
+              <mat-header-cell *matHeaderCellDef>Client</mat-header-cell>
+              <mat-cell *matCellDef="let d">{{ d.clientName || '—' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="parentDepartmentName">
+              <mat-header-cell *matHeaderCellDef>Parent</mat-header-cell>
+              <mat-cell *matCellDef="let d">{{ d.parentDepartmentName || '—' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="headOfDepartment">
+              <mat-header-cell *matHeaderCellDef>Head</mat-header-cell>
+              <mat-cell *matCellDef="let d">{{ d.headOfDepartment || '—' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="employeeCount">
+              <mat-header-cell *matHeaderCellDef>Employees</mat-header-cell>
+              <mat-cell *matCellDef="let d">
+                <span class="department-list__count">{{ d.employeeCount }}</span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+              <mat-cell *matCellDef="let d">
+                <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
+                  {{ d.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef></mat-header-cell>
+              <mat-cell *matCellDef="let d">
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="menu"
+                  (click)="$event.stopPropagation()"
+                  aria-label="More actions"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="viewDepartment(d.id)">
+                    <mat-icon>visibility</mat-icon> View
+                  </button>
+                  <button mat-menu-item (click)="editDepartment(d.id)">
+                    <mat-icon>edit</mat-icon> Edit
+                  </button>
+                  <button mat-menu-item (click)="deleteDepartment(d)" class="action-delete">
+                    <mat-icon color="warn">delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
+            <mat-row
+              *matRowDef="let row; columns: cols"
+              class="department-list__row table-row"
+              (click)="viewDepartment(row.id)"
+            ></mat-row>
+          </mat-table>
+        </div>
+
+        <mat-paginator
+          [length]="data()?.totalCount ?? 0"
+          [pageSize]="pageSize"
+          [pageIndex]="page - 1"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        />
+      }
+    </div>
+  }
 </div>

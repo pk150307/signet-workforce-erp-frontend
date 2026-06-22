@@ -1,0 +1,293 @@
+<div class="page-container client-detail">
+
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
+
+  @if (!loading() && !client()) {
+    <app-empty-state
+      icon="business_center"
+      title="Client not found"
+      description="The requested client could not be loaded.">
+      <button mat-stroked-button routerLink="/clients">Back to Clients</button>
+    </app-empty-state>
+  }
+
+  @if (!loading() && client(); as c) {
+    <div class="detail-nav">
+      <button mat-stroked-button type="button" routerLink="/clients">
+        <mat-icon>arrow_back</mat-icon> Back
+      </button>
+    </div>
+
+    <section class="detail-profile">
+      <div class="detail-profile__accent"></div>
+      <div class="detail-profile__inner">
+        <div class="detail-profile__main">
+          <div class="detail-profile__avatar">{{ initials(c.companyName) }}</div>
+          <div class="detail-profile__info">
+            <div class="detail-profile__title-row">
+              <h1 class="detail-profile__name">{{ c.companyName }}</h1>
+              <span class="badge" [class.badge--active]="c.isActive" [class.badge--inactive]="!c.isActive">
+                {{ c.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="detail-profile__chips">
+              <span class="meta-chip mono">{{ c.clientCode }}</span>
+              <span class="meta-chip">
+                <mat-icon>location_on</mat-icon>{{ c.city }}, {{ c.state }}
+              </span>
+              @if (c.contactPerson) {
+                <span class="meta-chip">
+                  <mat-icon>person</mat-icon>{{ c.contactPerson }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="detail-profile__actions">
+          <a mat-stroked-button routerLink="/billing/invoices/new">
+            <mat-icon>receipt_long</mat-icon> Invoice
+          </a>
+          <a mat-stroked-button routerLink="/sites/new">
+            <mat-icon>add_location_alt</mat-icon> Add Site
+          </a>
+          <a mat-raised-button color="primary" [routerLink]="['/clients', c.id, 'edit']">
+            <mat-icon>edit</mat-icon> Edit
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>location_city</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ sites().length || c.totalSites }}</div>
+          <div class="stat-card__label">Sites</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>groups</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ totalDeployed() }}<span class="kpi-sub"> / {{ totalRequired() || '—' }}</span></div>
+          <div class="stat-card__label">Deployed Headcount</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple"><mat-icon>corporate_fare</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ departments().length }}</div>
+          <div class="stat-card__label">Departments</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange"><mat-icon>pie_chart</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ staffingPercent() }}%</div>
+          <div class="stat-card__label">Staffing Fulfilment</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info cards -->
+    <div class="info-grid">
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>person</mat-icon> Contact</h3>
+        <div class="info-row">
+          <span class="info-label">Contact Person</span>
+          <span class="info-value">{{ c.contactPerson }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <a class="info-value info-link" [href]="'mailto:' + c.email">{{ c.email }}</a>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Phone</span>
+          <a class="info-value info-link" [href]="'tel:' + c.phone">{{ c.phone }}</a>
+        </div>
+        @if (c.alternatePhone) {
+          <div class="info-row">
+            <span class="info-label">Alternate</span>
+            <span class="info-value">{{ c.alternatePhone }}</span>
+          </div>
+        }
+        @if (c.website) {
+          <div class="info-row">
+            <span class="info-label">Website</span>
+            <a class="info-value info-link" [href]="c.website" target="_blank" rel="noopener">{{ c.website }}</a>
+          </div>
+        }
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>place</mat-icon> Address</h3>
+        <p class="address-block">{{ formatAddress(c) }}</p>
+        @if (c.pinCode) {
+          <div class="info-row">
+            <span class="info-label">PIN Code</span>
+            <span class="info-value mono">{{ c.pinCode }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>account_balance</mat-icon> Tax & Registration</h3>
+        <div class="info-row">
+          <span class="info-label">GST Number</span>
+          <span class="info-value mono">{{ c.gstNumber || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">PAN Number</span>
+          <span class="info-value mono">{{ c.panNumber || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sites -->
+    <div class="card section-card">
+      <div class="section-header">
+        <div>
+          <h3>Sites</h3>
+          <p>Locations managed under this client</p>
+        </div>
+        <a mat-stroked-button routerLink="/sites/new">
+          <mat-icon>add</mat-icon> Add Site
+        </a>
+      </div>
+
+      @if (sites().length) {
+        <div class="sites-grid">
+          @for (site of sites(); track site.id) {
+            <a class="site-card" [routerLink]="['/sites', site.id]">
+              <div class="site-card__head">
+                <span class="site-card__name">{{ site.siteName }}</span>
+                <span class="badge badge--sm" [class.badge--active]="site.isActive" [class.badge--inactive]="!site.isActive">
+                  {{ site.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              <p class="site-card__meta">{{ site.siteCode }} · {{ site.city }}, {{ site.state }}</p>
+              <div class="site-card__stats">
+                <div>
+                  <span class="site-stat__val">{{ site.deployedHeadcount ?? 0 }}</span>
+                  <span class="site-stat__lbl">Deployed</span>
+                </div>
+                <div>
+                  <span class="site-stat__val">{{ site.requiredHeadcount ?? 0 }}</span>
+                  <span class="site-stat__lbl">Required</span>
+                </div>
+              </div>
+              <mat-icon class="site-card__arrow">chevron_right</mat-icon>
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="empty-inline">
+          <mat-icon>location_off</mat-icon>
+          <p>No sites linked to this client yet.</p>
+          <a mat-stroked-button routerLink="/sites/new">Add first site</a>
+        </div>
+      }
+    </div>
+
+    <!-- Org hierarchy -->
+    <div class="card section-card">
+      <div class="section-header">
+        <div>
+          <h3>Organization & Pay Structure</h3>
+          <p>Configured under departments and designations — view details or manage from those modules</p>
+        </div>
+        <div class="section-header__actions">
+          <a mat-stroked-button [routerLink]="['/departments']" [queryParams]="{ clientId: c.id }">
+            <mat-icon>corporate_fare</mat-icon> All Departments
+          </a>
+          <a mat-stroked-button [routerLink]="['/designations']" [queryParams]="{ clientId: c.id }">
+            <mat-icon>badge</mat-icon> All Designations
+          </a>
+        </div>
+      </div>
+
+      <div class="org-subsection">
+        <div class="org-subsection__head">
+          <h4>Departments</h4>
+          <a mat-stroked-button [routerLink]="['/departments/new']" [queryParams]="{ clientId: c.id }">
+            <mat-icon>add</mat-icon> Add Department
+          </a>
+        </div>
+
+        @if (departments().length) {
+          <div class="rates-table">
+            <div class="rates-table__head">
+              <span>Department</span>
+              <span>Code</span>
+              <span>Employees</span>
+              <span></span>
+            </div>
+            @for (dept of departments(); track dept.id) {
+              <a class="rates-table__row rates-table__row--link" [routerLink]="['/departments', dept.id]">
+                <span class="rates-dept">
+                  <mat-icon class="rates-dept__icon">work</mat-icon>
+                  {{ dept.departmentName }}
+                </span>
+                <span class="mono muted">{{ dept.departmentCode }}</span>
+                <span>{{ dept.employeeCount }}</span>
+                <mat-icon class="row-link-icon">chevron_right</mat-icon>
+              </a>
+            }
+          </div>
+        } @else {
+          <div class="empty-inline">
+            <mat-icon>corporate_fare</mat-icon>
+            <p>No departments configured for this client yet.</p>
+            <a mat-stroked-button [routerLink]="['/departments/new']" [queryParams]="{ clientId: c.id }">Add department</a>
+          </div>
+        }
+      </div>
+
+      <div class="org-subsection">
+        <div class="org-subsection__head">
+          <h4>Designations</h4>
+          <a mat-stroked-button [routerLink]="['/designations/new']" [queryParams]="{ clientId: c.id }">
+            <mat-icon>add</mat-icon> Add Designation
+          </a>
+        </div>
+
+        @if (designations().length) {
+          <div class="rates-table">
+            <div class="rates-table__head">
+              <span>Designation</span>
+              <span>Department</span>
+              <span>Grades</span>
+              <span></span>
+            </div>
+            @for (des of designations(); track des.id) {
+              <a class="rates-table__row rates-table__row--link" [routerLink]="['/designations', des.id]">
+                <span class="rates-dept">
+                  <mat-icon class="rates-dept__icon">badge</mat-icon>
+                  {{ des.designationName }}
+                  <span class="mono muted">{{ des.designationCode }}</span>
+                </span>
+                <span class="muted">{{ des.departmentName || '—' }}</span>
+                <span>{{ des.gradeCount }}</span>
+                <mat-icon class="row-link-icon">chevron_right</mat-icon>
+              </a>
+            }
+          </div>
+        } @else {
+          <div class="empty-inline">
+            <mat-icon>badge</mat-icon>
+            <p>No designations configured for this client yet.</p>
+            <a mat-stroked-button [routerLink]="['/designations/new']" [queryParams]="{ clientId: c.id }">Add designation</a>
+          </div>
+        }
+      </div>
+
+    </div>
+
+    @if (c.notes) {
+      <div class="card notes-card">
+        <h3 class="info-card__title"><mat-icon>sticky_note_2</mat-icon> Notes</h3>
+        <p class="notes-text">{{ c.notes }}</p>
+      </div>
+    }
+  }
+</div>

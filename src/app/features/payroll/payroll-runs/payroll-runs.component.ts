@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
@@ -25,17 +24,12 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
   styleUrl: './payroll-runs.component.less',
 })
 export class PayrollRunsComponent implements OnInit {
-  private readonly breadcrumbService = inject(BreadcrumbService);
 
   readonly loading = signal(false);
   readonly currentMonthPayroll = signal(2450000);
   readonly pendingApproval = signal(3);
 
   ngOnInit() {
-    this.breadcrumbService.setItems([
-      { label: 'Home', route: '/dashboard' },
-      { label: 'Payroll' },
-    ]);
   }
 
   formatCurrency(value: number): string {

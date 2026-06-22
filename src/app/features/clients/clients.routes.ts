@@ -7,10 +7,17 @@ export const CLIENTS_ROUTES: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Add Client' },
     loadComponent: () => import('./client-form/client-form.component').then(m => m.ClientFormComponent),
   },
   {
     path: ':id/edit',
+    data: { breadcrumb: 'Edit Client' },
     loadComponent: () => import('./client-form/client-form.component').then(m => m.ClientFormComponent),
+  },
+  {
+    path: ':id',
+    data: { breadcrumb: 'Client Details' },
+    loadComponent: () => import('./client-detail/client-detail.component').then(m => m.ClientDetailComponent),
   },
 ];

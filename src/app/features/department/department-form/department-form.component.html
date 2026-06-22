@@ -1,45 +1,132 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">{{ isEdit() ? 'Edit Department' : 'Add Department' }}</h1>
+<div class="page-container department-form-page">
+
+  @if (loading() || saving()) {
+    <app-skeleton-loader type="card" [rows]="6"></app-skeleton-loader>
+  }
+
+  @if (!loading() && !saving()) {
+    <header class="form-page-header">
+      <button
+        mat-icon-button
+        type="button"
+        class="form-page-header__back"
+        (click)="cancel()"
+        matTooltip="Back to departments"
+      >
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="form-page-header__text">
+        <h1>{{ isEdit() ? 'Edit Department' : 'Add Department' }}</h1>
+        <p>
+          {{
+            isEdit()
+              ? 'Update department identity, hierarchy and status'
+              : 'Create a department to organize your workforce structure'
+          }}
+        </p>
+      </div>
+    </header>
+
+    <div class="card form-card">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>corporate_fare</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Department Identity</h2>
+              <p class="form-section__desc">Unique code and display name for this department</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--2">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Client *</mat-label>
+                <mat-select formControlName="clientId" [disabled]="isEdit()">
+                  @for (c of clients(); track c.id) {
+                    <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.get('clientId')?.hasError('required') && form.get('clientId')?.touched) {
+                  <mat-error>Client is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Department Code *</mat-label>
+                <input
+                  matInput
+                  formControlName="departmentCode"
+                  [readonly]="!isEdit()"
+                  placeholder="Auto-generated">
+                @if (form.get('departmentCode')?.hasError('required') && form.get('departmentCode')?.touched) {
+                  <mat-error>Department code is required</mat-error>
+                }
+                @if (!isEdit()) {
+                  <mat-hint>Auto-generated from existing departments for this client</mat-hint>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Department Name *</mat-label>
+                <input matInput formControlName="departmentName" placeholder="e.g. Human Resources">
+                @if (form.get('departmentName')?.hasError('required') && form.get('departmentName')?.touched) {
+                  <mat-error>Department name is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            <div class="status-toggle">
+              <mat-slide-toggle formControlName="isActive" color="primary">Active department</mat-slide-toggle>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>account_tree</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Organization</h2>
+              <p class="form-section__desc">Optional parent department for hierarchy</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--1">
+              <mat-form-field appearance="outline" subscriptSizing="fixed" class="field-narrow">
+                <mat-label>Parent Department</mat-label>
+                <mat-select formControlName="parentDepartmentId">
+                  <mat-option value="">None — top-level department</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section form-section--last">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>description</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Additional Details</h2>
+              <p class="form-section__desc">Optional notes about this department's role</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
+              <mat-label>Description</mat-label>
+              <textarea
+                matInput
+                formControlName="description"
+                rows="3"
+                placeholder="Optional description of responsibilities or scope"
+              ></textarea>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <footer class="form-footer">
+          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Department') }}
+          </button>
+        </footer>
+      </form>
     </div>
-    <button mat-stroked-button (click)="router.navigate(['/departments'])">Cancel</button>
-  </div>
-
-  <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
-
-  <div class="card form-card" *ngIf="!loading()">
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Department Code *</mat-label>
-          <input matInput formControlName="departmentCode">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Department Name *</mat-label>
-          <input matInput formControlName="departmentName">
-        </mat-form-field>
-      </div>
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Parent Department</mat-label>
-          <mat-select formControlName="parentDepartmentId">
-            <mat-option value="">None</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Description</mat-label>
-        <textarea matInput formControlName="description" rows="3"></textarea>
-      </mat-form-field>
-      <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
-      <div class="form-actions">
-        <button mat-stroked-button type="button" (click)="router.navigate(['/departments'])">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
-          {{ isEdit() ? 'Save Changes' : 'Create Department' }}
-        </button>
-      </div>
-    </form>
-  </div>
+  }
 </div>

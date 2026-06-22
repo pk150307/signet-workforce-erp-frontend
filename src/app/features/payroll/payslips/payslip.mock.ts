@@ -22,6 +22,7 @@ export const PAYSLIP_STATUS_OPTIONS: { value: PayslipStatus; label: string }[] =
   { value: 'Downloaded', label: 'Downloaded' },
   { value: 'Draft', label: 'Draft' },
   { value: 'Failed', label: 'Failed' },
+  { value: 'Cancelled', label: 'Cancelled' },
 ];
 
 const MOCK_ITEMS: PayslipListItem[] = [
@@ -87,6 +88,7 @@ export function getPayslipStatusClass(status: PayslipStatus): string {
     Downloaded: 'active',
     Failed: 'inactive',
     Draft: 'draft',
+    Cancelled: 'inactive',
   };
   return map[status] ?? 'inactive';
 }

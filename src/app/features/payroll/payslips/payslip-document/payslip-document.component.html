@@ -1,0 +1,114 @@
+<div class="payslip-document">
+  <header class="doc-header">
+    <div class="company">
+      <img *ngIf="logoUrl()" [src]="logoUrl()" alt="Company logo" class="company-logo">
+      <h1>{{ company()?.companyName }}</h1>
+      <p>{{ companyAddress() }}</p>
+      <p *ngIf="company()?.gstNumber || company()?.registrationNumber">
+        <span *ngIf="company()?.gstNumber">GSTIN: {{ company()?.gstNumber }}</span>
+        <span *ngIf="company()?.registrationNumber"> · Reg: {{ company()?.registrationNumber }}</span>
+      </p>
+    </div>
+    <div class="doc-title">
+      <h2>Salary Slip</h2>
+      <p>{{ monthLabel() }} {{ ps.year }}</p>
+      <p *ngIf="ps.slipNumber" class="slip-number">{{ ps.slipNumber }}</p>
+    </div>
+  </header>
+
+  <section class="employee-info">
+    <div class="info-col">
+      <div class="info-row"><span>Employee Name</span><strong>{{ ps.employeeName }}</strong></div>
+      <div class="info-row"><span>Employee Code</span><strong>{{ ps.employeeCode }}</strong></div>
+      <div class="info-row"><span>Designation</span><strong>{{ ps.designation }}</strong></div>
+      <div class="info-row"><span>Department</span><strong>{{ ps.department }}</strong></div>
+    </div>
+    <div class="info-col">
+      <div class="info-row"><span>Bank Account</span><strong>{{ ps.bankAccount || '—' }}</strong></div>
+      <div class="info-row"><span>PAN</span><strong>{{ ps.panNumber || '—' }}</strong></div>
+      <div class="info-row"><span>UAN</span><strong>{{ ps.uanNumber || '—' }}</strong></div>
+      <div class="info-row"><span>Generated</span><strong>{{ ps.generatedAt | apiDate }}</strong></div>
+    </div>
+    <div class="info-col">
+      <div class="info-row"><span>Working Days</span><strong>{{ ps.workingDays }}</strong></div>
+      <div class="info-row"><span>Paid Days</span><strong>{{ ps.paidDays }}</strong></div>
+      <div class="info-row"><span>LOP Days</span><strong>{{ ps.lopDays }}</strong></div>
+    </div>
+  </section>
+
+  <section class="salary-tables">
+    <table class="salary-table salary-table--earnings">
+      <thead>
+        <tr><th colspan="3">Earnings</th></tr>
+        <tr class="column-headers">
+          <th>Particulars</th>
+          <th>Rate</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of ps.earnings">
+          <td>{{ item.component }}</td>
+          <td class="rate-cell">
+            <ng-container *ngIf="item.rate != null; else noRate">
+              ₹{{ item.rate | number:'1.0-0' }}
+              <span class="line-note">as per grade</span>
+            </ng-container>
+            <ng-template #noRate>—</ng-template>
+          </td>
+          <td class="amount-cell">
+            ₹{{ item.amount | number:'1.0-0' }}
+            <span class="line-note" *ngIf="item.rate != null">earned as per attendance</span>
+          </td>
+        </tr>
+        <tr class="total">
+          <td colspan="2">Gross Total</td>
+          <td>₹{{ ps.grossSalary | number:'1.0-0' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="salary-table">
+      <thead>
+        <tr><th colspan="2">Deductions</th></tr>
+        <tr class="column-headers">
+          <th>Particulars</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of ps.deductions">
+          <td>
+            <div>{{ item.component }}</div>
+            <div class="line-note" *ngIf="item.note">{{ item.note }}</div>
+          </td>
+          <td>₹{{ item.amount | number:'1.0-0' }}</td>
+        </tr>
+        <tr class="total">
+          <td>Total Deductions</td>
+          <td>₹{{ totalDeductions() | number:'1.0-0' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="net-pay">
+    <div class="net-pay__row">
+      <span>Gross Earnings</span>
+      <strong>₹{{ ps.grossSalary | number:'1.0-0' }}</strong>
+    </div>
+    <div class="net-pay__row">
+      <span>Total Deductions</span>
+      <strong>₹{{ totalDeductions() | number:'1.0-0' }}</strong>
+    </div>
+    <div class="net-pay__row net-pay__row--final">
+      <span>Take Home Salary</span>
+      <strong>₹{{ ps.netSalary | number:'1.0-0' }}</strong>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <p>This is a computer-generated document and does not require a signature.</p>
+    <p *ngIf="company()?.email">For queries, contact HR at {{ company()?.email }}</p>
+  </footer>
+</div>

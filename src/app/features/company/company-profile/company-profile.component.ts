@@ -14,10 +14,12 @@ import { CompanyService } from '../../../core/services/company.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CompanyProfile } from '../../../core/models/company.models';
 
+import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-company-profile',
   standalone: true,
   imports: [
+    SkeletonLoaderComponent,
     NgIf,
     RouterLink,
     ReactiveFormsModule,
@@ -65,7 +67,7 @@ export class CompanyProfileComponent implements OnInit {
     this.companyService.getProfile().subscribe({
       next: (profile) => {
         this.form.patchValue(profile);
-        if (profile.logoUrl) this.logoPreview.set(profile.logoUrl);
+        this.logoPreview.set(this.companyService.resolveLogoUrl(profile.logoUrl));
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -99,6 +101,9 @@ export class CompanyProfileComponent implements OnInit {
     this.companyService.updateProfile(this.form.getRawValue() as Partial<CompanyProfile>).subscribe({
       next: () => {
         this.notification.success('Company profile updated.');
+        this.companyService.refreshProfile().subscribe({
+          next: (profile) => this.logoPreview.set(this.companyService.resolveLogoUrl(profile.logoUrl)),
+        });
         this.saving.set(false);
       },
       error: () => {

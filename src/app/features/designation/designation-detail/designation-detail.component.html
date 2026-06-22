@@ -1,0 +1,288 @@
+<div class="page-container designation-detail">
+
+  @if (loading()) {
+    <app-skeleton-loader type="card" [rows]="6"></app-skeleton-loader>
+  }
+
+  @if (!loading() && !designation()) {
+    <app-empty-state
+      icon="badge"
+      title="Designation not found"
+      description="The requested designation could not be loaded."
+    >
+      <button mat-stroked-button routerLink="/designations">Back to Designations</button>
+    </app-empty-state>
+  }
+
+  @if (!loading() && designation(); as d) {
+    <div class="detail-nav">
+      <button mat-stroked-button type="button" routerLink="/designations">
+        <mat-icon>arrow_back</mat-icon> Back
+      </button>
+    </div>
+
+    <section class="detail-profile">
+      <div class="detail-profile__accent detail-profile__accent--purple"></div>
+      <div class="detail-profile__inner">
+        <div class="detail-profile__main">
+          <div class="detail-profile__avatar detail-profile__avatar--purple">{{ initials(d.designationName) }}</div>
+          <div class="detail-profile__info">
+            <div class="detail-profile__title-row">
+              <h1 class="detail-profile__name">{{ d.designationName }}</h1>
+              <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
+                {{ d.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="detail-profile__chips">
+              <span class="meta-chip mono">{{ d.designationCode }}</span>
+              @if (d.departmentName) {
+                <span class="meta-chip">
+                  <mat-icon>corporate_fare</mat-icon>{{ d.departmentName }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="detail-profile__actions">
+          <a mat-raised-button color="primary" [routerLink]="['/designations', d.id, 'edit']">
+            <mat-icon>edit</mat-icon> Edit
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>groups</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ d.employeeCount ?? 0 }}</div>
+          <div class="stat-card__label">Employees</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--purple"><mat-icon>layers</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ d.gradeCount ?? grades().length }}</div>
+          <div class="stat-card__label">Pay Grades</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>account_tree</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ display(d.parentDesignationName) }}</div>
+          <div class="stat-card__label">Reports To</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>badge</mat-icon> Role</h3>
+        <div class="info-row">
+          <span class="info-label">Designation Code</span>
+          <span class="info-value mono">{{ d.designationCode }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Designation Name</span>
+          <span class="info-value">{{ d.designationName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value">{{ d.isActive ? 'Active' : 'Inactive' }}</span>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>corporate_fare</mat-icon> Organization</h3>
+        <div class="info-row">
+          <span class="info-label">Department</span>
+          <span class="info-value">{{ display(d.departmentName) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Reports To</span>
+          <span class="info-value">{{ display(d.parentDesignationName) }}</span>
+        </div>
+        <div class="info-row info-row--stack">
+          <span class="info-label">Description</span>
+          <span class="info-value">{{ display(d.description) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="card grades-section">
+      <div class="grades-section__head">
+        <div>
+          <h3 class="grades-section__title"><mat-icon>payments</mat-icon> Pay Grades</h3>
+          <p class="grades-section__desc">
+            Define compensation bands (e.g. HK1, HK2) with base salary and allowances used for payroll and client billing. Overtime is entered on the attendance register.
+          </p>
+        </div>
+        <button mat-raised-button color="primary" type="button" (click)="openAddGrade()">
+          <mat-icon>add</mat-icon> Add Grade
+        </button>
+      </div>
+
+      @if (savingGrade()) {
+        <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+      } @else if (showGradeForm()) {
+        <form class="grade-form" [formGroup]="gradeForm" (ngSubmit)="saveGrade()">
+          <div class="grade-form__head">
+            <h4>{{ editingGradeId() ? 'Edit Grade' : 'New Grade' }}</h4>
+            <button mat-icon-button type="button" (click)="cancelGradeForm()"><mat-icon>close</mat-icon></button>
+          </div>
+          <div class="grade-form__grid">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Grade Code *</mat-label>
+              <input matInput formControlName="gradeCode" placeholder="e.g. HK1">
+            </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Grade Name *</mat-label>
+              <input matInput formControlName="gradeName" placeholder="e.g. Housekeeping Helper Level 1">
+            </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Level</mat-label>
+              <input matInput type="number" formControlName="level" min="1">
+            </mat-form-field>
+          </div>
+          <div class="grade-form__grid grade-form__grid--wide">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Basic Salary</mat-label>
+              <input matInput type="number" formControlName="basicSalary" min="0">
+            </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>HRA</mat-label>
+              <input matInput type="number" formControlName="houseRentAllowance" min="0">
+            </mat-form-field>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Special Allowance</mat-label>
+              <input matInput type="number" formControlName="specialAllowance" min="0">
+            </mat-form-field>
+          </div>
+
+          <div class="grade-form__statutory">
+            <h5>Statutory Deductions</h5>
+            <p class="grade-form__statutory-hint">
+              Used in payroll and invoice calculations. PF: % of basic (max ₹1,800). ESIC &amp; LWF: % of gross earned (LWF max ₹35).
+            </p>
+
+            <div class="grade-form__statutory-rows">
+              <div class="grade-form__statutory-row">
+                <mat-slide-toggle formControlName="isPfApplicable" color="primary">PF Applicable</mat-slide-toggle>
+                @if (gradeForm.value.isPfApplicable) {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Employee PF %</mat-label>
+                    <input matInput type="number" formControlName="employeePfPercentage" min="0" max="100" step="0.01">
+                    <mat-hint>Default 12% of basic earned, max ₹1,800</mat-hint>
+                  </mat-form-field>
+                }
+              </div>
+
+              <div class="grade-form__statutory-row">
+                <mat-slide-toggle formControlName="isEsiApplicable" color="primary">ESIC Applicable</mat-slide-toggle>
+                @if (gradeForm.value.isEsiApplicable) {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Employee ESIC %</mat-label>
+                    <input matInput type="number" formControlName="employeeEsiPercentage" min="0" max="100" step="0.01">
+                    <mat-hint>Default 0.75% of gross (wage ceiling ₹21,000)</mat-hint>
+                  </mat-form-field>
+                }
+              </div>
+
+              <div class="grade-form__statutory-row">
+                <mat-slide-toggle formControlName="isLwfApplicable" color="primary">LWF Applicable</mat-slide-toggle>
+                @if (gradeForm.value.isLwfApplicable) {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Employee LWF %</mat-label>
+                    <input matInput type="number" formControlName="employeeLwfPercentage" min="0" max="100" step="0.01">
+                    <mat-hint>Default 0.2% of gross earned, max ₹35</mat-hint>
+                  </mat-form-field>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="grade-form__footer">
+            <div class="grade-form__gross">
+              Gross (excl. OT): <strong>{{ formatCurrency(gradeGross()) }}</strong>
+            </div>
+            <mat-slide-toggle formControlName="isActive" color="primary">Active</mat-slide-toggle>
+            <div class="grade-form__actions">
+              <button mat-stroked-button type="button" (click)="cancelGradeForm()">Cancel</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="savingGrade()">
+                {{ editingGradeId() ? 'Save Grade' : 'Create Grade' }}
+              </button>
+            </div>
+          </div>
+        </form>
+      }
+
+      @if (gradesLoading()) {
+        <app-skeleton-loader type="table" [rows]="3"></app-skeleton-loader>
+      } @else if (!grades().length) {
+        <app-empty-state
+          icon="layers"
+          title="No pay grades yet"
+          description="Add grades like HK1, HK2 for this designation to drive employee pay and client billing rates."
+        >
+          <button mat-stroked-button type="button" (click)="openAddGrade()">Add first grade</button>
+        </app-empty-state>
+      } @else {
+        <div class="grades-table">
+          <div class="grades-table__header">
+            <span>Grade</span>
+            <span>Basic</span>
+            <span>HRA</span>
+            <span>Special</span>
+            <span>Gross</span>
+            <span>PF</span>
+            <span>ESIC</span>
+            <span>LWF</span>
+            <span>Staff</span>
+            <span></span>
+          </div>
+          @for (g of grades(); track g.id) {
+            <div class="grades-table__row" [class.grades-table__row--inactive]="!g.isActive">
+              <div class="grades-table__grade">
+                <span class="mono">{{ g.gradeCode }}</span>
+                <span class="grades-table__grade-name">{{ g.gradeName }}</span>
+              </div>
+              <span>{{ g.basicSalary | number:'1.0-0' }}</span>
+              <span>{{ g.houseRentAllowance | number:'1.0-0' }}</span>
+              <span>{{ g.specialAllowance | number:'1.0-0' }}</span>
+              <span class="grades-table__gross">{{ g.grossSalary | number:'1.0-0' }}</span>
+              <span class="grades-table__statutory">
+                @if (g.isPfApplicable) {
+                  <span class="stat-chip stat-chip--on">{{ g.employeePfPercentage }}%</span>
+                } @else {
+                  <span class="stat-chip stat-chip--off">Off</span>
+                }
+              </span>
+              <span class="grades-table__statutory">
+                @if (g.isEsiApplicable) {
+                  <span class="stat-chip stat-chip--on">{{ g.employeeEsiPercentage }}%</span>
+                } @else {
+                  <span class="stat-chip stat-chip--off">Off</span>
+                }
+              </span>
+              <span class="grades-table__statutory">
+                @if (g.isLwfApplicable) {
+                  <span class="stat-chip stat-chip--on">{{ g.employeeLwfPercentage }}%</span>
+                } @else {
+                  <span class="stat-chip stat-chip--off">Off</span>
+                }
+              </span>
+              <span>{{ g.employeeCount }}</span>
+              <div class="grades-table__actions">
+                <button mat-icon-button type="button" matTooltip="Edit" (click)="openEditGrade(g)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button type="button" matTooltip="Delete" (click)="deleteGrade(g)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

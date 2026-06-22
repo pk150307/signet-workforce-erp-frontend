@@ -7,10 +7,17 @@ export const DEPARTMENT_ROUTES: Routes = [
   },
   {
     path: 'new',
+    data: { breadcrumb: 'Add Department' },
     loadComponent: () => import('./department-form/department-form.component').then(m => m.DepartmentFormComponent),
   },
   {
     path: ':id/edit',
+    data: { breadcrumb: 'Edit Department' },
     loadComponent: () => import('./department-form/department-form.component').then(m => m.DepartmentFormComponent),
+  },
+  {
+    path: ':id',
+    data: { breadcrumb: 'Department Details' },
+    loadComponent: () => import('./department-detail/department-detail.component').then(m => m.DepartmentDetailComponent),
   },
 ];

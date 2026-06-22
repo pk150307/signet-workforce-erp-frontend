@@ -7,14 +7,12 @@ export const PAYSLIP_ROUTES: Routes = [
   },
   {
     path: 'generate',
+    data: { breadcrumb: 'Generate Payslips' },
     loadComponent: () => import('./payslip-generate/payslip-generate.component').then(m => m.PayslipGenerateComponent),
   },
   {
-    path: ':id/print',
-    loadComponent: () => import('./payslip-print/payslip-print.component').then(m => m.PayslipPrintComponent),
-  },
-  {
     path: ':id',
+    data: { breadcrumb: 'Payslip Details' },
     loadComponent: () => import('./payslip-detail/payslip-detail.component').then(m => m.PayslipDetailComponent),
   },
 ];

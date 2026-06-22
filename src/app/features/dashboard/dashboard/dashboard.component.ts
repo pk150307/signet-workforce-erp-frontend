@@ -7,12 +7,13 @@ import { HighchartsChartModule } from 'highcharts-angular';
 import * as Highcharts from 'highcharts';
 
 import { DashboardService, DashboardStats } from '../../../core/services/dashboard.service';
-import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 
+import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
+    SkeletonLoaderComponent,
     RouterLink,
     MatButtonModule,
     MatIconModule,
@@ -24,7 +25,6 @@ import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 })
 export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
-  private readonly breadcrumbService = inject(BreadcrumbService);
 
   readonly Highcharts = Highcharts;
   readonly loading = signal(true);
@@ -33,7 +33,6 @@ export class DashboardComponent implements OnInit {
   readonly revenueChartOptions = signal<Highcharts.Options>({});
 
   ngOnInit() {
-    this.breadcrumbService.setItems([{ label: 'Dashboard' }]);
 
     this.dashboardService.getStats().subscribe({
       next: (data) => {

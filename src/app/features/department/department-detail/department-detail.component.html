@@ -1,0 +1,104 @@
+<div class="page-container department-detail">
+
+  @if (loading()) {
+    <app-skeleton-loader type="card" [rows]="6"></app-skeleton-loader>
+  }
+
+  @if (!loading() && !department()) {
+    <app-empty-state
+      icon="corporate_fare"
+      title="Department not found"
+      description="The requested department could not be loaded."
+    >
+      <button mat-stroked-button routerLink="/departments">Back to Departments</button>
+    </app-empty-state>
+  }
+
+  @if (!loading() && department(); as d) {
+    <div class="detail-nav">
+      <button mat-stroked-button type="button" routerLink="/departments">
+        <mat-icon>arrow_back</mat-icon> Back
+      </button>
+    </div>
+
+    <section class="detail-profile">
+      <div class="detail-profile__accent"></div>
+      <div class="detail-profile__inner">
+        <div class="detail-profile__main">
+          <div class="detail-profile__avatar">{{ initials(d.departmentName) }}</div>
+          <div class="detail-profile__info">
+            <div class="detail-profile__title-row">
+              <h1 class="detail-profile__name">{{ d.departmentName }}</h1>
+              <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
+                {{ d.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="detail-profile__chips">
+              <span class="meta-chip mono">{{ d.departmentCode }}</span>
+              @if (d.headOfDepartment) {
+                <span class="meta-chip">
+                  <mat-icon>person</mat-icon>{{ d.headOfDepartment }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="detail-profile__actions">
+          <a mat-raised-button color="primary" [routerLink]="['/departments', d.id, 'edit']">
+            <mat-icon>edit</mat-icon> Edit
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="kpi-grid">
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue"><mat-icon>groups</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ d.employeeCount ?? 0 }}</div>
+          <div class="stat-card__label">Employees</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green"><mat-icon>account_tree</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ display(d.parentDepartmentName) }}</div>
+          <div class="stat-card__label">Parent Department</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon stat-card__icon--orange"><mat-icon>supervisor_account</mat-icon></div>
+        <div>
+          <div class="stat-card__value">{{ display(d.headOfDepartment) }}</div>
+          <div class="stat-card__label">Department Head</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>corporate_fare</mat-icon> Overview</h3>
+        <div class="info-row">
+          <span class="info-label">Department Code</span>
+          <span class="info-value mono">{{ d.departmentCode }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Department Name</span>
+          <span class="info-value">{{ d.departmentName }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value">{{ d.isActive ? 'Active' : 'Inactive' }}</span>
+        </div>
+      </div>
+
+      <div class="card info-card">
+        <h3 class="info-card__title"><mat-icon>description</mat-icon> Details</h3>
+        <div class="info-row info-row--stack">
+          <span class="info-label">Description</span>
+          <span class="info-value">{{ display(d.description) }}</span>
+        </div>
+      </div>
+    </div>
+  }
+</div>

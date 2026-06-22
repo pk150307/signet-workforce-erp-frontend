@@ -1,8 +1,8 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1 class="page-header__title">Payslip Generate</h1>
-      <p class="page-header__subtitle">Generate salary slips for a payroll period</p>
+      <h1 class="page-header__title">Generate Payslips</h1>
+      <p class="page-header__subtitle">Select period and employees, then generate salary slips from payroll data</p>
     </div>
     <div class="page-header__actions">
       <button mat-stroked-button routerLink="/payroll/payslips">
@@ -12,8 +12,8 @@
   </div>
 
   <div class="generate-layout">
-    <mat-card class="generate-card">
-      <form [formGroup]="form" (ngSubmit)="generate()">
+    <mat-card class="filters-card">
+      <form [formGroup]="form">
         <div class="form-grid">
           <mat-form-field appearance="outline">
             <mat-label>Month</mat-label>
@@ -29,35 +29,81 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Scope</mat-label>
-            <mat-select formControlName="scope">
-              <mat-option value="all">All Employees</mat-option>
-              <mat-option value="department">By Department</mat-option>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Client</mat-label>
+            <mat-select formControlName="clientId">
+              <mat-option [value]="null">All Clients</mat-option>
+              <mat-option *ngFor="let c of clients()" [value]="c.id">{{ c.companyName }}</mat-option>
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" *ngIf="form.value.scope === 'department'">
-            <mat-label>Department</mat-label>
-            <mat-select formControlName="departmentId">
-              <mat-option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</mat-option>
-            </mat-select>
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Search employee</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [formControl]="searchCtrl" placeholder="Name or employee code">
           </mat-form-field>
-        </div>
-
-        <div class="form-actions">
-          <button mat-raised-button color="primary" type="submit" [disabled]="generating()">
-            <mat-icon>play_arrow</mat-icon> Generate Payslips
-          </button>
         </div>
       </form>
     </mat-card>
 
+    <mat-card class="employees-card card card--flush">
+      <div class="employees-card__header">
+        <div>
+          <h3>Employees</h3>
+          <p>{{ filteredEmployees().length }} active employee(s) · {{ selection.selected.length }} selected</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="generate()" [disabled]="generating() || loadingEmployees() || !filteredEmployees().length">
+          <mat-icon>play_arrow</mat-icon>
+          {{ generating() ? 'Generating…' : 'Generate Payslips' }}
+        </button>
+      </div>
+
+      <app-skeleton-loader *ngIf="loadingEmployees()" type="table" [rows]="6"></app-skeleton-loader>
+
+      <mat-table [dataSource]="filteredEmployees()" *ngIf="!loadingEmployees() && filteredEmployees().length">
+        <ng-container matColumnDef="select">
+          <mat-header-cell *matHeaderCellDef>
+            <mat-checkbox [checked]="isAllSelected()" (change)="toggleAllRows()"></mat-checkbox>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let row">
+            <mat-checkbox (click)="$event.stopPropagation()"
+                          [checked]="selection.isSelected(row)"
+                          (change)="selection.toggle(row)"></mat-checkbox>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="employeeCode">
+          <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+          <mat-cell *matCellDef="let row"><span class="emp-code">{{ row.employeeCode }}</span></mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="employeeName">
+          <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+          <mat-cell *matCellDef="let row">{{ row.fullName }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="department">
+          <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
+          <mat-cell *matCellDef="let row">{{ row.department }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="siteName">
+          <mat-header-cell *matHeaderCellDef>Site</mat-header-cell>
+          <mat-cell *matCellDef="let row">{{ row.siteName || '—' }}</mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+
+      <div class="empty-hint" *ngIf="!loadingEmployees() && !filteredEmployees().length">
+        No active employees found for the selected client.
+      </div>
+    </mat-card>
+
     <mat-card class="progress-card" *ngIf="generating()">
-      <h3>Generating Payslips...</h3>
-      <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
-      <p class="progress-text">{{ progress() | number:'1.0-0' }}% complete</p>
-      <p class="progress-count" *ngIf="generatedCount() > 0">{{ generatedCount() }} payslip(s) generated</p>
+      <h3>Generating payslips…</h3>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </mat-card>
   </div>
 </div>

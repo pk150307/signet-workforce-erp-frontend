@@ -19,15 +19,16 @@
     </mat-form-field>
   </div>
 
-  <div class="card card--flush">
-    <div class="loading-state" *ngIf="loading()"><mat-spinner diameter="36"></mat-spinner></div>
-    <div class="empty-state" *ngIf="!loading() && data()?.items?.length === 0">
+  <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
+
+  <div class="card card--flush" *ngIf="!loading()">
+    <div class="empty-state" *ngIf="data()?.items?.length === 0">
       <mat-icon>business_center</mat-icon>
       <h3>No clients yet</h3>
       <p>Add your first client to get started.</p>
       <button mat-raised-button color="primary" routerLink="/clients/new">Add Client</button>
     </div>
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="clientCode">
         <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
         <mat-cell *matCellDef="let c"><span class="code-chip">{{ c.clientCode }}</span></mat-cell>
@@ -55,12 +56,18 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
         <mat-cell *matCellDef="let c">
-          <button mat-icon-button [matMenuTriggerFor]="menu">
+          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More actions">
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu>
+            <button mat-menu-item [routerLink]="['/clients', c.id]">
+              <mat-icon>visibility</mat-icon> View Details
+            </button>
             <button mat-menu-item [routerLink]="['/clients', c.id, 'edit']">
               <mat-icon>edit</mat-icon> Edit
+            </button>
+            <button mat-menu-item (click)="deleteClient(c)">
+              <mat-icon>delete</mat-icon> Delete
             </button>
           </mat-menu>
         </mat-cell>

@@ -1,57 +1,140 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-header__title">{{ isEdit() ? 'Edit Client' : 'Add Client' }}</h1>
+<div class="page-container client-form-page">
+
+  <app-skeleton-loader *ngIf="loading() || saving()" type="card" [rows]="8"></app-skeleton-loader>
+
+  @if (!loading() && !saving()) {
+    <header class="form-page-header">
+      <button mat-icon-button type="button" class="form-page-header__back" (click)="cancel()" matTooltip="Go back">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="form-page-header__text">
+        <h1>{{ isEdit() ? 'Edit Client' : 'Add Client' }}</h1>
+        <p>{{ isEdit() ? 'Update company and contact details' : 'Register a new client with contact and address information' }}</p>
+      </div>
+    </header>
+
+    <div class="card form-card">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>business</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Company & Contact</h2>
+              <p class="form-section__desc">Primary company identity and point of contact</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--2">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Company Name *</mat-label>
+                <input matInput formControlName="companyName">
+                @if (form.get('companyName')?.hasError('required') && form.get('companyName')?.touched) {
+                  <mat-error>Company name is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Contact Person *</mat-label>
+                <input matInput formControlName="contactPerson">
+                @if (form.get('contactPerson')?.hasError('required') && form.get('contactPerson')?.touched) {
+                  <mat-error>Contact person is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            <div class="form-grid form-grid--2">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Email *</mat-label>
+                <input matInput type="email" formControlName="email">
+                @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+                  <mat-error>Email is required</mat-error>
+                }
+                @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+                  <mat-error>Enter a valid email</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Phone *</mat-label>
+                <input matInput formControlName="phone">
+                @if (form.get('phone')?.hasError('required') && form.get('phone')?.touched) {
+                  <mat-error>Phone is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>location_on</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Address</h2>
+              <p class="form-section__desc">Registered or primary business address</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
+              <mat-label>Address *</mat-label>
+              <textarea matInput formControlName="address" rows="2"></textarea>
+              @if (form.get('address')?.hasError('required') && form.get('address')?.touched) {
+                <mat-error>Address is required</mat-error>
+              }
+            </mat-form-field>
+            <div class="form-grid form-grid--3">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>City *</mat-label>
+                <input matInput formControlName="city">
+                @if (form.get('city')?.hasError('required') && form.get('city')?.touched) {
+                  <mat-error>City is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>State *</mat-label>
+                <input matInput formControlName="state">
+                @if (form.get('state')?.hasError('required') && form.get('state')?.touched) {
+                  <mat-error>State is required</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>Pin Code</mat-label>
+                <input matInput formControlName="pinCode">
+              </mat-form-field>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section form-section--last">
+          <div class="form-section__head">
+            <div class="form-section__icon"><mat-icon>account_balance</mat-icon></div>
+            <div>
+              <h2 class="form-section__title">Tax & Notes</h2>
+              <p class="form-section__desc">GST, PAN and any additional notes</p>
+            </div>
+          </div>
+          <div class="form-section__body">
+            <div class="form-grid form-grid--2">
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>GST Number</mat-label>
+                <input matInput formControlName="gstNumber">
+              </mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="fixed">
+                <mat-label>PAN Number</mat-label>
+                <input matInput formControlName="panNumber">
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
+              <mat-label>Notes</mat-label>
+              <textarea matInput formControlName="notes" rows="2" placeholder="Optional internal notes"></textarea>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <footer class="form-footer">
+          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Client') }}
+          </button>
+        </footer>
+      </form>
     </div>
-    <button mat-stroked-button (click)="router.navigate(['/clients'])">Cancel</button>
-  </div>
-  <div class="card" style="max-width:800px">
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Company Name *</mat-label>
-          <input matInput formControlName="companyName">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Contact Person *</mat-label>
-          <input matInput formControlName="contactPerson">
-        </mat-form-field>
-      </div>
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Email *</mat-label>
-          <input matInput formControlName="email">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Phone *</mat-label>
-          <input matInput formControlName="phone">
-        </mat-form-field>
-      </div>
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>GST Number</mat-label>
-          <input matInput formControlName="gstNumber">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>City</mat-label>
-          <input matInput formControlName="city">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>State</mat-label>
-          <input matInput formControlName="state">
-        </mat-form-field>
-      </div>
-      <mat-form-field appearance="outline" style="width:100%">
-        <mat-label>Address</mat-label>
-        <textarea matInput formControlName="address" rows="2"></textarea>
-      </mat-form-field>
-      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
-        <button mat-stroked-button type="button" (click)="router.navigate(['/clients'])">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
-          {{ isEdit() ? 'Save Changes' : 'Create Client' }}
-        </button>
-      </div>
-    </form>
-  </div>
+  }
 </div>

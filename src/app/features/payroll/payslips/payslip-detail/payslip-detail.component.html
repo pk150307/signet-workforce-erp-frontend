@@ -1,112 +1,168 @@
-<div class="page-container">
-  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
-
-  <ng-container *ngIf="!loading() && payslip() as ps">
-    <div class="page-header">
+<div class="page-container payslip-page" *ngIf="!loading() && payslip() as ps; else loadingOrNotFound">
+  <section class="detail-hero">
+    <div class="detail-hero__main">
+      <button mat-icon-button routerLink="/payroll/payslips" class="back-btn" aria-label="Back to payslips">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
       <div>
-        <h1 class="page-header__title">{{ ps.employeeName }}</h1>
-        <p class="page-header__subtitle">
-          {{ ps.employeeCode }} · {{ ps.designation }} · {{ ps.department }}
-          <span class="badge" [ngClass]="'badge--' + getStatusClass(ps.status)">{{ ps.status }}</span>
+        <p class="eyebrow">Salary Slip</p>
+        <h1>{{ ps.employeeName }}</h1>
+        <p>
+          {{ ps.slipNumber || ps.employeeCode }}
+          · {{ ps.designation }}
+          · {{ ps.department }}
+          <span *ngIf="ps.siteName"> · {{ ps.siteName }}</span>
         </p>
       </div>
-      <div class="page-header__actions">
-        <button mat-stroked-button routerLink="/payroll/payslips">
-          <mat-icon>arrow_back</mat-icon> Back
+      <span class="status-badge" [ngClass]="'status-badge--' + getStatusClass(ps.status)">{{ ps.status }}</span>
+    </div>
+    <div class="detail-hero__actions">
+      @if (availableActions(ps).length) {
+        <button mat-stroked-button [matMenuTriggerFor]="statusMenu">
+          <mat-icon>swap_horiz</mat-icon> Update Status
         </button>
-        <button mat-stroked-button (click)="openPrintPreview()">
-          <mat-icon>print</mat-icon> Print
+        <mat-menu #statusMenu="matMenu">
+          @for (action of availableActions(ps); track action.status) {
+            <button mat-menu-item (click)="transitionStatus(action)">
+              <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+            </button>
+          }
+        </mat-menu>
+      }
+      <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
+      <button mat-stroked-button (click)="downloadPdf()" [disabled]="downloadingPdf()">
+        <mat-icon>download</mat-icon> Download PDF
+      </button>
+      <button mat-raised-button color="primary" (click)="emailPayslip()">
+        <mat-icon>email</mat-icon> Email
+      </button>
+      @if (canDelete(ps)) {
+        <button mat-stroked-button color="warn" (click)="deletePayslip()">
+          <mat-icon>delete</mat-icon> Delete
         </button>
-        <button mat-stroked-button (click)="downloadPdf()">
-          <mat-icon>picture_as_pdf</mat-icon> PDF
-        </button>
-        <button mat-raised-button color="primary" (click)="emailPayslip()">
-          <mat-icon>email</mat-icon> Email
-        </button>
+      }
+    </div>
+  </section>
+
+  <section class="summary-cards">
+    <div class="summary-card">
+      <span>Pay Period</span>
+      <strong>{{ monthLabel(ps) }} {{ ps.year }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Gross Earnings</span>
+      <strong>₹{{ ps.grossSalary | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Total Deductions</span>
+      <strong>₹{{ totalDeductionsAmount(ps) | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card summary-card--accent">
+      <span>Net Salary</span>
+      <strong>₹{{ ps.netSalary | number:'1.0-0' }}</strong>
+    </div>
+  </section>
+
+  <div class="detail-layout">
+    <div class="main-col">
+      <div class="panel panel--preview">
+        <div class="panel__header">
+          <h3>Payslip Preview</h3>
+          <span>Official document layout</span>
+        </div>
+        <div class="preview-frame">
+          <app-payslip-document [ps]="ps"></app-payslip-document>
+        </div>
+      </div>
+
+      <div class="breakdown-grid">
+        <div class="panel">
+          <div class="panel__header"><h3>Earnings</h3><span>{{ ps.earnings.length }} items</span></div>
+          <table class="breakdown-table" *ngIf="ps.earnings.length; else noEarnings">
+            <thead>
+              <tr>
+                <th>Particulars</th>
+                <th>Rate</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of ps.earnings">
+                <td>{{ item.component }}</td>
+                <td>
+                  <ng-container *ngIf="item.rate != null; else noRate">
+                    ₹{{ item.rate | number:'1.0-0' }}
+                    <div class="deduction-note">as per grade</div>
+                  </ng-container>
+                  <ng-template #noRate>—</ng-template>
+                </td>
+                <td>
+                  ₹{{ item.amount | number:'1.2-2' }}
+                  <div class="deduction-note" *ngIf="item.rate != null">earned as per attendance</div>
+                </td>
+              </tr>
+              <tr class="total-row">
+                <td colspan="2">Gross Total</td>
+                <td>₹{{ ps.grossSalary | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noEarnings><p class="empty-hint">No earnings recorded.</p></ng-template>
+        </div>
+
+        <div class="panel">
+          <div class="panel__header"><h3>Deductions</h3><span>{{ ps.deductions.length }} items</span></div>
+          <table class="breakdown-table" *ngIf="ps.deductions.length; else noDeductions">
+            <tbody>
+              <tr *ngFor="let item of ps.deductions">
+                <td>
+                  <div>{{ item.component }}</div>
+                  <div class="deduction-note" *ngIf="item.note">{{ item.note }}</div>
+                </td>
+                <td>₹{{ item.amount | number:'1.2-2' }}</td>
+              </tr>
+              <tr class="total-row">
+                <td>Total Deductions</td>
+                <td>₹{{ totalDeductionsAmount(ps) | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noDeductions><p class="empty-hint">No deductions recorded.</p></ng-template>
+        </div>
       </div>
     </div>
 
-    <div class="detail-grid">
-      <div class="card summary-card">
-        <h3>Pay Summary</h3>
-        <div class="summary-row">
-          <span>Period</span>
-          <strong>{{ ps.month }}/{{ ps.year }}</strong>
-        </div>
-        <div class="summary-row">
-          <span>Working Days</span>
-          <strong>{{ ps.workingDays }}</strong>
-        </div>
-        <div class="summary-row">
-          <span>Paid Days</span>
-          <strong>{{ ps.paidDays }}</strong>
-        </div>
-        <div class="summary-row">
-          <span>LOP Days</span>
-          <strong>{{ ps.lopDays }}</strong>
-        </div>
+    <div class="side-col">
+      <div class="panel">
+        <h3>Attendance</h3>
+        <div class="info-row"><span>Working Days</span><strong>{{ ps.workingDays }}</strong></div>
+        <div class="info-row"><span>Paid Days</span><strong>{{ ps.paidDays }}</strong></div>
+        <div class="info-row"><span>LOP Days</span><strong>{{ ps.lopDays }}</strong></div>
+      </div>
+
+      <div class="panel">
+        <h3>Employee &amp; Statutory</h3>
+        <div class="info-row"><span>Employee Code</span><strong>{{ ps.employeeCode }}</strong></div>
+        <div class="info-row"><span>Bank Account</span><strong>{{ ps.bankAccount || '—' }}</strong></div>
+        <div class="info-row"><span>PAN</span><strong>{{ ps.panNumber || '—' }}</strong></div>
+        <div class="info-row"><span>UAN</span><strong>{{ ps.uanNumber || '—' }}</strong></div>
+        <div class="info-row"><span>PF Number</span><strong>{{ ps.pfNumber || '—' }}</strong></div>
+        <div class="info-row"><span>ESIC Number</span><strong>{{ ps.esicNumber || '—' }}</strong></div>
         <mat-divider></mat-divider>
-        <div class="summary-row summary-row--highlight">
-          <span>Gross Salary</span>
-          <strong>₹{{ ps.grossSalary | number:'1.0-0' }}</strong>
-        </div>
-        <div class="summary-row summary-row--net">
-          <span>Net Salary</span>
-          <strong>₹{{ ps.netSalary | number:'1.0-0' }}</strong>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Employee Details</h3>
-        <div class="info-grid">
-          <div><span>Bank Account</span><strong>{{ ps.bankAccount || '—' }}</strong></div>
-          <div><span>PAN</span><strong>{{ ps.panNumber || '—' }}</strong></div>
-          <div><span>UAN</span><strong>{{ ps.uanNumber || '—' }}</strong></div>
-          <div><span>PF Number</span><strong>{{ ps.pfNumber || '—' }}</strong></div>
-          <div><span>ESIC Number</span><strong>{{ ps.esicNumber || '—' }}</strong></div>
-          <div><span>Generated</span><strong>{{ ps.generatedAt | date:'dd MMM yyyy, hh:mm a' }}</strong></div>
-        </div>
+        <div class="info-row"><span>Generated</span><strong>{{ ps.generatedAt | apiDate:'short' }}</strong></div>
       </div>
     </div>
-
-    <div class="breakdown-grid">
-      <div class="card">
-        <h3>Earnings</h3>
-        <table class="breakdown-table">
-          <tr *ngFor="let item of ps.earnings">
-            <td>{{ item.component }}</td>
-            <td>₹{{ item.amount | number:'1.0-0' }}</td>
-          </tr>
-          <tr class="total-row">
-            <td>Total Earnings</td>
-            <td>₹{{ totalEarnings | number:'1.0-0' }}</td>
-          </tr>
-        </table>
-      </div>
-
-      <div class="card">
-        <h3>Deductions</h3>
-        <table class="breakdown-table">
-          <tr *ngFor="let item of ps.deductions">
-            <td>{{ item.component }}</td>
-            <td>₹{{ item.amount | number:'1.0-0' }}</td>
-          </tr>
-          <tr class="total-row">
-            <td>Total Deductions</td>
-            <td>₹{{ totalDeductions | number:'1.0-0' }}</td>
-          </tr>
-        </table>
-      </div>
-
-      <div class="card">
-        <h3>Employer Contributions</h3>
-        <table class="breakdown-table">
-          <tr *ngFor="let item of ps.employerContributions">
-            <td>{{ item.component }}</td>
-            <td>₹{{ item.amount | number:'1.0-0' }}</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </ng-container>
+  </div>
 </div>
+
+<ng-template #loadingOrNotFound>
+  <div class="page-container payslip-page">
+    <app-skeleton-loader *ngIf="loading()" type="card" [rows]="8"></app-skeleton-loader>
+    <div class="empty-state" *ngIf="!loading() && notFound()">
+      <mat-icon>receipt_long</mat-icon>
+      <h2>Payslip not found</h2>
+      <p>The payslip may have been removed or the link is invalid.</p>
+      <a mat-stroked-button routerLink="/payroll/payslips">Back to Salary Slips</a>
+    </div>
+  </div>
+</ng-template>

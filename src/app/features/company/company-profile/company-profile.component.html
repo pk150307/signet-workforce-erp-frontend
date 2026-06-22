@@ -14,11 +14,9 @@
     </div>
   </div>
 
-  <div class="loading-state" *ngIf="loading()">
-    <mat-spinner diameter="36"></mat-spinner>
-  </div>
+  <app-skeleton-loader *ngIf="loading() || saving()" type="card" [rows]="8"></app-skeleton-loader>
 
-  <div class="card" *ngIf="!loading()">
+  <div class="card" *ngIf="!loading() && !saving()">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="logo-section">
         <div class="logo-section__preview">
@@ -137,7 +135,6 @@
 
       <div class="form-actions">
         <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-          <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
           Save Changes
         </button>
       </div>

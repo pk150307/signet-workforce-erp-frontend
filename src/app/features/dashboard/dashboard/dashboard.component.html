@@ -12,8 +12,10 @@
   </div>
 
   @if (loading()) {
-    <div class="loading-state">
-      <mat-spinner diameter="40" />
+    <app-skeleton-loader type="stats" [rows]="6"></app-skeleton-loader>
+    <div class="dashboard-skeleton-charts">
+      <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+      <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
     </div>
   }
 
@@ -97,7 +99,7 @@
         <h3 class="section-title"><mat-icon>flash_on</mat-icon> Quick Actions</h3>
         <div class="quick-actions">
           <button mat-stroked-button routerLink="/employees/new"><mat-icon>person_add</mat-icon> Add Employee</button>
-          <button mat-stroked-button routerLink="/attendance"><mat-icon>fingerprint</mat-icon> Mark Attendance</button>
+          <button mat-stroked-button routerLink="/attendance"><mat-icon>event_available</mat-icon> Attendance Register</button>
           <button mat-stroked-button routerLink="/billing"><mat-icon>add_circle</mat-icon> New Invoice</button>
           <button mat-stroked-button routerLink="/payroll"><mat-icon>payments</mat-icon> Process Payroll</button>
         </div>
