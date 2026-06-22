@@ -1,44 +1,62 @@
-.confirm-dialog {
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 8px;
+:host {
+  display: block;
+}
+
+.confirm-dialog__title {
+  display: flex !important;
+  align-items: center;
+  gap: 14px;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: var(--color-text-primary);
+}
+
+.confirm-dialog__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(21, 101, 192, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: var(--color-primary);
   }
 
-  &__icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: rgba(21, 101, 192, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+  &--warn {
+    background: rgba(198, 40, 40, 0.1);
 
     mat-icon {
-      color: var(--color-primary);
+      color: var(--color-danger);
     }
   }
+}
 
-  &__title {
-    margin: 0 0 4px;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
+.confirm-dialog__content {
+  padding-top: 8px !important;
+  padding-bottom: 4px !important;
+}
 
-  &__message {
-    margin: 0;
-    font-size: 14px;
-    color: var(--color-text-secondary);
-    line-height: 1.5;
-  }
+.confirm-dialog__message {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 24px;
+.confirm-dialog__actions {
+  padding-top: 8px !important;
+  gap: 10px;
+
+  button {
+    min-width: 96px;
   }
 }

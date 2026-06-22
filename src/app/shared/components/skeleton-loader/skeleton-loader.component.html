@@ -4,8 +4,22 @@
       <div class="skeleton__line" [class.skeleton__line--full]="row === 0" [class.skeleton__line--medium]="row > 0"></div>
     }
   </div>
+} @else if (type === 'stats') {
+  <div class="skeleton__stats-grid">
+    @for (row of rowArray; track row) {
+      <div class="skeleton__stat">
+        <div class="skeleton__stat-icon"></div>
+        <div class="skeleton__stat-lines">
+          <div class="skeleton__line skeleton__line--medium"></div>
+          <div class="skeleton__line skeleton__line--short"></div>
+        </div>
+      </div>
+    }
+  </div>
 } @else {
-  @for (row of rowArray; track row) {
-    <div class="skeleton__line skeleton__line--full"></div>
-  }
+  <div class="skeleton__table card">
+    @for (row of rowArray; track row) {
+      <div class="skeleton__line skeleton__line--full"></div>
+    }
+  </div>
 }

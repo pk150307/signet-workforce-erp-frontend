@@ -26,6 +26,41 @@
     border: 1px solid var(--color-border);
     background: var(--color-surface);
   }
+
+  &__table {
+    padding: 20px;
+  }
+
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  &__stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  &__stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, var(--color-divider) 25%, var(--color-border) 50%, var(--color-divider) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+  }
+
+  &__stat-lines {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 @keyframes skeleton-shimmer {

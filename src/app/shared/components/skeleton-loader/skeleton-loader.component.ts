@@ -10,7 +10,7 @@ import { NgFor } from '@angular/common';
 })
 export class SkeletonLoaderComponent {
   @Input() rows = 5;
-  @Input() type: 'table' | 'card' = 'table';
+  @Input() type: 'table' | 'card' | 'stats' = 'table';
 
   get rowArray(): number[] {
     return Array.from({ length: this.rows }, (_, i) => i);

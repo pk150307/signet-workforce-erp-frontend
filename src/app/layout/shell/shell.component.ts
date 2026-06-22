@@ -11,6 +11,7 @@ import { FooterComponent } from '../footer/footer.component';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { SessionService } from '../../core/services/session.service';
+import { BreadcrumbService } from '../../core/services/breadcrumb.service';
 
 @Component({
   selector: 'app-shell',
@@ -31,11 +32,13 @@ import { SessionService } from '../../core/services/session.service';
 export class ShellComponent implements OnInit {
   private readonly breakpoint = inject(BreakpointObserver);
   private readonly sessionService = inject(SessionService);
+  private readonly breadcrumbService = inject(BreadcrumbService);
 
   readonly sidebarCollapsed = signal(false);
   readonly isMobile$ = this.breakpoint.observe(Breakpoints.Handset).pipe(map(r => r.matches));
 
   ngOnInit() {
+    this.breadcrumbService.connect();
     this.sessionService.init();
   }
 

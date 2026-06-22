@@ -26,7 +26,18 @@ export class SidebarComponent {
   );
 
   isActive(route: string): boolean {
-    return this.router.url.startsWith(route);
+    if (!route) return false;
+
+    const url = this.router.url.split('?')[0].split('#')[0];
+    const routes = this.navItems()
+      .map(item => item.route)
+      .filter((r): r is string => !!r);
+
+    const matchingRoute = routes
+      .filter(r => url === r || url.startsWith(`${r}/`))
+      .sort((a, b) => b.length - a.length)[0];
+
+    return matchingRoute === route;
   }
 
   navigate(item: NavItem) {

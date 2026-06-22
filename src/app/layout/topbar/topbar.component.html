@@ -11,22 +11,22 @@
   </div>
 
   <div class="topbar__actions">
-    <button mat-icon-button class="topbar__action-btn" (click)="themeService.toggle()" [matTooltip]="themeService.isDark() ? 'Light mode' : 'Dark mode'">
+    <button mat-icon-button class="topbar__action-btn" (click)="themeService.toggle()" [matTooltip]="themeService.isDark() ? 'Light mode' : 'Dark mode'" [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
       <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
 
-    <button mat-icon-button class="topbar__action-btn" matTooltip="Notifications">
+    <button mat-icon-button class="topbar__action-btn" matTooltip="Notifications" aria-label="Notifications">
       <mat-icon [matBadge]="3" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
     </button>
 
-    <button mat-button class="topbar__user-btn" [matMenuTriggerFor]="userMenu">
+    <button mat-button class="topbar__user-btn" [matMenuTriggerFor]="userMenu" aria-label="User account menu">
       <div class="topbar__user-avatar">
         {{ (authService.userFullName() || 'U').charAt(0).toUpperCase() }}
       </div>
-      <div class="topbar__user-info">
+      <!-- <div class="topbar__user-info">
         <span class="topbar__user-name">{{ authService.userFullName() }}</span>
         <span class="topbar__user-role">{{ authService.userRoles()[0] || 'User' }}</span>
-      </div>
+      </div> -->
       <mat-icon class="topbar__user-caret">expand_more</mat-icon>
     </button>
 
