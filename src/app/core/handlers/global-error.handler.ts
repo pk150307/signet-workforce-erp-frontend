@@ -8,11 +8,15 @@ export class GlobalErrorHandler implements ErrorHandler {
   handleError(error: Error): void {
     console.error('Global Error Handler:', error);
 
-    // Show user-friendly error message
-    const message = this.getUserFriendlyMessage(error);
-    this.notification.error(message);
+    if (error.message.includes('InvalidPipeArgument')) {
+      return;
+    }
 
-    // Log to external service in production
+    const message = this.getUserFriendlyMessage(error);
+    if (message) {
+      this.notification.error(message);
+    }
+
     if (typeof window !== 'undefined' && (window as any).logErrorToService) {
       (window as any).logErrorToService(error);
     }

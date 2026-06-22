@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 import { environment } from '@env/environment';
 import { PaginatedResult } from '../models/api.models';
 import {
@@ -9,27 +9,9 @@ import {
   CompanyQueryParams,
   OfficeListItem,
 } from '../models/company.models';
+import { mapCompanyProfile, unwrapApiData } from '../utils/api-response.util';
 import { paginateMock } from '../utils/mock-pagination.util';
-
-const MOCK_PROFILE: CompanyProfile = {
-  id: '1',
-  companyName: 'Signet Workforce Solutions Pvt. Ltd.',
-  legalName: 'Signet Workforce Solutions Private Limited',
-  registrationNumber: 'U74999MH2018PTC312456',
-  gstNumber: '27AABCS1234F1Z5',
-  panNumber: 'AABCS1234F',
-  email: 'info@signetworkforce.com',
-  phone: '+91 22 4567 8900',
-  website: 'https://signetworkforce.com',
-  address: '501, Business Park, Andheri East',
-  city: 'Mumbai',
-  state: 'Maharashtra',
-  pinCode: '400069',
-  billingAddress: '501, Business Park, Andheri East',
-  billingCity: 'Mumbai',
-  billingState: 'Maharashtra',
-  billingPinCode: '400069',
-};
+import { DEFAULT_COMPANY_LOGO } from '../constants/company.constants';
 
 const MOCK_BRANCHES: BranchListItem[] = [
   { id: '1', branchCode: 'BR-MUM', branchName: 'Mumbai HQ', city: 'Mumbai', state: 'Maharashtra', headCount: 120, isActive: true },
@@ -49,16 +31,44 @@ const MOCK_OFFICES: OfficeListItem[] = [
 export class CompanyService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/company`;
+  private profileCache$: Observable<CompanyProfile> | null = null;
 
   getProfile(): Observable<CompanyProfile> {
-    return this.http.get<CompanyProfile>(`${this.base}/profile`).pipe(
-      catchError(() => of({ ...MOCK_PROFILE }))
-    );
+    if (!this.profileCache$) {
+      this.profileCache$ = this.http.get<unknown>(`${this.base}/profile`).pipe(
+        map(res => mapCompanyProfile(unwrapApiData(res) ?? res ?? {})),
+        shareReplay(1),
+      );
+    }
+    return this.profileCache$;
+  }
+
+  refreshProfile(): Observable<CompanyProfile> {
+    this.profileCache$ = null;
+    return this.getProfile();
+  }
+
+  clearSessionCache(): void {
+    this.profileCache$ = null;
+  }
+
+  resolveLogoUrl(logoUrl?: string | null): string {
+    return logoUrl?.trim() ? logoUrl : DEFAULT_COMPANY_LOGO;
+  }
+
+  formatAddress(profile: Pick<CompanyProfile, 'address' | 'city' | 'state' | 'pinCode' | 'billingAddress' | 'billingCity' | 'billingState' | 'billingPinCode'>, useBilling = false): string {
+    const address = useBilling && profile.billingAddress ? profile.billingAddress : profile.address;
+    const city = useBilling && profile.billingCity ? profile.billingCity : profile.city;
+    const state = useBilling && profile.billingState ? profile.billingState : profile.state;
+    const pinCode = useBilling && profile.billingPinCode ? profile.billingPinCode : profile.pinCode;
+    const cityLine = [city, state, pinCode].filter(Boolean).join(', ');
+    return [address, cityLine].filter(Boolean).join('\n');
   }
 
   updateProfile(data: Partial<CompanyProfile>): Observable<CompanyProfile> {
-    return this.http.put<CompanyProfile>(`${this.base}/profile`, data).pipe(
-      catchError(() => of({ ...MOCK_PROFILE, ...data }))
+    return this.http.put<unknown>(`${this.base}/profile`, data).pipe(
+      map(res => mapCompanyProfile(unwrapApiData(res) ?? res)),
+      tap(() => { this.profileCache$ = null; }),
     );
   }
 

@@ -3,8 +3,11 @@ export interface DesignationListItem {
   designationCode: string;
   designationName: string;
   parentDesignationName?: string;
+  clientId?: string;
+  clientName?: string;
+  departmentId?: string;
   departmentName?: string;
-  salaryGrade: string;
+  gradeCount: number;
   employeeCount: number;
   isActive: boolean;
 }
@@ -14,9 +17,15 @@ export interface DesignationDetail {
   designationCode: string;
   designationName: string;
   parentDesignationId?: string;
+  parentDesignationName?: string;
+  clientId?: string;
+  clientName?: string;
   departmentId?: string;
-  salaryGrade: string;
+  departmentName?: string;
+  gradeCount: number;
+  level?: number;
   description?: string;
+  employeeCount?: number;
   isActive: boolean;
 }
 
@@ -25,7 +34,6 @@ export interface CreateDesignationRequest {
   designationName: string;
   parentDesignationId?: string;
   departmentId?: string;
-  salaryGrade: string;
   description?: string;
   isActive: boolean;
 }
@@ -33,8 +41,9 @@ export interface CreateDesignationRequest {
 export interface DesignationQueryParams {
   page?: number;
   pageSize?: number;
+  clientId?: string;
   search?: string;
   departmentId?: string;
-  salaryGrade?: string;
+  gradeCode?: string;
   isActive?: boolean;
 }

@@ -34,7 +34,21 @@ export const API_ENDPOINTS = {
   },
   attendance: {
     base: '/attendance',
-    mark: '/attendance/mark',
+    registers: {
+      employees: '/attendance/registers/employees',
+      grid: '/attendance/registers/grid',
+      cells: '/attendance/registers/cells',
+      submitEmployeeRow: (employeeId: string) => `/attendance/registers/employees/${employeeId}/cells`,
+      bulk: '/attendance/registers/bulk',
+      importTemplate: '/attendance/registers/import/template',
+      importPreview: '/attendance/registers/import/preview',
+      importApply: '/attendance/registers/import/apply',
+      importFilePreview: '/attendance/registers/import/file-preview',
+      lock: '/attendance/registers/lock',
+      unlock: '/attendance/registers/unlock',
+      unlockHistory: '/attendance/registers/unlock-history',
+    },
+    employeeCalendar: (employeeId: string) => `/attendance/employees/${employeeId}/calendar`,
   },
   leave: {
     base: '/leave',

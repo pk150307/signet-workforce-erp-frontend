@@ -1,5 +1,7 @@
 export interface DepartmentListItem {
   id: string;
+  clientId: string;
+  clientName?: string;
   departmentCode: string;
   departmentName: string;
   parentDepartmentName?: string;
@@ -10,15 +12,21 @@ export interface DepartmentListItem {
 
 export interface DepartmentDetail {
   id: string;
+  clientId: string;
+  clientName?: string;
   departmentCode: string;
   departmentName: string;
   parentDepartmentId?: string;
+  parentDepartmentName?: string;
   description?: string;
   headOfDepartmentId?: string;
+  headOfDepartment?: string;
+  employeeCount?: number;
   isActive: boolean;
 }
 
 export interface CreateDepartmentRequest {
+  clientId: string;
   departmentCode: string;
   departmentName: string;
   parentDepartmentId?: string;
@@ -30,6 +38,7 @@ export interface CreateDepartmentRequest {
 export interface DepartmentQueryParams {
   page?: number;
   pageSize?: number;
+  clientId?: string;
   search?: string;
   isActive?: boolean;
 }

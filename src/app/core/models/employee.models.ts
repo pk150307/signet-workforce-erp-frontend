@@ -1,10 +1,8 @@
 export enum EmployeeStatus {
+  Draft = 0,
   Active = 1,
-  Inactive = 2,
-  OnLeave = 3,
-  Terminated = 4,
-  Suspended = 5,
-  Probation = 6
+  Left = 2,
+  Rejoined = 3,
 }
 
 export enum Gender {
@@ -57,10 +55,15 @@ export interface EmployeeDetail {
   departmentName: string;
   designationId: string;
   designationName: string;
+  designationGradeId: string | null;
+  gradeCode: string | null;
+  gradeName: string | null;
   reportingManagerId: string | null;
   reportingManagerName: string | null;
   siteId: string | null;
   siteName: string | null;
+  clientId: string | null;
+  clientName: string | null;
   presentAddress: string | null;
   permanentAddress: string | null;
   city: string | null;
@@ -93,7 +96,9 @@ export interface CreateEmployeeRequest {
   employmentType: EmploymentType;
   departmentId: string;
   designationId: string;
+  designationGradeId?: string;
   reportingManagerId?: string;
+  clientId?: string;
   siteId?: string;
   presentAddress?: string;
   permanentAddress?: string;
@@ -104,14 +109,134 @@ export interface CreateEmployeeRequest {
   grossSalary: number;
 }
 
-export const EMPLOYEE_STATUS_LABELS: Record<EmployeeStatus, string> = {
-  [EmployeeStatus.Active]:      'Active',
-  [EmployeeStatus.Inactive]:    'Inactive',
-  [EmployeeStatus.OnLeave]:     'On Leave',
-  [EmployeeStatus.Terminated]:  'Terminated',
-  [EmployeeStatus.Suspended]:   'Suspended',
-  [EmployeeStatus.Probation]:   'Probation',
+export type EmployeeDocumentType =
+  | 'profile_photo'
+  | 'aadhaar'
+  | 'pan'
+  | 'offer_letter'
+  | 'education_certificate'
+  | 'relieving_letter'
+  | 'cancelled_cheque'
+  | 'other';
+
+export interface EmployeeDocument {
+  id: string;
+  type: EmployeeDocumentType;
+  label: string;
+  fileName: string;
+  fileUrl: string;
+  mimeType: string;
+  uploadedAt: string;
+}
+
+export interface PendingDocument {
+  type: EmployeeDocumentType;
+  label: string;
+  file: File;
+  previewUrl: string | null;
+}
+
+export interface CreateEmployeeDraftRequest extends CreateEmployeeRequest {
+  id?: string;
+  employeeCode?: string;
+  shiftId?: string;
+  ctc?: number;
+  emergencyContactName?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactPhone?: string;
+  status?: EmployeeStatus;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  uanNumber?: string;
+  pfNumber?: string;
+  esicNumber?: string;
+  bankName?: string;
+  accountHolderName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+}
+
+export interface EmployeeSubmitResult {
+  id: string;
+  employeeCode: string;
+  status: EmployeeStatus;
+  fullName: string;
+}
+
+export const EMPLOYEE_DOCUMENT_LABELS: Record<EmployeeDocumentType, string> = {
+  profile_photo: 'Profile Photo',
+  aadhaar: 'Aadhaar',
+  pan: 'PAN',
+  offer_letter: 'Offer Letter',
+  education_certificate: 'Educational Certificates',
+  relieving_letter: 'Relieving Letter',
+  cancelled_cheque: 'Cancelled Cheque',
+  other: 'Additional Document',
 };
+
+export interface RejoinEmployeeRequest {
+  joiningDate: string;
+  departmentId: string;
+  designationId: string;
+  siteId?: string;
+  reportingManagerId?: string;
+  reuseEmployeeCode?: boolean;
+  basicSalary?: number;
+  grossSalary?: number;
+}
+
+export interface MarkEmployeeLeftRequest {
+  lastWorkingDate: string;
+  reason: string;
+  remarks?: string;
+}
+
+export const EMPLOYEE_LEFT_REASONS = [
+  'Resignation',
+  'Termination',
+  'Contract Ended',
+  'Absconding',
+  'Retirement',
+  'Mutual Separation',
+  'Other',
+] as const;
+
+export const EMPLOYEE_STATUS_LABELS: Record<EmployeeStatus, string> = {
+  [EmployeeStatus.Draft]:     'Draft',
+  [EmployeeStatus.Active]:    'Active',
+  [EmployeeStatus.Left]:      'Left',
+  [EmployeeStatus.Rejoined]:  'Rejoined',
+};
+
+export interface EmployeeDashboardStats {
+  totalEmployees: number;
+  activeEmployees: number;
+  leftEmployees: number;
+  draftEmployees: number;
+  newJoinersThisMonth: number;
+  exitsThisMonth: number;
+  departmentDistribution: { department: string; count: number }[];
+  headcountTrend: { month: string; joiners: number; exits: number }[];
+}
+
+export type EmployeeActivityType =
+  | 'created'
+  | 'updated'
+  | 'marked_left'
+  | 'rejoined'
+  | 'document_uploaded'
+  | 'draft_saved';
+
+export interface EmployeeActivity {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  type: EmployeeActivityType;
+  description: string;
+  performedBy: string;
+  performedAt: string;
+}
 
 export const GENDER_LABELS: Record<Gender, string> = {
   [Gender.Male]:            'Male',

@@ -7,7 +7,9 @@ export interface PfEsicEmployee {
   fullName: string;
   department: string;
   designation: string;
+  clientCompanyName?: string | null;
   siteName?: string;
+  aadhaarNumber?: string | null;
   uanNumber?: string;
   pfNumber?: string;
   esicNumber?: string;
@@ -64,6 +66,8 @@ export interface PfEsicQueryParams {
   pageSize?: number;
   search?: string;
   status?: PfEsicStatus;
+  employeeStatus?: number | 'all';
+  clientId?: string;
   department?: string;
   siteId?: string;
   hasUan?: boolean;

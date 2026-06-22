@@ -2,6 +2,7 @@ import { ApplicationConfig, ErrorHandler, importProvidersFrom, provideZoneChange
 import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
+    provideNativeDateAdapter(),
     importProvidersFrom(MatDialogModule, MatSnackBarModule),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
   ],

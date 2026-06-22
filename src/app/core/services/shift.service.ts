@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
+import { normalizePaginated, mapShiftListItem } from '../utils/api-response.util';
 import { environment } from '@env/environment';
 import { PaginatedResult } from '../models/api.models';
 import {
@@ -26,9 +27,10 @@ export class ShiftService {
   private readonly base = `${environment.apiUrl}/shifts`;
 
   getAll(params: ShiftQueryParams = {}): Observable<PaginatedResult<ShiftListItem>> {
-    return this.http.get<PaginatedResult<ShiftListItem>>(this.base, {
+    return this.http.get<unknown>(this.base, {
       params: this.toParams(params),
     }).pipe(
+      map(res => normalizePaginated<ShiftListItem>(res, mapShiftListItem)),
       catchError(() => of(paginateMock(MOCK_SHIFTS, params, ['shiftCode', 'shiftName', 'weeklyOff'])))
     );
   }

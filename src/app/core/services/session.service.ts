@@ -2,7 +2,7 @@ import { Injectable, inject, NgZone, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from './auth.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
-import { ConfirmDialogData } from '../../shared/models/dialog.models';
+import { confirmDialogConfig } from '../utils/dialog.util';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 const WARNING_BEFORE_MS = 2 * 60 * 1000; // 2 minutes before logout
@@ -24,6 +24,11 @@ export class SessionService implements OnDestroy {
         document.addEventListener(event, () => this.onActivity(), { passive: true });
       });
     });
+  }
+
+  clearSessionTimers(): void {
+    this.clearTimers();
+    this.warningOpen = false;
   }
 
   ngOnDestroy() {
@@ -50,17 +55,13 @@ export class SessionService implements OnDestroy {
     this.warningOpen = true;
 
     this.ngZone.run(() => {
-      const ref = this.dialog.open(ConfirmDialogComponent, {
-        width: '420px',
-        disableClose: true,
-        data: {
-          title: 'Session Expiring',
-          message: 'Your session will expire in 2 minutes due to inactivity. Stay signed in?',
-          confirmLabel: 'Stay Signed In',
-          cancelLabel: 'Sign Out',
-          confirmColor: 'primary',
-        } satisfies ConfirmDialogData,
-      });
+      const ref = this.dialog.open(ConfirmDialogComponent, confirmDialogConfig({
+        title: 'Session Expiring',
+        message: 'Your session will expire in 2 minutes due to inactivity. Stay signed in?',
+        confirmLabel: 'Stay Signed In',
+        cancelLabel: 'Sign Out',
+        confirmColor: 'primary',
+      }, { disableClose: true }));
 
       ref.afterClosed().subscribe(stay => {
         this.warningOpen = false;

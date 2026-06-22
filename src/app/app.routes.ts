@@ -19,6 +19,18 @@ export const routes: Routes = [
   },
 
   {
+    path: 'print/billing/invoices/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/billing/invoices/invoice-print/invoice-print.component').then(m => m.InvoicePrintComponent),
+  },
+
+  {
+    path: 'print/payroll/payslips/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/payroll/payslips/payslip-print/payslip-print.component').then(m => m.PayslipPrintComponent),
+  },
+
+  {
     path: '**',
     loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),
   },

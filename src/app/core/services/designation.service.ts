@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
+import { cachedLookup, invalidateLookupCache, lookupCacheKey } from '../utils/lookup-cache.util';
+import { normalizePaginated, mapDesignationDetail, mapDesignationListItem } from '../utils/api-response.util';
 import { environment } from '@env/environment';
 import { PaginatedResult } from '../models/api.models';
 import {
@@ -9,15 +11,6 @@ import {
   DesignationListItem,
   DesignationQueryParams,
 } from '../models/designation.models';
-import { paginateMock } from '../utils/mock-pagination.util';
-
-const MOCK_DESIGNATIONS: DesignationListItem[] = [
-  { id: '1', designationCode: 'DSG-CEO', designationName: 'Chief Executive Officer', salaryGrade: 'G1', employeeCount: 1, isActive: true },
-  { id: '2', designationCode: 'DSG-MGR', designationName: 'Manager', parentDesignationName: 'Chief Executive Officer', departmentName: 'Operations', salaryGrade: 'G4', employeeCount: 8, isActive: true },
-  { id: '3', designationCode: 'DSG-SUP', designationName: 'Supervisor', parentDesignationName: 'Manager', departmentName: 'Operations', salaryGrade: 'G6', employeeCount: 24, isActive: true },
-  { id: '4', designationCode: 'DSG-EXE', designationName: 'Executive', departmentName: 'Sales & Marketing', salaryGrade: 'G7', employeeCount: 45, isActive: true },
-  { id: '5', designationCode: 'DSG-ASST', designationName: 'Assistant', parentDesignationName: 'Executive', salaryGrade: 'G8', employeeCount: 62, isActive: true },
-];
 
 @Injectable({ providedIn: 'root' })
 export class DesignationService {
@@ -25,46 +18,65 @@ export class DesignationService {
   private readonly base = `${environment.apiUrl}/designations`;
 
   getAll(params: DesignationQueryParams = {}): Observable<PaginatedResult<DesignationListItem>> {
-    return this.http.get<PaginatedResult<DesignationListItem>>(this.base, {
+    return this.http.get<unknown>(this.base, {
       params: this.toParams(params),
     }).pipe(
-      catchError(() => {
-        let items = [...MOCK_DESIGNATIONS];
-        if (params.salaryGrade) {
-          items = items.filter(d => d.salaryGrade === params.salaryGrade);
-        }
-        return of(paginateMock(items, params, ['designationCode', 'designationName', 'salaryGrade', 'departmentName']));
-      })
+      map(res => normalizePaginated<DesignationListItem>(res, mapDesignationListItem)),
     );
   }
 
+  /** Loads designations for dropdowns, optionally filtered by department. */
+  getAllForSelect(params: Omit<DesignationQueryParams, 'page' | 'pageSize'> = {}): Observable<DesignationListItem[]> {
+    const key = lookupCacheKey({ ...params, isActive: params.isActive ?? true });
+    return cachedLookup('designations', key, () => {
+      const pageSize = 100;
+      return this.getAll({ ...params, page: 1, pageSize, isActive: params.isActive ?? true }).pipe(
+        expand(result =>
+          result.hasNextPage
+            ? this.getAll({ ...params, page: result.page + 1, pageSize, isActive: params.isActive ?? true })
+            : EMPTY,
+        ),
+        map(result => result.items),
+        reduce((acc, items) => acc.concat(items), [] as DesignationListItem[]),
+      );
+    });
+  }
+
   getById(id: string): Observable<DesignationDetail> {
-    return this.http.get<DesignationDetail>(`${this.base}/${id}`).pipe(
-      catchError(() => {
-        const item = MOCK_DESIGNATIONS.find(d => d.id === id);
-        return of({
-          id,
-          designationCode: item?.designationCode ?? '',
-          designationName: item?.designationName ?? '',
-          salaryGrade: item?.salaryGrade ?? 'G8',
-          isActive: item?.isActive ?? true,
-        });
-      })
+    return this.http.get<unknown>(`${this.base}/${id}`).pipe(
+      map(res => mapDesignationDetail(res)),
+    );
+  }
+
+  getNextCode(departmentId: string): Observable<{ code: string }> {
+    return this.http.get<unknown>(`${this.base}/next-code`, {
+      params: { departmentId },
+    }).pipe(
+      map(res => {
+        const payload = (res as { data?: { code?: string }; code?: string });
+        const code = payload.data?.code ?? payload.code ?? '';
+        return { code };
+      }),
     );
   }
 
   create(data: CreateDesignationRequest): Observable<{ id: string }> {
     return this.http.post<{ id: string }>(this.base, data).pipe(
-      catchError(() => of({ id: crypto.randomUUID() }))
+      tap(() => invalidateLookupCache('designations')),
     );
   }
 
-  update(id: string, data: Partial<CreateDesignationRequest>): Observable<void> {
-    return this.http.put<void>(`${this.base}/${id}`, data).pipe(catchError(() => of(undefined)));
+  update(id: string, data: Partial<CreateDesignationRequest>): Observable<DesignationDetail> {
+    return this.http.put<unknown>(`${this.base}/${id}`, data).pipe(
+      map(res => mapDesignationDetail(res)),
+      tap(() => invalidateLookupCache('designations')),
+    );
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`).pipe(catchError(() => of(undefined)));
+    return this.http.delete<void>(`${this.base}/${id}`).pipe(
+      tap(() => invalidateLookupCache('designations')),
+    );
   }
 
   private toParams(params: DesignationQueryParams): HttpParams {

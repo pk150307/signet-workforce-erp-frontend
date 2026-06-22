@@ -10,7 +10,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      const isAuthRoute = req.url.includes('/auth/');
+      if (error.status === 401 && !isAuthRoute && !authService.isLoggingOut()) {
         authService.logout();
       } else if (error.status === 403) {
         notificationService.error('Access denied. You do not have permission.');
