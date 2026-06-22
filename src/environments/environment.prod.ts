@@ -1,6 +1,6 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://api.signet-erp.com/api',
+  production: false,
+  apiUrl: 'http://35.154.205.144:5000/api',
   appName: 'Signet Workforce ERP',
   appVersion: '1.0.0'
 };
