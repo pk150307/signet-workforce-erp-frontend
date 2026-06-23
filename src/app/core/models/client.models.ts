@@ -23,14 +23,14 @@ export interface ClientDetail extends ClientListItem {
 
 export interface CreateClientRequest {
   companyName: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
   alternatePhone?: string;
   website?: string;
-  address: string;
-  city: string;
-  state: string;
+  address?: string;
+  city?: string;
+  state?: string;
   pinCode?: string;
   gstNumber?: string;
   panNumber?: string;
