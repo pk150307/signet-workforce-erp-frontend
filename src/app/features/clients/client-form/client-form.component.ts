@@ -46,14 +46,14 @@ export class ClientFormComponent implements OnInit {
 
   readonly form = this.fb.group({
     companyName: ['', Validators.required],
-    contactPerson: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    phone: ['', Validators.required],
+    contactPerson: [''],
+    email: ['', Validators.email],
+    phone: [''],
     gstNumber: [''],
     panNumber: [''],
-    address: ['', Validators.required],
-    city: ['', Validators.required],
-    state: ['', Validators.required],
+    address: [''],
+    city: [''],
+    state: [''],
     pinCode: [''],
     notes: [''],
   });
@@ -101,14 +101,14 @@ export class ClientFormComponent implements OnInit {
     const raw = this.form.getRawValue();
     return {
       companyName: raw.companyName!,
-      contactPerson: raw.contactPerson!,
-      email: raw.email!,
-      phone: raw.phone!,
+      contactPerson: raw.contactPerson || undefined,
+      email: raw.email || undefined,
+      phone: raw.phone || undefined,
       gstNumber: raw.gstNumber || undefined,
       panNumber: raw.panNumber || undefined,
-      address: raw.address!,
-      city: raw.city!,
-      state: raw.state!,
+      address: raw.address || undefined,
+      city: raw.city || undefined,
+      state: raw.state || undefined,
       pinCode: raw.pinCode || undefined,
       notes: raw.notes || undefined,
     };
