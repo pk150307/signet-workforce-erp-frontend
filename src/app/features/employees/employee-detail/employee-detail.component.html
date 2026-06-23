@@ -165,6 +165,90 @@
         </div>
       </mat-tab>
 
+      <!-- Documents -->
+      <mat-tab label="Documents">
+        <div class="tab-content">
+          @if (documentsLoading()) {
+            <div class="documents-loading">
+              <mat-spinner diameter="32"></mat-spinner>
+              <span>Loading documents…</span>
+            </div>
+          } @else if (documents().length === 0) {
+            <div class="documents-empty card">
+              <mat-icon>folder_open</mat-icon>
+              <p>No documents uploaded for this employee yet.</p>
+              <button mat-stroked-button [routerLink]="['/employees', emp.id, 'edit']">
+                <mat-icon>upload_file</mat-icon> Upload Documents
+              </button>
+            </div>
+          } @else {
+            <div class="documents-list card">
+              <div class="documents-list__header">
+                <h4 class="detail-section">Employee Documents</h4>
+                <span class="text-muted">{{ documents().length }} file(s)</span>
+              </div>
+
+              @for (doc of documents(); track doc.id) {
+                <div class="document-row">
+                  <div class="document-row__icon" [class.document-row__icon--image]="isImage(doc.mimeType)">
+                    <mat-icon>{{ isImage(doc.mimeType) ? 'image' : (doc.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'description') }}</mat-icon>
+                  </div>
+                  <div class="document-row__info">
+                    <div class="document-row__title">{{ doc.label }}</div>
+                    <div class="document-row__meta">
+                      <span>{{ docTypeLabel(doc.type) }}</span>
+                      <span class="sep">·</span>
+                      <span>{{ doc.fileName }}</span>
+                      <span class="sep">·</span>
+                      <span>{{ doc.uploadedAt | safeDate:'dd MMM yyyy' }}</span>
+                    </div>
+                  </div>
+                  <div class="document-row__actions">
+                    <button
+                      mat-icon-button
+                      matTooltip="View"
+                      aria-label="View document"
+                      [disabled]="viewingId() === doc.id || downloadingId() === doc.id"
+                      (click)="openDocument(doc)">
+                      @if (viewingId() === doc.id) {
+                        <mat-spinner diameter="20"></mat-spinner>
+                      } @else {
+                        <mat-icon>visibility</mat-icon>
+                      }
+                    </button>
+                    <button
+                      mat-icon-button
+                      matTooltip="Download"
+                      aria-label="Download document"
+                      [disabled]="downloadingId() === doc.id || viewingId() === doc.id"
+                      (click)="downloadDocument(doc)">
+                      @if (downloadingId() === doc.id) {
+                        <mat-spinner diameter="20"></mat-spinner>
+                      } @else {
+                        <mat-icon>download</mat-icon>
+                      }
+                    </button>
+                    <button
+                      mat-icon-button
+                      matTooltip="Remove"
+                      aria-label="Remove document"
+                      color="warn"
+                      [disabled]="deletingId() === doc.id"
+                      (click)="deleteDocument(doc)">
+                      @if (deletingId() === doc.id) {
+                        <mat-spinner diameter="20"></mat-spinner>
+                      } @else {
+                        <mat-icon>delete</mat-icon>
+                      }
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+
     </mat-tab-group>
   </ng-container>
 </div>
