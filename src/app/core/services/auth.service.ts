@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap, catchError, finalize, of, EMPTY, Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { AuthResponse, LoginRequest, TokenPayload } from '../models/auth.models';
+import { AuthResponse, ChangePasswordRequest, ForgotPasswordRequest, LoginRequest, MessageResponse, ResetPasswordRequest, TokenPayload } from '../models/auth.models';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { AUTH_STORAGE_KEY, SESSION_STORAGE_KEYS } from '../constants/auth-storage.constants';
 import { BreadcrumbService } from './breadcrumb.service';
@@ -39,6 +39,27 @@ export class AuthService {
         this._authState.set(res);
         this.persistState(res);
       }),
+    );
+  }
+
+  forgotPassword(request: ForgotPasswordRequest) {
+    return this.http.post<MessageResponse>(
+      `${environment.apiUrl}${API_ENDPOINTS.auth.forgotPassword}`,
+      request,
+    );
+  }
+
+  resetPassword(request: ResetPasswordRequest) {
+    return this.http.post<MessageResponse>(
+      `${environment.apiUrl}${API_ENDPOINTS.auth.resetPassword}`,
+      request,
+    );
+  }
+
+  changePassword(request: ChangePasswordRequest) {
+    return this.http.post<MessageResponse>(
+      `${environment.apiUrl}${API_ENDPOINTS.auth.changePassword}`,
+      request,
     );
   }
 

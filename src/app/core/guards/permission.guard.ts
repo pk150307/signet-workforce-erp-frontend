@@ -7,7 +7,7 @@ export const permissionGuard = (permission: string): CanActivateFn => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (authService.hasPermission(permission) || authService.hasRole('Admin')) {
+    if (authService.hasPermission(permission) || authService.hasRole('Super Admin') || authService.hasRole('Admin')) {
       return true;
     }
 

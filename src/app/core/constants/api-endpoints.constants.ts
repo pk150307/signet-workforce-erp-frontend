@@ -5,7 +5,42 @@ export const API_ENDPOINTS = {
     logout: '/auth/logout',
     refreshToken: '/auth/refresh-token',
     forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
     changePassword: '/auth/change-password',
+    profile: '/auth/profile',
+    loginHistory: '/auth/login-history',
+    loginHistorySummary: '/auth/login-history/summary',
+  },
+  loginHistory: {
+    base: '/login-history',
+    summary: '/login-history/summary',
+  },
+  users: {
+    base: '/users',
+    byId: (id: string) => `/users/${id}`,
+    status: (id: string) => `/users/${id}/status`,
+    resetPassword: (id: string) => `/users/${id}/reset-password`,
+    loginHistory: (id: string) => `/users/${id}/login-history`,
+  },
+  roles: {
+    base: '/roles',
+    byId: (id: string) => `/roles/${id}`,
+    permissions: (id: string) => `/roles/${id}/permissions`,
+  },
+  permissions: {
+    base: '/permissions',
+  },
+  deleteRequests: {
+    base: '/delete-requests',
+    byId: (id: string) => `/delete-requests/${id}`,
+    approve: (id: string) => `/delete-requests/${id}/approve`,
+    reject: (id: string) => `/delete-requests/${id}/reject`,
+  },
+  auditLogs: {
+    base: '/audit-logs',
+    summary: '/audit-logs/summary',
+    export: '/audit-logs/export',
+    byId: (id: string) => `/audit-logs/${id}`,
   },
   dashboard: {
     stats: '/dashboard/stats',
@@ -88,8 +123,11 @@ export const API_ENDPOINTS = {
   },
   notifications: {
     base: '/notifications',
+    summary: '/notifications/summary',
     readAll: '/notifications/read-all',
+    byId: (id: string) => `/notifications/${id}`,
     read: (id: string) => `/notifications/${id}/read`,
+    unread: (id: string) => `/notifications/${id}/unread`,
   },
   documents: {
     upload: '/documents/upload',

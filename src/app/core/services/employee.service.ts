@@ -180,21 +180,6 @@ export class EmployeeService {
 
     return this.http.get<unknown>(this.base, { params }).pipe(
       map(res => normalizePaginated<EmployeeListItem>(res, mapEmployeeListItem)),
-      catchError(() => {
-        let items = [...MOCK_EMPLOYEES];
-        if (filter.status != null && filter.status !== 'all') {
-          items = items.filter(e => e.status === filter.status);
-        }
-        if (filter.search) {
-          const term = filter.search.toLowerCase();
-          items = items.filter(e =>
-            e.fullName.toLowerCase().includes(term) ||
-            e.employeeCode.toLowerCase().includes(term) ||
-            e.email.toLowerCase().includes(term)
-          );
-        }
-        return of(paginateMock(items, filter, ['fullName', 'employeeCode', 'email', 'department']));
-      })
     );
   }
 
@@ -226,23 +211,17 @@ export class EmployeeService {
   }
 
   getDashboardStats(): Observable<EmployeeDashboardStats> {
-    return this.http.get<EmployeeDashboardStats>(`${this.base}/dashboard`).pipe(
-      catchError(() => of({ ...MOCK_DASHBOARD }))
-    );
+    return this.http.get<EmployeeDashboardStats>(`${this.base}/dashboard`);
   }
 
   getRecentEmployees(limit = 5): Observable<EmployeeListItem[]> {
     const params = new HttpParams().set('limit', limit);
-    return this.http.get<EmployeeListItem[]>(`${this.base}/recent`, { params }).pipe(
-      catchError(() => of(MOCK_EMPLOYEES.slice(0, limit)))
-    );
+    return this.http.get<EmployeeListItem[]>(`${this.base}/recent`, { params });
   }
 
   getRecentActivities(limit = 10): Observable<EmployeeActivity[]> {
     const params = new HttpParams().set('limit', limit);
-    return this.http.get<EmployeeActivity[]>(`${this.base}/activities`, { params }).pipe(
-      catchError(() => of(MOCK_ACTIVITIES.slice(0, limit)))
-    );
+    return this.http.get<EmployeeActivity[]>(`${this.base}/activities`, { params });
   }
 
   create(payload: CreateEmployeeRequest) {
@@ -266,19 +245,12 @@ export class EmployeeService {
   submit(id: string) {
     return this.http.post<EmployeeSubmitResult>(`${this.base}/${id}/submit`, {}).pipe(
       tap(() => invalidateLookupCache('employees-select')),
-      catchError(() => of({
-        id,
-        employeeCode: '',
-        status: EmployeeStatus.Active,
-        fullName: 'New Employee',
-      }))
     );
   }
 
   update(id: string, payload: Partial<CreateEmployeeDraftRequest> & { id: string }) {
     return this.http.put<void>(`${this.base}/${id}`, payload).pipe(
       tap(() => invalidateLookupCache('employees-select')),
-      catchError(() => of(undefined))
     );
   }
 

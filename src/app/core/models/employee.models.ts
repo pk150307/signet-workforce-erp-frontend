@@ -125,6 +125,7 @@ export interface EmployeeDocument {
   label: string;
   fileName: string;
   fileUrl: string;
+  downloadUrl: string;
   mimeType: string;
   uploadedAt: string;
 }

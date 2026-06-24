@@ -4,6 +4,8 @@ import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache, invalidateLookupKey, lookupCacheKey } from '../utils/lookup-cache.util';
 import { mapSiteDetail, normalizePaginated, mapSiteListItem } from '../utils/api-response.util';
 import { environment } from '@env/environment';
+import { DeleteActionResult } from '../models/delete-action.models';
+import { deleteWithApproval } from '../utils/delete-api.util';
 import { PaginatedResult } from '../models/api.models';
 import {
   CreateSiteRequest,
@@ -85,8 +87,8 @@ export class SitesService {
     );
   }
 
-  delete(id: string, clientId?: string) {
-    return this.http.delete<void>(`${this.base}/${id}`).pipe(
+  delete(id: string, clientId?: string, options?: { reason?: string }): Observable<DeleteActionResult> {
+    return deleteWithApproval(this.http, `${this.base}/${id}`, options).pipe(
       tap(() => {
         invalidateLookupCache('sites');
         invalidateLookupCache('clients');

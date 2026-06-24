@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
 import { environment } from '@env/environment';
+import { DeleteActionResult } from '../models/delete-action.models';
+import { deleteWithApproval } from '../utils/delete-api.util';
 import { PaginatedResult } from '../models/api.models';
 import {
   ClientDetail,
@@ -69,8 +71,8 @@ export class ClientsService {
     );
   }
 
-  delete(id: string) {
-    return this.http.delete<void>(`${this.base}/${id}`).pipe(
+  delete(id: string, options?: { reason?: string }): Observable<DeleteActionResult> {
+    return deleteWithApproval(this.http, `${this.base}/${id}`, options).pipe(
       tap(() => {
         invalidateLookupCache('clients');
         invalidateLookupKey('client-sites', id);

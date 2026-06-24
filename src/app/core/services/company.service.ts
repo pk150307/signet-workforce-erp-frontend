@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
+import { Observable, map, shareReplay, tap } from 'rxjs';
 import { environment } from '@env/environment';
 import { PaginatedResult } from '../models/api.models';
 import {
@@ -10,22 +10,7 @@ import {
   OfficeListItem,
 } from '../models/company.models';
 import { mapCompanyProfile, unwrapApiData } from '../utils/api-response.util';
-import { paginateMock } from '../utils/mock-pagination.util';
 import { DEFAULT_COMPANY_LOGO } from '../constants/company.constants';
-
-const MOCK_BRANCHES: BranchListItem[] = [
-  { id: '1', branchCode: 'BR-MUM', branchName: 'Mumbai HQ', city: 'Mumbai', state: 'Maharashtra', headCount: 120, isActive: true },
-  { id: '2', branchCode: 'BR-PUN', branchName: 'Pune Office', city: 'Pune', state: 'Maharashtra', headCount: 45, isActive: true },
-  { id: '3', branchCode: 'BR-DEL', branchName: 'Delhi NCR', city: 'Gurgaon', state: 'Haryana', headCount: 38, isActive: true },
-  { id: '4', branchCode: 'BR-BLR', branchName: 'Bangalore', city: 'Bangalore', state: 'Karnataka', headCount: 52, isActive: false },
-];
-
-const MOCK_OFFICES: OfficeListItem[] = [
-  { id: '1', officeCode: 'OF-MUM-01', officeName: 'Corporate Office', branchName: 'Mumbai HQ', floor: '5th Floor', capacity: 80, isActive: true },
-  { id: '2', officeCode: 'OF-MUM-02', officeName: 'Operations Wing', branchName: 'Mumbai HQ', floor: '3rd Floor', capacity: 40, isActive: true },
-  { id: '3', officeCode: 'OF-PUN-01', officeName: 'Pune Main', branchName: 'Pune Office', floor: '2nd Floor', capacity: 30, isActive: true },
-  { id: '4', officeCode: 'OF-DEL-01', officeName: 'NCR Hub', branchName: 'Delhi NCR', floor: '1st Floor', capacity: 25, isActive: true },
-];
 
 @Injectable({ providedIn: 'root' })
 export class CompanyService {
@@ -75,25 +60,21 @@ export class CompanyService {
   getBranches(params: CompanyQueryParams = {}): Observable<PaginatedResult<BranchListItem>> {
     return this.http.get<PaginatedResult<BranchListItem>>(`${this.base}/branches`, {
       params: this.toParams(params),
-    }).pipe(
-      catchError(() => of(paginateMock(MOCK_BRANCHES, params, ['branchCode', 'branchName', 'city', 'state'])))
-    );
+    });
   }
 
   getOffices(params: CompanyQueryParams = {}): Observable<PaginatedResult<OfficeListItem>> {
     return this.http.get<PaginatedResult<OfficeListItem>>(`${this.base}/offices`, {
       params: this.toParams(params),
-    }).pipe(
-      catchError(() => of(paginateMock(MOCK_OFFICES, params, ['officeCode', 'officeName', 'branchName', 'floor'])))
-    );
+    });
   }
 
   deleteBranch(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/branches/${id}`).pipe(catchError(() => of(undefined)));
+    return this.http.delete<void>(`${this.base}/branches/${id}`);
   }
 
   deleteOffice(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/offices/${id}`).pipe(catchError(() => of(undefined)));
+    return this.http.delete<void>(`${this.base}/offices/${id}`);
   }
 
   private toParams(params: CompanyQueryParams): HttpParams {

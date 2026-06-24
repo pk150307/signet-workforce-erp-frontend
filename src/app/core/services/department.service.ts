@@ -4,6 +4,8 @@ import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache, lookupCacheKey } from '../utils/lookup-cache.util';
 import { normalizePaginated, mapDepartmentDetail, mapDepartmentListItem } from '../utils/api-response.util';
 import { environment } from '@env/environment';
+import { DeleteActionResult } from '../models/delete-action.models';
+import { deleteWithApproval } from '../utils/delete-api.util';
 import { PaginatedResult } from '../models/api.models';
 import {
   CreateDepartmentRequest,
@@ -73,8 +75,8 @@ export class DepartmentService {
     );
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${id}`).pipe(
+  delete(id: string, options?: { reason?: string }): Observable<DeleteActionResult> {
+    return deleteWithApproval(this.http, `${this.base}/${id}`, options).pipe(
       tap(() => invalidateLookupCache('departments')),
     );
   }
