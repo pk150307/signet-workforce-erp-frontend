@@ -1,0 +1,341 @@
+@import './breakpoints.less';
+
+// Scrollable Material table inside list cards (mobile / tablet)
+.card-table-scroll(@min-width: 720px) {
+  .tablet-down({
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+
+    mat-table,
+    table.mat-mdc-table,
+    .mat-mdc-table {
+      min-width: @min-width;
+      width: max-content;
+      overflow: visible !important;
+    }
+
+    .mat-mdc-header-row,
+    .mat-mdc-row,
+    mat-header-row,
+    mat-row {
+      min-width: @min-width;
+    }
+  });
+}
+
+// Custom CSS-grid mat-table wrapper
+.grid-table-scroll(@wrap-selector; @min-width: 900px) {
+  @{wrap-selector} {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .tablet-down({
+    @{wrap-selector} {
+      .mat-mdc-header-row,
+      .mat-mdc-row,
+      mat-header-row,
+      mat-row {
+        min-width: @min-width;
+        width: max-content;
+      }
+    }
+  });
+}
+
+// Filter card used on list pages (sites, etc.)
+.responsive-filters-card(@root) {
+  @{root} {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-down({
+    @{root} {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px;
+
+      .mat-mdc-form-field {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: 1 1 100% !important;
+      }
+
+      &__clear,
+      &__actions {
+        margin-left: 0 !important;
+        width: 100%;
+        align-self: stretch;
+        height: auto !important;
+      }
+    }
+  });
+}
+
+// Page header action buttons — wrap / stack on small screens
+.responsive-page-actions() {
+  .page-header__actions {
+    flex-wrap: wrap;
+
+    .tablet-down({
+      width: 100%;
+      gap: 8px;
+    });
+
+    .mobile-down({
+      button,
+      a[mat-raised-button],
+      a[mat-stroked-button],
+      a[mat-button] {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        justify-content: center;
+      }
+
+      button:only-child,
+      a:only-child {
+        flex: 1 1 100%;
+      }
+    });
+  }
+}
+
+// Form page headers (create/edit screens)
+.responsive-form-page-header() {
+  .form-page-header {
+    .tablet-down({
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    });
+
+    &__actions {
+      .mobile-down({
+        margin-left: 0 !important;
+        width: 100%;
+        flex-wrap: wrap;
+
+        button,
+        a {
+          flex: 1 1 calc(50% - 4px);
+          justify-content: center;
+        }
+      });
+    }
+  }
+
+  .form-footer {
+    .mobile-down({
+      flex-direction: column-reverse;
+      padding: 14px 16px;
+
+      button {
+        width: 100%;
+        min-width: 0 !important;
+      }
+    });
+  }
+}
+
+// Detail profile hero banner
+.responsive-detail-profile(@root: detail-profile) {
+  .@{root}__inner {
+    .mobile-and-tablet({
+      flex-direction: column;
+      align-items: stretch;
+      padding: 20px 16px;
+      gap: 16px;
+    });
+  }
+
+  .@{root}__main {
+    .mobile-down({
+      flex-direction: column;
+      align-items: flex-start;
+    });
+  }
+
+  .@{root}__actions {
+    .mobile-down({
+      width: 100%;
+      flex-direction: column;
+
+      a, button {
+        width: 100%;
+        justify-content: center;
+      }
+    });
+  }
+
+  .@{root}__name {
+    .mobile-down({
+      font-size: 1.25rem;
+    });
+  }
+}
+
+.responsive-site-profile() {
+  .responsive-detail-profile(site-profile);
+}
+
+.responsive-detail-rows() {
+  .detail-row,
+  .info-row {
+    .mobile-down({
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    });
+  }
+
+  .detail-label,
+  .info-label {
+    .mobile-down({
+      min-width: 0;
+    });
+  }
+
+  .detail-value,
+  .info-value {
+    .mobile-down({
+      text-align: left !important;
+    });
+  }
+}
+
+.responsive-detail-grid(@selector: detail-grid; @min: 280px) {
+  .@{selector} {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(@min, 1fr));
+    gap: 16px;
+
+    .mobile-down({
+      grid-template-columns: 1fr;
+    });
+  }
+}
+
+.responsive-filter-row(@selector: filter-row) {
+  .@{selector} {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .mat-mdc-form-field {
+      flex: 1 1 160px;
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
+  .mobile-down({
+    .@{selector} {
+      flex-direction: column;
+
+      .mat-mdc-form-field {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+      }
+    }
+  });
+}
+
+.responsive-register-banner(@selector: register-banner) {
+  .@{selector} {
+    .mobile-down({
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    });
+  }
+}
+
+// Standard list-page bundle — import in any page with tables
+.list-page-responsive(@table-min-width: 720px) {
+  .responsive-page-actions();
+
+  .table-scroll,
+  [class*='__table-wrap'] {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+
+    mat-table,
+    table.mat-mdc-table,
+    .mat-mdc-table {
+      overflow: visible !important;
+      border-radius: 0 !important;
+    }
+  }
+
+  .tablet-down({
+    .table-scroll,
+    [class*='__table-wrap'] {
+      mat-table,
+      table.mat-mdc-table,
+      .mat-mdc-table {
+        min-width: @table-min-width;
+        width: max-content;
+      }
+
+      .mat-mdc-header-row,
+      .mat-mdc-row,
+      mat-header-row,
+      mat-row {
+        min-width: @table-min-width;
+      }
+    }
+  });
+
+  .card--flush {
+    .tablet-down({
+      overflow: visible;
+    });
+  }
+
+  .filter-bar {
+    .mat-mdc-form-field {
+      .mobile-down({
+        width: 100% !important;
+        max-width: none !important;
+      });
+    }
+  }
+
+  mat-paginator,
+  .mat-mdc-paginator {
+    .mobile-down({
+      .mat-mdc-paginator-container {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 8px;
+        padding: 8px 12px;
+        min-height: auto;
+      }
+
+      .mat-mdc-paginator-range-label {
+        margin: 0 4px;
+        font-size: 12px;
+      }
+
+      .mat-mdc-paginator-page-size {
+        margin-right: 0;
+      }
+    });
+  }
+}

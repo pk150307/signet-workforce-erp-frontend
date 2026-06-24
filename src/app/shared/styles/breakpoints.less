@@ -1,0 +1,46 @@
+// Responsive breakpoints
+// Mobile:  330px – 600px  (max-width: 599px)
+// Tablet:  600px – 1200px (600px – 1199px)
+// Desktop: > 1200px       (min-width: 1200px)
+
+@bp-mobile-min: 330px;
+@bp-mobile-max: 599px;
+@bp-tablet-min: 600px;
+@bp-tablet-max: 1199px;
+@bp-desktop-min: 1200px;
+
+.mobile(@rules) {
+  @media (min-width: @bp-mobile-min) and (max-width: @bp-mobile-max) {
+    @rules();
+  }
+}
+
+.mobile-down(@rules) {
+  @media (max-width: @bp-mobile-max) {
+    @rules();
+  }
+}
+
+.tablet(@rules) {
+  @media (min-width: @bp-tablet-min) and (max-width: @bp-tablet-max) {
+    @rules();
+  }
+}
+
+.tablet-down(@rules) {
+  @media (max-width: @bp-tablet-max) {
+    @rules();
+  }
+}
+
+.desktop(@rules) {
+  @media (min-width: @bp-desktop-min) {
+    @rules();
+  }
+}
+
+.mobile-and-tablet(@rules) {
+  @media (max-width: @bp-tablet-max) {
+    @rules();
+  }
+}

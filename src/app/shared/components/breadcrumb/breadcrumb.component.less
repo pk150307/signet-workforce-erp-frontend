@@ -1,3 +1,5 @@
+@import '../../styles/breakpoints.less';
+
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -7,6 +9,15 @@
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   font-size: 13px;
+
+  .tablet({
+    padding: 10px 16px;
+  });
+
+  .mobile-down({
+    padding: 8px 12px;
+    font-size: 12px;
+  });
 
   &__item {
     display: inline-flex;
