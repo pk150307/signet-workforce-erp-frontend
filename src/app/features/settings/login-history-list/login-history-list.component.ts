@@ -5,24 +5,20 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { RolesService } from '../../../core/services/roles.service';
+import { LoginHistoryService } from '../../../core/services/login-history.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { IAM_PERMISSIONS } from '../../../core/constants/iam-permissions.constants';
 import { PaginatedResult } from '../../../core/models/api.models';
-import { IamRoleListItem } from '../../../core/models/iam.models';
+import { LoginHistoryItem } from '../../../core/services/login-history.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { RolePermissionsDrawerComponent } from '../role-permissions-drawer/role-permissions-drawer.component';
 
 @Component({
-  selector: 'app-roles-list',
+  selector: 'app-login-history-list',
   standalone: true,
   imports: [
     NgIf,
@@ -32,30 +28,24 @@ import { RolePermissionsDrawerComponent } from '../role-permissions-drawer/role-
     MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule,
-    MatSidenavModule,
     EmptyStateComponent,
     SkeletonLoaderComponent,
-    RolePermissionsDrawerComponent,
   ],
-  templateUrl: './roles-list.component.html',
-  styleUrl: './roles-list.component.less',
+  templateUrl: './login-history-list.component.html',
+  styleUrl: './login-history-list.component.less',
 })
-export class RolesListComponent implements OnInit {
-  private readonly rolesService = inject(RolesService);
+export class LoginHistoryListComponent implements OnInit {
+  private readonly loginHistoryService = inject(LoginHistoryService);
   private readonly notification = inject(NotificationService);
-  private readonly authService = inject(AuthService);
 
   readonly loading = signal(true);
-  readonly drawerOpen = signal(false);
-  readonly selectedRoleId = signal<string | null>(null);
-  readonly data = signal<PaginatedResult<IamRoleListItem> | null>(null);
+  readonly data = signal<PaginatedResult<LoginHistoryItem> | null>(null);
   readonly searchCtrl = new FormControl('');
-  readonly cols = ['name', 'description', 'userCount', 'permissionCount', 'isSystem', 'isActive', 'actions'];
-
-  readonly canUpdate = this.authService.hasPermission(IAM_PERMISSIONS.roles.update);
+  readonly statusCtrl = new FormControl('');
+  readonly cols = ['loggedInAt', 'userName', 'loginStatus', 'ipAddress', 'browser', 'isNewDevice'];
 
   page = 1;
   pageSize = 20;
@@ -66,35 +56,29 @@ export class RolesListComponent implements OnInit {
       this.page = 1;
       this.load();
     });
+    this.statusCtrl.valueChanges.subscribe(() => {
+      this.page = 1;
+      this.load();
+    });
   }
 
   load(): void {
     this.loading.set(true);
-    this.rolesService.list({ page: this.page, pageSize: this.pageSize, search: this.searchCtrl.value || undefined }).subscribe({
+    this.loginHistoryService.list({
+      page: this.page,
+      pageSize: this.pageSize,
+      search: this.searchCtrl.value || undefined,
+      loginStatus: this.statusCtrl.value || undefined,
+    }).subscribe({
       next: (result) => {
         this.data.set(result);
         this.loading.set(false);
       },
       error: (err) => {
         this.loading.set(false);
-        this.notification.error(err?.error?.message ?? 'Failed to load roles.');
+        this.notification.error(err?.error?.message ?? 'Failed to load login history.');
       },
     });
-  }
-
-  openPermissions(role: IamRoleListItem): void {
-    this.selectedRoleId.set(role.id);
-    this.drawerOpen.set(true);
-  }
-
-  closeDrawer(): void {
-    this.drawerOpen.set(false);
-    this.selectedRoleId.set(null);
-  }
-
-  onSaved(): void {
-    this.closeDrawer();
-    this.load();
   }
 
   onPageChange(event: PageEvent): void {

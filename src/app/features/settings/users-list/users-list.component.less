@@ -1,9 +1,22 @@
-.mock-badge {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  background: var(--color-divider);
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/module-layout.less';
+
+.users-list__container,
+.users-list__drawer {
+  height: 100%;
+}
+
+.users-list__drawer {
+  width: min(480px, 100vw);
+}
+
+.status--inactive {
   color: var(--color-text-muted);
 }
+
+.status--locked {
+  color: #c62828;
+  font-size: 12px;
+}
+
+.list-page-responsive(900);

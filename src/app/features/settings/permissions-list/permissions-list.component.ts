@@ -1,18 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe, NgIf } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { NgFor, NgIf } from '@angular/common';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { MatChipsModule } from '@angular/material/chips';
 
-import { SettingsService } from '../../../core/services/settings.service';
+import { RolesService } from '../../../core/services/roles.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { PaginatedResult } from '../../../core/models/api.models';
-import { PermissionListItem } from '../../../core/models/settings.models';
+import { IamPermissionModuleGroup } from '../../../core/models/iam.models';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 
@@ -21,14 +16,11 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
   standalone: true,
   imports: [
     NgIf,
-    DatePipe,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
+    NgFor,
+    MatExpansionModule,
     MatButtonModule,
     MatIconModule,
+    MatChipsModule,
     EmptyStateComponent,
     SkeletonLoaderComponent,
   ],
@@ -36,46 +28,27 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
   styleUrl: './permissions-list.component.less',
 })
 export class PermissionsListComponent implements OnInit {
-
-  private readonly service = inject(SettingsService);
+  private readonly rolesService = inject(RolesService);
   private readonly notification = inject(NotificationService);
 
   readonly loading = signal(true);
-  readonly usingMock = signal(false);
-  readonly data = signal<PaginatedResult<PermissionListItem> | null>(null);
-  readonly searchCtrl = new FormControl('');
-  readonly cols = ["permissionCode","permissionName","module","description"];
+  readonly groups = signal<IamPermissionModuleGroup[]>([]);
 
-  page = 1;
-  pageSize = 20;
-
-  ngOnInit() {
+  ngOnInit(): void {
     this.load();
-    this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
-    });
   }
 
-  load() {
+  load(): void {
     this.loading.set(true);
-    this.service.getPermissions({ page: this.page, pageSize: this.pageSize, search: this.searchCtrl.value || undefined }).subscribe({
+    this.rolesService.listPermissions(true).subscribe({
       next: (result) => {
-        this.data.set(result);
-        this.usingMock.set(false);
+        this.groups.set(result as IamPermissionModuleGroup[]);
         this.loading.set(false);
       },
-      error: () => {
-        this.usingMock.set(true);
+      error: (err) => {
         this.loading.set(false);
-        this.notification.info('Showing sample data.');
+        this.notification.error(err?.error?.message ?? 'Failed to load permissions.');
       },
     });
-  }
-
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.load();
   }
 }

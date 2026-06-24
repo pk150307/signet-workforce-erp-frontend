@@ -1,3 +1,7 @@
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/module-layout.less';
+
 .code-chip {
   font-family: monospace;
   background: var(--color-divider);
@@ -18,4 +22,19 @@
     height: 16px;
     color: var(--color-text-secondary);
   }
+}
+
+.list-page-responsive(720);
+
+.filter-field--inline {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 140px;
+  max-width: 220px;
+
+  .mobile-down({
+    width: 100% !important;
+    max-width: none !important;
+    flex: 1 1 100% !important;
+  });
 }

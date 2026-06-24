@@ -4,7 +4,7 @@
       <h1 class="page-header__title">Email Templates</h1>
       <p class="page-header__subtitle">
         {{ data()?.totalCount ?? 0 }} records
-        <span class="mock-badge" *ngIf="usingMock()">Sample Data</span>
+        <span class="mock-badge" *ngIf="usingLocalData()">Local templates</span>
       </p>
     </div>
     <div class="page-header__actions">
@@ -29,6 +29,7 @@
       title="No records found"
       description="No email templates match your search criteria.">
     </app-empty-state>
+    <div class="table-scroll">
     <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="templateCode">
         <mat-header-cell *matHeaderCellDef>Template Code</mat-header-cell>
@@ -49,6 +50,7 @@
       <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
       <mat-row *matRowDef="let row; columns: cols;"></mat-row>
     </mat-table>
+    </div>
     <mat-paginator
       *ngIf="(data()?.totalCount ?? 0) > 0"
       [length]="data()?.totalCount ?? 0"

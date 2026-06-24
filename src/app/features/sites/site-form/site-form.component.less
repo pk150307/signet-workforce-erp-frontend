@@ -1,3 +1,7 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
 .site-form-page {
   margin: 0 auto;
 }
@@ -145,7 +149,7 @@
   }
 }
 
-@media (max-width: 720px) {
+.tablet-down({
   .form-section {
     padding: 20px 16px;
 
@@ -167,4 +171,6 @@
       width: 100%;
     }
   }
-}
+});
+
+.responsive-form-page-header();

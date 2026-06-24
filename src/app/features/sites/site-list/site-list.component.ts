@@ -12,11 +12,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { confirmDialogConfig } from '../../../core/utils/dialog.util';
 import { SitesService } from '../../../core/services/sites.service';
 import { ClientsService } from '../../../core/services/clients.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { runDeleteWithApproval } from '../../../core/utils/delete-record.util';
 import { PaginatedResult } from '../../../core/models/api.models';
 import { SiteListItem } from '../../../core/models/sites.models';
 import { ClientListItem } from '../../../core/models/client.models';
@@ -37,6 +37,7 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 export class SiteListComponent implements OnInit {
   private readonly sitesService = inject(SitesService);
   private readonly clientsService = inject(ClientsService);
+  private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
@@ -108,24 +109,14 @@ export class SiteListComponent implements OnInit {
   }
 
   deleteSite(site: SiteListItem) {
-    this.dialog.open(
-      ConfirmDialogComponent,
-      confirmDialogConfig({
-        title: 'Delete Site',
-        message: `Delete site "${site.siteName}"? This action cannot be undone.`,
-        confirmLabel: 'Delete',
-        icon: 'delete',
-        confirmColor: 'warn',
-      }),
-    ).afterClosed().subscribe(confirmed => {
-      if (!confirmed) return;
-      this.sitesService.delete(site.id, site.clientId).subscribe({
-        next: () => {
-          this.notification.success('Site deleted.');
-          this.load();
-        },
-        error: () => this.notification.error('Failed to delete site.'),
-      });
+    runDeleteWithApproval({
+      auth: this.authService,
+      dialog: this.dialog,
+      notification: this.notification,
+      title: 'Delete Site',
+      entityLabel: site.siteName,
+      deleteFn: (reason) => this.sitesService.delete(site.id, site.clientId, { reason }),
+      onSuccess: () => this.load(),
     });
   }
 }

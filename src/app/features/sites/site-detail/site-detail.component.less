@@ -1,3 +1,8 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+@import '../../../shared/styles/dashboard-grids.less';
+
 .detail-nav {
   margin-bottom: 16px;
 
@@ -137,9 +142,7 @@
 
 // ── KPIs ─────────────────────────────────────────────────────────────────────
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  .kpi-grid-responsive(3, 2, 1);
   margin-bottom: 24px;
 }
 
@@ -314,7 +317,7 @@
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
+.mobile-and-tablet({
   .site-profile__inner {
     flex-direction: column;
     align-items: stretch;
@@ -337,9 +340,24 @@
   .info-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 480px) {
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .info-value {
+    text-align: left;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+});
+
+.mobile({
   .site-profile__main {
     flex-direction: column;
     align-items: flex-start;
@@ -352,4 +370,4 @@
       width: 100%;
     }
   }
-}
+});

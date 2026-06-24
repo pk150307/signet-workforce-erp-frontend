@@ -1,0 +1,14 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/module-layout.less';
+
+.status-chip {
+  text-transform: capitalize;
+  font-size: 12px;
+  font-weight: 600;
+
+  &--pending { color: #e65100; }
+  &--approved { color: #2e7d32; }
+  &--rejected { color: #c62828; }
+}
+
+.list-page-responsive(1000);

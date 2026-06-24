@@ -45,6 +45,7 @@
     </div>
 
     <div class="card card--flush">
+      <div class="table-scroll">
       <mat-table [dataSource]="filteredEmployees">
         <ng-container matColumnDef="select">
           <mat-header-cell *matHeaderCellDef>
@@ -79,6 +80,7 @@
         <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
         <mat-row *matRowDef="let row; columns: cols;"></mat-row>
       </mat-table>
+      </div>
     </div>
 
     <div class="form-actions">

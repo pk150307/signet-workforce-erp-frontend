@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { SettingsService } from '../../../core/services/settings.service';
-import { NotificationService } from '../../../core/services/notification.service';
 import { PaginatedResult } from '../../../core/models/api.models';
 import { EmailTemplateItem } from '../../../core/models/settings.models';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -38,10 +37,9 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 export class EmailTemplatesComponent implements OnInit {
 
   private readonly service = inject(SettingsService);
-  private readonly notification = inject(NotificationService);
 
   readonly loading = signal(true);
-  readonly usingMock = signal(false);
+  readonly usingLocalData = signal(true);
   readonly data = signal<PaginatedResult<EmailTemplateItem> | null>(null);
   readonly searchCtrl = new FormControl('');
   readonly cols = ["templateCode","templateName","subject","lastModified"];
@@ -62,13 +60,7 @@ export class EmailTemplatesComponent implements OnInit {
     this.service.getEmailTemplates({ page: this.page, pageSize: this.pageSize, search: this.searchCtrl.value || undefined }).subscribe({
       next: (result) => {
         this.data.set(result);
-        this.usingMock.set(false);
         this.loading.set(false);
-      },
-      error: () => {
-        this.usingMock.set(true);
-        this.loading.set(false);
-        this.notification.info('Showing sample data.');
       },
     });
   }

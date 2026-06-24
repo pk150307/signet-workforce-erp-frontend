@@ -1,0 +1,47 @@
+<div class="role-permissions-drawer">
+  <div class="role-permissions-drawer__header">
+    <div>
+      <h2>Permission Matrix</h2>
+      <p *ngIf="role() as r">{{ r.name }}</p>
+    </div>
+    <button mat-icon-button type="button" (click)="close()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <app-skeleton-loader *ngIf="loading()" type="form" [rows]="8"></app-skeleton-loader>
+
+  <div *ngIf="!loading()" class="role-permissions-drawer__body">
+    <mat-accordion multi>
+      <mat-expansion-panel *ngFor="let group of groups()">
+        <mat-expansion-panel-header>
+          <mat-panel-title>{{ group.module }}</mat-panel-title>
+          <mat-panel-description>{{ group.permissions.length }} permissions</mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="role-permissions-drawer__module-actions">
+          <button mat-button type="button" (click)="toggleModule(group, true)">Select all</button>
+          <button mat-button type="button" (click)="toggleModule(group, false)">Clear</button>
+        </div>
+
+        <div class="role-permissions-drawer__permission" *ngFor="let perm of group.permissions">
+          <mat-checkbox
+            [checked]="isChecked(perm.id)"
+            [disabled]="!canUpdate || role()?.isSystem"
+            (change)="toggle(perm.id, $event.checked)">
+            <span class="role-permissions-drawer__perm-key">{{ perm.key }}</span>
+            <span class="role-permissions-drawer__perm-desc" *ngIf="perm.description">{{ perm.description }}</span>
+          </mat-checkbox>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+
+  <div class="role-permissions-drawer__actions">
+    <button mat-stroked-button type="button" (click)="close()">Cancel</button>
+    <button mat-raised-button color="primary" type="button" [disabled]="saving() || !canUpdate || role()?.isSystem" (click)="save()">
+      <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
+      <span *ngIf="!saving()">Save Permissions</span>
+    </button>
+  </div>
+</div>

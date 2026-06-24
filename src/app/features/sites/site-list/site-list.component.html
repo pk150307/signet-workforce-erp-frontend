@@ -49,6 +49,7 @@
       description="Try adjusting your search or client filter.">
     </app-empty-state>
 
+    <div class="table-scroll">
     <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="siteCode">
         <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
@@ -98,6 +99,7 @@
       <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
       <mat-row *matRowDef="let row; columns: cols;"></mat-row>
     </mat-table>
+    </div>
 
     <mat-paginator
       *ngIf="(data()?.totalCount ?? 0) > 0"

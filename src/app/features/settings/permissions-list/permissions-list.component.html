@@ -1,61 +1,33 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1 class="page-header__title">Permissions List</h1>
-      <p class="page-header__subtitle">
-        {{ data()?.totalCount ?? 0 }} records
-        <span class="mock-badge" *ngIf="usingMock()">Sample Data</span>
-      </p>
+      <h1 class="page-header__title">Permission Matrix</h1>
+      <p class="page-header__subtitle">All system permissions grouped by module. Assign permissions to roles from the Roles page.</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button>
+      <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon></button>
     </div>
-  </div>
-
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-bar__search">
-      <mat-label>Search...</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl">
-    </mat-form-field>
   </div>
 
   <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
 
-  <div class="card card--flush" *ngIf="!loading()">
-    <app-empty-state
-      *ngIf="data()?.items?.length === 0"
-      icon="inbox"
-      title="No records found"
-      description="No permissions match your search criteria.">
-    </app-empty-state>
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
-      <ng-container matColumnDef="permissionCode">
-        <mat-header-cell *matHeaderCellDef>Permission Code</mat-header-cell>
-        <mat-cell *matCellDef="let row">{{ row.permissionCode ?? '—' }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="permissionName">
-        <mat-header-cell *matHeaderCellDef>Permission Name</mat-header-cell>
-        <mat-cell *matCellDef="let row">{{ row.permissionName ?? '—' }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="module">
-        <mat-header-cell *matHeaderCellDef>Module</mat-header-cell>
-        <mat-cell *matCellDef="let row">{{ row.module ?? '—' }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="description">
-        <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-        <mat-cell *matCellDef="let row">{{ row.description ?? '—' }}</mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-    </mat-table>
-    <mat-paginator
-      *ngIf="(data()?.totalCount ?? 0) > 0"
-      [length]="data()?.totalCount ?? 0"
-      [pageSize]="pageSize"
-      [pageIndex]="page - 1"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="onPageChange($event)">
-    </mat-paginator>
+  <div *ngIf="!loading()">
+    <app-empty-state *ngIf="groups().length === 0" icon="lock" title="No permissions found" description="Permissions will appear here once configured."></app-empty-state>
+
+    <mat-accordion multi class="permissions-matrix" *ngIf="groups().length > 0">
+      <mat-expansion-panel *ngFor="let group of groups()">
+        <mat-expansion-panel-header>
+          <mat-panel-title>{{ group.module }}</mat-panel-title>
+          <mat-panel-description>{{ group.permissions.length }} permissions</mat-panel-description>
+        </mat-expansion-panel-header>
+        <div class="permissions-matrix__item" *ngFor="let perm of group.permissions">
+          <div class="permissions-matrix__key">{{ perm.key }}</div>
+          <div class="permissions-matrix__desc">{{ perm.description || perm.action }}</div>
+          <mat-chip-set>
+            <mat-chip>{{ perm.action }}</mat-chip>
+          </mat-chip-set>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
   </div>
 </div>

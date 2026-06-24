@@ -1,0 +1,30 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/dashboard-grids.less';
+
+.kpi-grid {
+  .kpi-grid-responsive(4, 2, 1);
+  margin-bottom: 20px;
+}
+
+.charts-grid,
+.content-grid {
+  .charts-grid-responsive();
+  margin-bottom: 20px;
+}
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+
+  .mobile-down({
+    flex-direction: column;
+
+    a, button {
+      width: 100%;
+      justify-content: center;
+    }
+  });
+}

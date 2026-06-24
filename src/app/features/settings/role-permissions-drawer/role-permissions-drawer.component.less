@@ -1,0 +1,58 @@
+.role-permissions-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.role-permissions-drawer__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+}
+
+.role-permissions-drawer__body {
+  flex: 1;
+  overflow: auto;
+}
+
+.role-permissions-drawer__module-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.role-permissions-drawer__permission {
+  margin-bottom: 8px;
+}
+
+.role-permissions-drawer__perm-key {
+  display: block;
+  font-weight: 500;
+}
+
+.role-permissions-drawer__perm-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.role-permissions-drawer__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 16px;
+}
