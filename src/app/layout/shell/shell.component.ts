@@ -1,7 +1,8 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { MEDIA_QUERIES } from '../../core/constants/breakpoints';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { map } from 'rxjs/operators';
 
@@ -35,7 +36,8 @@ export class ShellComponent implements OnInit {
   private readonly breadcrumbService = inject(BreadcrumbService);
 
   readonly sidebarCollapsed = signal(false);
-  readonly isMobile$ = this.breakpoint.observe(Breakpoints.Handset).pipe(map(r => r.matches));
+  readonly isMobile$ = this.breakpoint.observe(MEDIA_QUERIES.mobileDown).pipe(map(r => r.matches));
+  readonly isTablet$ = this.breakpoint.observe(MEDIA_QUERIES.tablet).pipe(map(r => r.matches));
 
   ngOnInit() {
     this.breadcrumbService.connect();

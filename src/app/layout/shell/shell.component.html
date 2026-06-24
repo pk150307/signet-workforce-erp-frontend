@@ -1,4 +1,4 @@
-<div class="shell" [class.shell--collapsed]="sidebarCollapsed()">
+<div class="shell" [class.shell--collapsed]="sidebarCollapsed() || !!(isTablet$ | async)">
 
   @if (isMobile$ | async) {
     <mat-sidenav-container class="shell__sidenav-container" [hasBackdrop]="true">

@@ -1,3 +1,5 @@
+@import '../../shared/styles/breakpoints.less';
+
 .topbar {
   height: var(--topbar-height);
   background: var(--topbar-bg);
@@ -11,6 +13,11 @@
   z-index: 50;
   position: sticky;
   top: 0;
+
+  .mobile-down({
+    padding: 0 8px 0 4px;
+    gap: 4px;
+  });
 
   &__menu-btn {
     color: var(--color-text-secondary);
@@ -30,6 +37,21 @@
     gap: 8px;
     flex: 1;
     max-width: 400px;
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.2);
+    }
+
+    .tablet({
+      max-width: 240px;
+    });
+
+    .mobile-down({
+      max-width: none;
+      min-width: 0;
+      padding: 6px 10px;
+    });
   }
 
   &__search-icon {
@@ -47,6 +69,7 @@
     color: var(--color-text-primary);
     font-family: inherit;
     width: 100%;
+    min-width: 0;
 
     &::placeholder {
       color: var(--color-text-muted);
@@ -58,6 +81,7 @@
     align-items: center;
     gap: 4px;
     margin-left: auto;
+    flex-shrink: 0;
   }
 
   &__action-btn {
@@ -97,14 +121,12 @@
     display: flex;
     flex-direction: column;
     text-align: left;
-
-    display: flex !important;
     align-items: center !important;
     gap: 10px !important;
 
-    @media (max-width: 600px) {
-      display: none;
-    }
+    .mobile-down({
+      display: none !important;
+    });
   }
 
   &__user-name {
@@ -127,12 +149,54 @@
     width: 18px !important;
     height: 18px !important;
 
-    @media (max-width: 600px) {
+    .mobile-down({
       display: none;
-    }
+    });
   }
 
   &__logout {
     color: var(--color-danger);
   }
+
+  &__notifications-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  &__notifications-empty {
+    padding: 16px;
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+
+  &__notification-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    white-space: normal;
+    line-height: 1.35;
+
+    span {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    small {
+      font-size: 11px;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__notification--unread strong {
+    color: var(--color-primary);
+  }
+}
+
+[data-theme='dark'] .topbar__search:focus-within {
+  box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.25);
 }

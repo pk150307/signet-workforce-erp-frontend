@@ -1,3 +1,5 @@
+@import '../../shared/styles/breakpoints.less';
+
 .shell {
   display: flex;
   height: 100vh;
@@ -10,7 +12,7 @@
   }
 
   &__drawer {
-    width: 260px;
+    width: min(280px, 88vw);
     border-right: none;
   }
 
@@ -21,6 +23,10 @@
     overflow: hidden;
     z-index: 100;
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.06);
+
+    .tablet({
+      width: var(--sidebar-collapsed);
+    });
   }
 
   &__main {
@@ -42,6 +48,7 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   &--collapsed {
