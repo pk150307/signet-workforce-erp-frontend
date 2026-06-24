@@ -1,3 +1,7 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../../../shared/styles/module-layout.less';
+
 .pf-esic-drawer {
   display: flex;
   flex-direction: column;
@@ -125,4 +129,29 @@
   padding: 12px 20px;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
+  flex-wrap: wrap;
 }
+
+.mobile-down({
+  .pf-esic-drawer__header {
+    padding: 16px;
+  }
+
+  .pf-esic-drawer__body {
+    padding: 12px 16px 20px;
+  }
+
+  .pf-esic-drawer__info-grid,
+  .pf-esic-drawer__contrib-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-esic-drawer__footer {
+    flex-direction: column-reverse;
+    padding: 12px 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+});

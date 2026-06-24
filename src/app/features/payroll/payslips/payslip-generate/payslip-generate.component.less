@@ -1,3 +1,7 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../../../shared/styles/module-layout.less';
+
 .generate-layout {
   display: flex;
   flex-direction: column;
@@ -44,8 +48,10 @@
   h3 { margin: 0 0 12px; font-size: 15px; }
 }
 
-@media (max-width: 720px) {
+.tablet-down({
   .form-grid { grid-template-columns: 1fr; }
   .span-2 { grid-column: span 1; }
   .employees-card__header { flex-direction: column; align-items: flex-start; }
-}
+});
+
+.list-page-responsive(760px);

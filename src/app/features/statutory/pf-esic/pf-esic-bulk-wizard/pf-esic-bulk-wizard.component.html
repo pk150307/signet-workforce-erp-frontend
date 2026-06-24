@@ -92,6 +92,7 @@
           </div>
 
           @if (parsedRows().length) {
+            <div class="table-scroll">
             <table mat-table [dataSource]="parsedRows()" class="pf-esic-bulk-wizard__table">
               <ng-container matColumnDef="employeeCode">
                 <th mat-header-cell *matHeaderCellDef>Code</th>
@@ -127,6 +128,7 @@
               <tr mat-row *matRowDef="let row; columns: previewColumns"
                   [class.pf-esic-bulk-wizard__row--invalid]="row.errors.length"></tr>
             </table>
+            </div>
           } @else {
             <p class="pf-esic-bulk-wizard__empty">No data to preview. Go back and upload a CSV or enter records manually.</p>
           }

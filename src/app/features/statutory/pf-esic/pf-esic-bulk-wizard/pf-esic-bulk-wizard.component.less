@@ -1,3 +1,7 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../../../shared/styles/module-layout.less';
+
 .pf-esic-bulk-wizard {
   min-width: 640px;
 }
@@ -94,7 +98,7 @@
   color: var(--color-danger);
 }
 
-@media (max-width: 768px) {
+.mobile-and-tablet({
   .pf-esic-bulk-wizard {
     min-width: auto;
   }
@@ -102,4 +106,15 @@
   .pf-esic-bulk-wizard__manual-row {
     grid-template-columns: 1fr;
   }
-}
+
+  .pf-esic-bulk-wizard__actions {
+    flex-wrap: wrap;
+
+    button {
+      flex: 1 1 calc(50% - 4px);
+      min-width: 0;
+    }
+  }
+});
+
+.list-page-responsive(720px);

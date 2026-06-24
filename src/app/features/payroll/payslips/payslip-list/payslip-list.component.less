@@ -1,3 +1,7 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../../../shared/styles/module-layout.less';
+
 .emp-code {
   font-size: 12px;
   font-family: 'Courier New', monospace;
@@ -19,12 +23,21 @@
 
 .status-chips {
   margin-bottom: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 
   mat-chip-listbox {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 4px;
+    min-width: min-content;
   }
+
+  .mobile-down({
+    mat-chip-listbox {
+      flex-wrap: wrap;
+    }
+  });
 }
 
 .mock-badge {
@@ -37,3 +50,5 @@
   background: rgba(245, 127, 23, 0.12);
   color: var(--color-warning);
 }
+
+.list-page-responsive(880px);

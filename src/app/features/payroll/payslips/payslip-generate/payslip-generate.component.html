@@ -60,6 +60,7 @@
 
       <app-skeleton-loader *ngIf="loadingEmployees()" type="table" [rows]="6"></app-skeleton-loader>
 
+      <div class="table-scroll">
       <mat-table [dataSource]="filteredEmployees()" *ngIf="!loadingEmployees() && filteredEmployees().length">
         <ng-container matColumnDef="select">
           <mat-header-cell *matHeaderCellDef>
@@ -95,6 +96,7 @@
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </mat-table>
+      </div>
 
       <div class="empty-hint" *ngIf="!loadingEmployees() && !filteredEmployees().length">
         No active employees found for the selected client.
