@@ -1,11 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 
 import { AuthLayoutComponent } from '../shared/auth-layout/auth-layout.component';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
@@ -13,17 +15,19 @@ import { NotificationService } from '../../../core/services/notification.service
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     AuthLayoutComponent,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatProgressSpinnerModule,
+    MatIconModule,
   ],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.less',
 })
 export class ForgotPasswordComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
 
   readonly loading = signal(false);
@@ -38,11 +42,23 @@ export class ForgotPasswordComponent {
       this.form.markAllAsTouched();
       return;
     }
+
     this.loading.set(true);
-    setTimeout(() => {
-      this.loading.set(false);
-      this.submitted.set(true);
-      this.notification.success('Password reset link sent to your email.');
-    }, 800);
+    const { email } = this.form.getRawValue();
+
+    this.authService.forgotPassword({ email }).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.submitted.set(true);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.submitted.set(true);
+        const message = err?.error?.detail || err?.error?.title;
+        if (message) {
+          this.notification.error(message);
+        }
+      },
+    });
   }
 }

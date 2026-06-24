@@ -1,3 +1,7 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/module-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+
 .billing-page {
   display: flex;
   flex-direction: column;
@@ -145,13 +149,58 @@
   cursor: pointer;
 }
 
-@media (max-width: 960px) {
+.tablet-down({
   .billing-hero {
     flex-direction: column;
     align-items: flex-start;
+    padding: 20px;
   }
 
   .kpi-row {
     grid-template-columns: repeat(2, 1fr);
   }
-}
+
+  .filters-card {
+    mat-form-field:not(.filters-card__search) {
+      flex: 1 1 140px;
+      min-width: 0;
+    }
+  }
+});
+
+.mobile-down({
+  .billing-hero {
+    padding: 18px 16px;
+
+    h1 {
+      font-size: 22px;
+    }
+
+    &__actions {
+      width: 100%;
+
+      button, a {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 0;
+      }
+    }
+  }
+
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-card {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__search,
+    mat-form-field {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+  }
+});
+
+.list-page-responsive(880px);

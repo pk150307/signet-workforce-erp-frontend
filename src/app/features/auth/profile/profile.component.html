@@ -34,5 +34,23 @@
         <span>{{ authService.currentUser()?.userId || '—' }}</span>
       </div>
     </div>
+
+    <mat-divider style="margin: 24px 0;" />
+
+    <div class="profile__history">
+      <div class="profile__history-header">
+        <h3>Recent Sign-ins</h3>
+        <button mat-button color="primary" routerLink="/settings/login-history">View all</button>
+      </div>
+      <p *ngIf="loadingHistory()">Loading login history...</p>
+      <p *ngIf="!loadingHistory() && loginHistory().length === 0">No recent sign-in activity.</p>
+      <ul *ngIf="!loadingHistory() && loginHistory().length > 0" class="profile__history-list">
+        <li *ngFor="let item of loginHistory()">
+          <span>{{ item.loggedInAt | date:'medium' }}</span>
+          <span>{{ item.loginStatus }}</span>
+          <span>{{ item.ipAddress || '—' }}</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>

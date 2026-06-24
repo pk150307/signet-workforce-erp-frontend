@@ -1,3 +1,6 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+
 .profile {
   &__header {
     display: flex;
@@ -36,9 +39,9 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 
-    @media (max-width: 600px) {
+    .mobile-down({
       grid-template-columns: 1fr;
-    }
+    });
   }
 
   &__field {
@@ -54,6 +57,37 @@
     span {
       font-size: 14px;
       color: var(--color-text-primary);
+    }
+  }
+
+  &__history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+
+  &__history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr 1fr;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-divider);
+      font-size: 13px;
+
+      &:last-child {
+        border-bottom: none;
+      }
     }
   }
 }

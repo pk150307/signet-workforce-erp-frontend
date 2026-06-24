@@ -1,3 +1,5 @@
+@import '../../../shared/styles/breakpoints.less';
+
 :host {
   display: block;
   min-height: 100vh;
@@ -392,7 +394,7 @@
 }
 
 // ── Tablet / mobile ─────────────────────────────────────────
-@media (max-width: 960px) {
+.tablet-down({
   .login-layout {
     flex-direction: column;
   }
@@ -441,9 +443,9 @@
   .login-panel__logo-mobile {
     display: block;
   }
-}
+});
 
-@media (max-width: 480px) {
+.mobile({
   .login-brand {
     padding: 24px 20px;
   }
@@ -456,4 +458,4 @@
     flex-direction: column;
     align-items: flex-start;
   }
-}
+});

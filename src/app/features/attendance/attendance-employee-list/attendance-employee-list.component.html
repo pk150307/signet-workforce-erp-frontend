@@ -72,6 +72,7 @@
     }
 
     @if (items().length) {
+    <div class="table-scroll">
     <table mat-table [dataSource]="items()">
       <ng-container matColumnDef="employee">
         <th mat-header-cell *matHeaderCellDef>Employee</th>
@@ -132,6 +133,7 @@
       <tr mat-header-row *matHeaderRowDef="cols"></tr>
       <tr mat-row *matRowDef="let row; columns: cols"></tr>
     </table>
+    </div>
     }
   </div>
   }

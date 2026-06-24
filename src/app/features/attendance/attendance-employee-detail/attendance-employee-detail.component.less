@@ -1,3 +1,7 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
 .filter-row {
   display: flex;
   gap: 12px;
@@ -10,9 +14,9 @@
   grid-template-columns: 280px 1fr;
   gap: 16px;
 
-  @media (max-width: 900px) {
+  .tablet-down({
     grid-template-columns: 1fr;
-  }
+  });
 }
 
 .summary-card, .calendar-card {
@@ -78,3 +82,21 @@
 }
 
 .loading-state { padding: 64px; display: flex; justify-content: center; }
+
+.responsive-filter-row();
+.responsive-page-actions();
+
+.mobile-down({
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 6px;
+  }
+
+  .cal-day {
+    padding: 6px;
+  }
+});

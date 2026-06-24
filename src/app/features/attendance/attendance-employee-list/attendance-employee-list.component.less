@@ -1,12 +1,17 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
+.responsive-filter-row();
+.responsive-register-banner();
+
 .filter-card {
   margin-bottom: 16px;
   padding: 16px;
-}
 
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  .mobile-down({
+    padding: 12px;
+  });
 }
 
 .register-banner {
@@ -47,8 +52,4 @@
   &--locked { background: var(--att-leave-bg); color: var(--att-leave-fg); }
 }
 
-.empty-state, .loading-state {
-  padding: 48px;
-  text-align: center;
-  color: var(--color-text-muted);
-}
+.list-page-responsive(900px);

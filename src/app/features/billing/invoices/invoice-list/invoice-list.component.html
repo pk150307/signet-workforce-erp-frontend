@@ -90,6 +90,7 @@
       <button mat-raised-button color="primary" routerLink="/billing/invoices/generate">Auto Generate</button>
     </app-empty-state>
 
+    <div class="table-scroll">
     <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="select">
         <mat-header-cell *matHeaderCellDef>
@@ -169,6 +170,7 @@
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row" (click)="viewInvoice(row.id)"></mat-row>
     </mat-table>
+    </div>
 
     <mat-paginator *ngIf="(data()?.totalCount ?? 0) > 0"
                    [length]="data()?.totalCount ?? 0"

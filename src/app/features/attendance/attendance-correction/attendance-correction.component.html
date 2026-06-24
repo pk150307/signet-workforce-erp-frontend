@@ -4,6 +4,7 @@
   <app-skeleton-loader *ngIf="loading()" type="table" [rows]="5"></app-skeleton-loader>
   <div class="card card--flush" *ngIf="!loading()">
     <app-empty-state *ngIf="data()?.items?.length === 0" icon="edit_note" title="No corrections" description="No pending attendance correction requests."></app-empty-state>
+    <div class="table-scroll">
     <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="employeeName"><mat-header-cell *matHeaderCellDef>Employee</mat-header-cell><mat-cell *matCellDef="let row">{{ row.employeeName }}</mat-cell></ng-container>
       <ng-container matColumnDef="date"><mat-header-cell *matHeaderCellDef>Date</mat-header-cell><mat-cell *matCellDef="let row">{{ row.date }}</mat-cell></ng-container>
@@ -12,4 +13,5 @@
       <ng-container matColumnDef="reason"><mat-header-cell *matHeaderCellDef>Reason</mat-header-cell><mat-cell *matCellDef="let row">{{ row.reason }}</mat-cell></ng-container>
       <ng-container matColumnDef="status"><mat-header-cell *matHeaderCellDef>Status</mat-header-cell><mat-cell *matCellDef="let row"><span class="badge">{{ row.status }}</span></mat-cell></ng-container>
       <mat-header-row *matHeaderRowDef="cols"></mat-header-row><mat-row *matRowDef="let row; columns: cols;"></mat-row></mat-table>
+      </div>
   </div></div>

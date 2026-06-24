@@ -1,3 +1,6 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+
 .billing-page {
   display: flex;
   flex-direction: column;
@@ -241,8 +244,8 @@
   p, span { font-size: 12px; color: var(--color-text-secondary); margin: 4px 0 0; }
 }
 
-@media (max-width: 960px) {
+.tablet-down({
   .detail-hero { flex-direction: column; }
   .detail-layout { grid-template-columns: 1fr; }
   .summary-cards { grid-template-columns: repeat(2, 1fr); }
-}
+});

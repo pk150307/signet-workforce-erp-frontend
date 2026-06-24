@@ -75,10 +75,17 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading.set(true);
-    const { email, password } = this.form.getRawValue();
+    const { email, password, rememberMe } = this.form.getRawValue();
 
-    this.authService.login({ email, password }).subscribe({
-      next: () => this.router.navigateByUrl(this.returnUrl),
+    this.authService.login({ email, password, rememberMe }).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        if (res.forcePasswordReset) {
+          void this.router.navigate(['/auth/change-password']);
+          return;
+        }
+        void this.router.navigateByUrl(this.returnUrl);
+      },
       error: (err) => {
         this.loading.set(false);
         const message = err?.error?.title || err?.error?.detail || 'Invalid email or password.';
