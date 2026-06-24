@@ -16,9 +16,9 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { DesignationService } from '../../../core/services/designation.service';
 import { ClientsService } from '../../../core/services/clients.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { confirmDialogConfig } from '../../../core/utils/dialog.util';
+import { runDeleteWithApproval } from '../../../core/utils/delete-record.util';
 import { DesignationListItem } from '../../../core/models/designation.models';
 import { ClientListItem } from '../../../core/models/client.models';
 import { PaginatedResult } from '../../../core/models/api.models';
@@ -51,6 +51,7 @@ export class DesignationListComponent implements OnInit {
 
   private readonly designationService = inject(DesignationService);
   private readonly clientsService = inject(ClientsService);
+  private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
@@ -146,24 +147,14 @@ export class DesignationListComponent implements OnInit {
   }
 
   deleteDesignation(item: DesignationListItem) {
-    this.dialog.open(
-      ConfirmDialogComponent,
-      confirmDialogConfig({
-        title: 'Delete Designation',
-        message: `Delete designation "${item.designationName}"? This action cannot be undone.`,
-        confirmLabel: 'Delete',
-        icon: 'delete',
-        confirmColor: 'warn',
-      }),
-    ).afterClosed().subscribe(confirmed => {
-      if (!confirmed) return;
-      this.designationService.delete(item.id).subscribe({
-        next: () => {
-          this.notification.success('Designation deleted.');
-          this.load();
-        },
-        error: () => this.notification.error('Failed to delete designation.'),
-      });
+    runDeleteWithApproval({
+      auth: this.authService,
+      dialog: this.dialog,
+      notification: this.notification,
+      title: 'Delete Designation',
+      entityLabel: item.designationName,
+      deleteFn: (reason) => this.designationService.delete(item.id, { reason }),
+      onSuccess: () => this.load(),
     });
   }
 

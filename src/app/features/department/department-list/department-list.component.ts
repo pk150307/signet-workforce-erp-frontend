@@ -16,9 +16,9 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { DepartmentService } from '../../../core/services/department.service';
 import { ClientsService } from '../../../core/services/clients.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { confirmDialogConfig } from '../../../core/utils/dialog.util';
+import { runDeleteWithApproval } from '../../../core/utils/delete-record.util';
 import { DepartmentListItem } from '../../../core/models/department.models';
 import { ClientListItem } from '../../../core/models/client.models';
 import { PaginatedResult } from '../../../core/models/api.models';
@@ -51,6 +51,7 @@ export class DepartmentListComponent implements OnInit {
 
   private readonly departmentService = inject(DepartmentService);
   private readonly clientsService = inject(ClientsService);
+  private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
@@ -148,24 +149,14 @@ export class DepartmentListComponent implements OnInit {
   }
 
   deleteDepartment(dept: DepartmentListItem) {
-    this.dialog.open(
-      ConfirmDialogComponent,
-      confirmDialogConfig({
-        title: 'Delete Department',
-        message: `Delete department "${dept.departmentName}"? This action cannot be undone.`,
-        confirmLabel: 'Delete',
-        icon: 'delete',
-        confirmColor: 'warn',
-      }),
-    ).afterClosed().subscribe(confirmed => {
-      if (!confirmed) return;
-      this.departmentService.delete(dept.id).subscribe({
-        next: () => {
-          this.notification.success('Department deleted.');
-          this.load();
-        },
-        error: () => this.notification.error('Failed to delete department.'),
-      });
+    runDeleteWithApproval({
+      auth: this.authService,
+      dialog: this.dialog,
+      notification: this.notification,
+      title: 'Delete Department',
+      entityLabel: dept.departmentName,
+      deleteFn: (reason) => this.departmentService.delete(dept.id, { reason }),
+      onSuccess: () => this.load(),
     });
   }
 

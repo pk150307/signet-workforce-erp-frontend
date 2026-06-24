@@ -124,11 +124,6 @@ export class EmployeeDetailComponent implements OnInit {
   openDocument(doc: EmployeeDocument) {
     if (this.viewingId() || this.downloadingId()) return;
 
-    if (doc.fileUrl && !doc.fileUrl.includes('.s3.')) {
-      window.open(doc.fileUrl, '_blank', 'noopener,noreferrer');
-      return;
-    }
-
     this.viewingId.set(doc.id);
     this.documentService.openInNewTab(this.employeeId, doc).subscribe({
       next: () => this.viewingId.set(null),

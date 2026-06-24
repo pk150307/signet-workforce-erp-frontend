@@ -21,7 +21,7 @@
       <input matInput [formControl]="searchCtrl">
     </mat-form-field>
     <div class="filter-bar__filters">
-      <mat-form-field appearance="outline" style="width: 160px;">
+      <mat-form-field appearance="outline" class="filter-field--inline">
         <mat-label>Status</mat-label>
         <mat-select [formControl]="statusCtrl">
           <mat-option [value]="null">All</mat-option>
@@ -45,6 +45,7 @@
       <p>Add a branch or adjust your filters.</p>
       <button mat-raised-button color="primary"><mat-icon>add</mat-icon> Add Branch</button>
     </div>
+    <div class="table-scroll">
     <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="branchCode">
         <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
@@ -83,6 +84,7 @@
       <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
       <mat-row *matRowDef="let row; columns: cols;"></mat-row>
     </mat-table>
+    </div>
     <mat-paginator
       *ngIf="(data()?.totalCount ?? 0) > 0"
       [length]="data()?.totalCount ?? 0"

@@ -1,5 +1,5 @@
 <div class="employee-avatar" [class]="'employee-avatar--' + size">
-  <img *ngIf="photoUrl; else initialsTpl" [src]="photoUrl" [alt]="name" class="employee-avatar__image">
+  <img *ngIf="resolvedPhotoUrl(); else initialsTpl" [src]="resolvedPhotoUrl()" [alt]="name" class="employee-avatar__image">
   <ng-template #initialsTpl>
     <span class="employee-avatar__initials">{{ initials }}</span>
   </ng-template>

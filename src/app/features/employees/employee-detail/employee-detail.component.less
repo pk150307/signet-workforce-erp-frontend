@@ -1,8 +1,43 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
 .emp-header {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
+
+.responsive-detail-grid();
+.responsive-detail-rows();
+
+.mobile-down({
+  .emp-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .documents-list__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .document-row {
+    flex-wrap: wrap;
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .detail-tabs {
+    ::ng-deep .mat-mdc-tab-header {
+      overflow-x: auto;
+    }
+  }
+});
 
 .emp-header__avatar {
   width: 56px;
@@ -27,12 +62,6 @@
 }
 
 .tab-content { padding: 20px 0 0; }
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-}
 
 .detail-section {
   font-size: 13px;

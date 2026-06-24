@@ -28,6 +28,7 @@
       <p>Add your first client to get started.</p>
       <button mat-raised-button color="primary" routerLink="/clients/new">Add Client</button>
     </div>
+    <div class="table-scroll">
     <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
       <ng-container matColumnDef="clientCode">
         <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
@@ -75,6 +76,7 @@
       <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
       <mat-row *matRowDef="let row; columns: cols;"></mat-row>
     </mat-table>
+    </div>
     <mat-paginator [length]="data()?.totalCount ?? 0" [pageSize]="20" *ngIf="(data()?.totalCount ?? 0) > 0"></mat-paginator>
   </div>
 </div>

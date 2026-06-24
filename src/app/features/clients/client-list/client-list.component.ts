@@ -12,9 +12,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ClientsService } from '../../../core/services/clients.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { confirmDialogConfig } from '../../../core/utils/dialog.util';
+import { runDeleteWithApproval } from '../../../core/utils/delete-record.util';
 import { ClientListItem } from '../../../core/models/client.models';
 import { PaginatedResult } from '../../../core/models/api.models';
 
@@ -41,6 +41,7 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 })
 export class ClientListComponent implements OnInit {
   private readonly clientsService = inject(ClientsService);
+  private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   readonly searchCtrl = new FormControl('');
@@ -69,21 +70,14 @@ export class ClientListComponent implements OnInit {
   }
 
   deleteClient(client: ClientListItem) {
-    this.dialog.open(
-      ConfirmDialogComponent,
-      confirmDialogConfig({
-        title: 'Delete Client',
-        message: `Delete client "${client.companyName}"? This action cannot be undone.`,
-        confirmLabel: 'Delete',
-        icon: 'delete',
-        confirmColor: 'warn',
-      }),
-    ).afterClosed().subscribe(confirmed => {
-      if (!confirmed) return;
-      this.clientsService.delete(client.id).subscribe({
-        next: () => { this.notification.success('Client deleted.'); this.load(); },
-        error: () => this.notification.error('Failed to delete client.'),
-      });
+    runDeleteWithApproval({
+      auth: this.authService,
+      dialog: this.dialog,
+      notification: this.notification,
+      title: 'Delete Client',
+      entityLabel: client.companyName,
+      deleteFn: (reason) => this.clientsService.delete(client.id, { reason }),
+      onSuccess: () => this.load(),
     });
   }
 }

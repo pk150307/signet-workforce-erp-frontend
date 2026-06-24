@@ -1,7 +1,16 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
 .employee-list__table-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
+
+.grid-table-scroll(~'.employee-list__table-wrap', 980px);
 
 .employee-list__table {
   width: 100%;
@@ -135,11 +144,4 @@
   }
 }
 
-@media (max-width: 768px) {
-  .employee-list__table {
-    .mat-mdc-header-row,
-    .mat-mdc-row {
-      min-width: 980px;
-    }
-  }
-}
+.list-page-responsive(980px);

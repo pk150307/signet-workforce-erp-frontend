@@ -1,3 +1,7 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
 .client-form-page {
   margin: 0 auto;
 }
@@ -216,7 +220,7 @@
   }
 }
 
-@media (max-width: 720px) {
+.tablet-down({
   .form-section {
     padding: 20px 16px;
 
@@ -252,4 +256,20 @@
       width: 100%;
     }
   }
-}
+
+  .form-page-header {
+    flex-direction: column;
+
+    &__actions {
+      margin-left: 0;
+      width: 100%;
+      flex-wrap: wrap;
+
+      button {
+        flex: 1 1 calc(50% - 4px);
+      }
+    }
+  }
+});
+
+.responsive-form-page-header();
