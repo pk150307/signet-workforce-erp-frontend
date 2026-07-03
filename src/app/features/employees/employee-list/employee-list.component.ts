@@ -17,7 +17,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { EmployeeService } from '../../../core/services/employee.service';
+import { ClientsService } from '../../../core/services/clients.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ClientListItem } from '../../../core/models/client.models';
 import {
   EmployeeListItem, EmployeeStatus, EmploymentType,
   EMPLOYEE_STATUS_LABELS, EMPLOYMENT_TYPE_LABELS
@@ -60,6 +62,7 @@ export class EmployeeListComponent implements OnInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   private readonly employeeService = inject(EmployeeService);
+  private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
@@ -67,8 +70,10 @@ export class EmployeeListComponent implements OnInit {
   readonly loading = signal(true);
   readonly apiUnavailable = signal(false);
   readonly data = signal<PaginatedResult<EmployeeListItem> | null>(null);
+  readonly clients = signal<ClientListItem[]>([]);
 
   readonly searchCtrl = new FormControl('');
+  readonly clientCtrl = new FormControl<string | null>(null);
   readonly statusCtrl = new FormControl<EmployeeStatus | 'all'>(EmployeeStatus.Active);
   readonly employmentTypeCtrl = new FormControl<EmploymentType | null>(null);
 
@@ -84,6 +89,11 @@ export class EmployeeListComponent implements OnInit {
   sortDir: 'asc' | 'desc' = 'desc';
 
   ngOnInit() {
+    this.clientsService.getAllForSelect().subscribe({
+      next: list => this.clients.set(list),
+      error: () => this.clients.set([]),
+    });
+
     this.loadData();
 
     this.searchCtrl.valueChanges.pipe(
@@ -91,6 +101,7 @@ export class EmployeeListComponent implements OnInit {
       distinctUntilChanged()
     ).subscribe(() => { this.page = 1; this.loadData(); });
 
+    this.clientCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
     this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
     this.employmentTypeCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
   }
@@ -101,6 +112,7 @@ export class EmployeeListComponent implements OnInit {
       page: this.page,
       pageSize: this.pageSize,
       search: this.searchCtrl.value || undefined,
+      clientId: this.clientCtrl.value || undefined,
       status: this.statusCtrl.value === 'all'
         ? 'all'
         : (this.statusCtrl.value ?? EmployeeStatus.Active),
@@ -180,6 +192,7 @@ export class EmployeeListComponent implements OnInit {
 
   clearFilters() {
     this.searchCtrl.setValue('');
+    this.clientCtrl.setValue(null);
     this.statusCtrl.setValue(EmployeeStatus.Active);
     this.employmentTypeCtrl.setValue(null);
   }
@@ -187,6 +200,7 @@ export class EmployeeListComponent implements OnInit {
   hasNonDefaultFilters(): boolean {
     return !!(
       this.searchCtrl.value ||
+      this.clientCtrl.value ||
       this.statusCtrl.value !== EmployeeStatus.Active ||
       this.employmentTypeCtrl.value
     );
