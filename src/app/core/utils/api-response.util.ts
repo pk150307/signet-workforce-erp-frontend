@@ -353,7 +353,10 @@ export function normalizePaginated<T>(response: unknown, mapItem?: (raw: unknown
 export function mapInvoiceStatus(value: unknown): InvoiceStatus {
   if (typeof value === 'string' && value) {
     const normalized = value.replace(/\s+/g, '');
-    const allowed: InvoiceStatus[] = ['Draft', 'Sent', 'Viewed', 'PartiallyPaid', 'Paid', 'Overdue', 'Cancelled'];
+    const allowed: InvoiceStatus[] = [
+      'Draft', 'Sent', 'Viewed', 'PartiallyPaid', 'Paid', 'Overdue', 'Cancelled',
+      'Generated', 'Approved', 'Archived',
+    ];
     const match = allowed.find(s => s.toLowerCase() === normalized.toLowerCase());
     return match ?? 'Draft';
   }
@@ -369,6 +372,9 @@ export function mapInvoiceStatusLabel(status: InvoiceStatus): string {
     Paid: 'Paid',
     Overdue: 'Overdue',
     Cancelled: 'Cancelled',
+    Generated: 'Generated',
+    Approved: 'Approved',
+    Archived: 'Archived',
   };
   return labels[status] ?? status;
 }
@@ -463,6 +469,7 @@ export function mapInvoiceDetail(raw: unknown): InvoiceDetail {
           };
         })
       : [],
+    isLocked: Boolean(r['isLocked']),
   };
 }
 

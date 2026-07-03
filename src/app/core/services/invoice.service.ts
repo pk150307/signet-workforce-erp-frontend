@@ -27,6 +27,7 @@ import {
   normalizePaginated,
   unwrapApiData,
 } from '../utils/api-response.util';
+import { BillingReportsService } from './billing-reports.service';
 import { SitesService } from './sites.service';
 import { SiteListItem } from '../models/sites.models';
 
@@ -34,6 +35,7 @@ import { SiteListItem } from '../models/sites.models';
 export class InvoiceService {
   private readonly http = inject(HttpClient);
   private readonly sitesService = inject(SitesService);
+  private readonly reportsService = inject(BillingReportsService);
   private readonly baseUrl = `${environment.apiUrl}/billing/invoices`;
 
   getAll(params: InvoiceQueryParams = {}) {
@@ -57,22 +59,35 @@ export class InvoiceService {
     );
   }
 
-  getDashboardData(month: number, year: number): Observable<BillingDashboardData> {
+  getDashboardData(month: number, year: number, clientId?: string): Observable<BillingDashboardData> {
     return forkJoin({
-      invoices: this.getAllForPeriod({ month, year }),
-      sites: this.sitesService.getAllForSelect(),
+      summary: this.reportsService.getSummary({ month, year, clientId }),
+      sites: this.sitesService.getAllForSelect(clientId ? { clientId } : {}),
+      invoices: this.getAllForPeriod({ month, year, clientId }),
     }).pipe(
-      map(({ invoices, sites }) => ({
-        kpis: this.computeKpis(invoices),
+      map(({ summary, sites, invoices }) => ({
+        kpis: {
+          totalBilled: summary.totalBilled,
+          totalGst: summary.totalGst,
+          paidCount: invoices.filter(i => i.status === 'Paid').length,
+          pendingCount: invoices.filter(i =>
+            ['Sent', 'Viewed', 'PartiallyPaid', 'Overdue', 'Generated', 'Approved'].includes(i.status),
+          ).length,
+          overdueCount: summary.overdueCount,
+          paidAmount: summary.totalCollected,
+          pendingAmount: summary.outstanding,
+          invoiceCount: summary.invoiceCount,
+        },
         siteSummary: this.buildSiteSummary(invoices, sites),
       })),
     );
   }
 
-  getGenerateSites(): Observable<SiteBillingSummary[]> {
-    return this.sitesService.getAllForSelect().pipe(
+  getGenerateSites(clientId?: string): Observable<SiteBillingSummary[]> {
+    return this.sitesService.getAllForSelect(clientId ? { clientId } : {}).pipe(
       map(sites => sites.map(site => ({
         siteId: site.id,
+        clientId: site.clientId ?? '',
         siteName: site.siteName,
         clientName: site.clientCompanyName,
         headcount: site.deployedHeadcount ?? site.requiredHeadcount ?? 0,
@@ -166,6 +181,35 @@ export class InvoiceService {
     return this.getDashboardData(month, year).pipe(map(data => data.siteSummary));
   }
 
+  generateFromEngine(request: {
+    month: number;
+    year: number;
+    clientId: string;
+    siteId: string;
+    notes?: string;
+    skipValidation?: boolean;
+  }) {
+    return this.http.post<unknown>(`${environment.apiUrl}/billing/invoices/generate`, request).pipe(
+      map(res => {
+        const data = unwrapApiData<{
+          invoiceId: string;
+          id?: string;
+          invoiceNumber: string;
+          totalAmount: number;
+        }>(res) ?? res as { invoiceId?: string; id?: string; invoiceNumber: string; totalAmount: number };
+        const invoiceId = data.invoiceId ?? data.id ?? '';
+        return { invoiceId, invoiceNumber: data.invoiceNumber, totalAmount: data.totalAmount };
+      }),
+    );
+  }
+
+  getPrintHtml(id: string) {
+    return this.http.get(`${environment.apiUrl}/billing/invoices/${id}/preview`, {
+      params: { format: 'html' },
+      responseType: 'text',
+    });
+  }
+
   getPrintUrl(id: string): string {
     return `/print/billing/invoices/${id}`;
   }
@@ -235,6 +279,7 @@ export class InvoiceService {
 
       return {
         siteId: site.id,
+        clientId: site.clientId ?? '',
         siteName: site.siteName,
         clientName: site.clientCompanyName,
         headcount: site.deployedHeadcount ?? site.requiredHeadcount ?? 0,

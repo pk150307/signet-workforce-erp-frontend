@@ -173,6 +173,7 @@ export class EmployeeService {
     if (filter.departmentId)   params = params.set('departmentId', filter.departmentId);
     if (filter.designationId)  params = params.set('designationId', filter.designationId);
     if (filter.siteId)         params = params.set('siteId', filter.siteId);
+    if (filter.clientId)       params = params.set('clientId', filter.clientId);
     if (filter.status === 'all') params = params.set('status', 'all');
     else if (filter.status != null) params = params.set('status', filter.status);
     if (filter.sortBy)         params = params.set('sortBy', filter.sortBy);

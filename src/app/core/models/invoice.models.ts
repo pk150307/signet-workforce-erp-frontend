@@ -5,7 +5,10 @@ export type InvoiceStatus =
   | 'PartiallyPaid'
   | 'Paid'
   | 'Overdue'
-  | 'Cancelled';
+  | 'Cancelled'
+  | 'Generated'
+  | 'Approved'
+  | 'Archived';
 
 export const INVOICE_STATUS_TO_API: Record<InvoiceStatus, number> = {
   Draft: 1,
@@ -15,6 +18,9 @@ export const INVOICE_STATUS_TO_API: Record<InvoiceStatus, number> = {
   Paid: 5,
   Overdue: 6,
   Cancelled: 7,
+  Generated: 8,
+  Approved: 9,
+  Archived: 10,
 };
 
 export const INVOICE_STATUS_FROM_API: Record<number, InvoiceStatus> = {
@@ -25,6 +31,9 @@ export const INVOICE_STATUS_FROM_API: Record<number, InvoiceStatus> = {
   5: 'Paid',
   6: 'Overdue',
   7: 'Cancelled',
+  8: 'Generated',
+  9: 'Approved',
+  10: 'Archived',
 };
 
 export interface InvoiceListItem {
@@ -59,6 +68,7 @@ export interface InvoiceDetail extends InvoiceListItem {
   lineItems: InvoiceLineItem[];
   timeline: InvoiceTimelineEntry[];
   notes?: string;
+  isLocked?: boolean;
 }
 
 export interface InvoiceLineItem {
@@ -212,6 +222,7 @@ export interface BillingDashboardData {
 
 export interface SiteBillingSummary {
   siteId: string;
+  clientId: string;
   siteName: string;
   clientName: string;
   headcount: number;

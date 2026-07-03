@@ -21,7 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Sites', icon: 'location_on', route: '/sites' },
   // { label: 'Leave', icon: 'beach_access', route: '/leave', badge: 7 },
   // { label: 'Shifts', icon: 'schedule', route: '/shifts' },
-  // { label: 'Payroll', icon: 'account_balance_wallet', route: '/payroll' },
+  { label: 'Payroll', icon: 'account_balance_wallet', route: '/payroll' },
   { label: 'Reports', icon: 'bar_chart', route: '/reports' },
   { label: 'Company', icon: 'corporate_fare', route: '/company' },
   { label: 'Settings', icon: 'settings', route: '/settings' },
