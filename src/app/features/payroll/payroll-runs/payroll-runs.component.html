@@ -2,9 +2,15 @@
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Payroll</h1>
-      <p class="page-header__subtitle">Process and manage monthly payroll</p>
+      <p class="page-header__subtitle">Process monthly payroll — required before billing invoice generation</p>
     </div>
     <div class="page-header__actions">
+      <button mat-stroked-button routerLink="/attendance/register">
+        <mat-icon>event_available</mat-icon> Attendance
+      </button>
+      <button mat-stroked-button routerLink="/billing/invoices/generate">
+        <mat-icon>receipt_long</mat-icon> Generate Invoice
+      </button>
       <button mat-raised-button color="primary" routerLink="/payroll/payslips">
         <mat-icon>description</mat-icon> Payslips
       </button>
@@ -15,23 +21,86 @@
     <div class="stat-card">
       <div class="stat-card__icon stat-card__icon--purple"><mat-icon>payments</mat-icon></div>
       <div>
-        <div class="stat-card__value">{{ formatCurrency(currentMonthPayroll()) }}</div>
-        <div class="stat-card__label">This Month Payroll</div>
+        <div class="stat-card__value">{{ latestRun() ? formatCurrency(latestRun()!.totalNet) : '—' }}</div>
+        <div class="stat-card__label">Latest Run Net Pay</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-card__icon stat-card__icon--orange"><mat-icon>pending_actions</mat-icon></div>
+      <div class="stat-card__icon stat-card__icon--green"><mat-icon>check_circle</mat-icon></div>
       <div>
-        <div class="stat-card__value">{{ pendingApproval() }}</div>
-        <div class="stat-card__label">Pending Approval</div>
+        <div class="stat-card__value">{{ processedCount() }}</div>
+        <div class="stat-card__label">Processed Runs</div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <p>Run payroll processing for the current month. Connect to <code>POST /api/payroll/process</code> when ready.</p>
-    <button mat-raised-button color="primary" style="margin-top: 16px;">
-      <mat-icon>play_arrow</mat-icon> Process Payroll
-    </button>
+  <div class="card process-card">
+    <h3>Process Payroll</h3>
+    <p class="hint">Calculates salaries, PF, ESIC, and deductions for all active employees. Lock attendance first for accurate man-days.</p>
+    <form class="process-form" [formGroup]="processForm" (ngSubmit)="processPayroll()">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Month</mat-label>
+        <mat-select formControlName="month">
+          <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Year</mat-label>
+        <mat-select formControlName="year">
+          <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit" [disabled]="processing() || processForm.invalid">
+        <mat-icon>play_arrow</mat-icon>
+        {{ processing() ? 'Processing…' : 'Process Payroll' }}
+      </button>
+    </form>
   </div>
+
+  <app-skeleton-loader *ngIf="loading()" type="table" [rows]="5"></app-skeleton-loader>
+
+  <ng-container *ngIf="!loading()">
+    <app-empty-state
+      *ngIf="!runs().length"
+      icon="payments"
+      title="No payroll runs yet"
+      description="Select a month and year above, then click Process Payroll.">
+    </app-empty-state>
+
+    <div class="card card--flush" *ngIf="runs().length">
+      <div class="table-scroll">
+        <table mat-table [dataSource]="runs()" class="data-table">
+          <ng-container matColumnDef="period">
+            <th mat-header-cell *matHeaderCellDef>Period</th>
+            <td mat-cell *matCellDef="let row">{{ row.monthName }} <small class="muted">({{ row.runCode }})</small></td>
+          </ng-container>
+          <ng-container matColumnDef="employees">
+            <th mat-header-cell *matHeaderCellDef>Employees</th>
+            <td mat-cell *matCellDef="let row">{{ row.totalEmployees }}</td>
+          </ng-container>
+          <ng-container matColumnDef="gross">
+            <th mat-header-cell *matHeaderCellDef>Gross</th>
+            <td mat-cell *matCellDef="let row">₹{{ row.totalGross | number:'1.0-0' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="net">
+            <th mat-header-cell *matHeaderCellDef>Net</th>
+            <td mat-cell *matCellDef="let row">₹{{ row.totalNet | number:'1.0-0' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="status-pill" [ngClass]="statusClass(row.status)">{{ statusLabel(row.status) }}</span>
+              <mat-icon class="billing-ready" *ngIf="isReadyForBilling(row.status)" matTooltip="Ready for billing">verified</mat-icon>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="processed">
+            <th mat-header-cell *matHeaderCellDef>Processed</th>
+            <td mat-cell *matCellDef="let row">{{ row.processedDate ? (row.processedDate | apiDate) : '—' }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 </div>

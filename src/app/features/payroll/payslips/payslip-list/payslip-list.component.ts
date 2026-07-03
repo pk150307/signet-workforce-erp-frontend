@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { NgClass, NgFor, NgIf, DatePipe, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -20,6 +20,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
 import { PayslipPdfService } from '../../../../core/services/payslip-pdf.service';
+import { PayrollFilterService } from '../../../../core/services/payroll-filter.service';
 import { ClientsService } from '../../../../core/services/clients.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -74,6 +75,8 @@ export class PayslipListComponent implements OnInit {
 
   private readonly payslipService = inject(PayslipService);
   private readonly payslipPdfService = inject(PayslipPdfService);
+  private readonly payrollFilter = inject(PayrollFilterService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
@@ -90,9 +93,9 @@ export class PayslipListComponent implements OnInit {
   readonly statusOptions = PAYSLIP_STATUS_OPTIONS;
 
   readonly searchCtrl = new FormControl('');
-  readonly monthCtrl = new FormControl(this.currentMonth());
-  readonly yearCtrl = new FormControl(this.currentYear());
-  readonly clientCtrl = new FormControl<string | null>(null);
+  readonly monthCtrl = new FormControl<number | null>(this.payrollFilter.month());
+  readonly yearCtrl = new FormControl<number | null>(this.payrollFilter.year());
+  readonly clientCtrl = new FormControl<string | null>(this.payrollFilter.clientId());
   readonly statusCtrl = new FormControl<PayslipStatus | null>(null);
 
   readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
@@ -101,6 +104,12 @@ export class PayslipListComponent implements OnInit {
   pageSize = 20;
 
   ngOnInit() {
+    this.payrollFilter.bindControls(
+      { month: this.monthCtrl, year: this.yearCtrl, clientId: this.clientCtrl },
+      this.destroyRef,
+      () => { this.page = 1; this.loadData(); },
+    );
+
     this.loadData();
 
     this.clientsService.getAllForSelect().subscribe({
@@ -112,9 +121,6 @@ export class PayslipListComponent implements OnInit {
       this.loadData();
     });
 
-    this.monthCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.yearCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.clientCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
     this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
   }
 
@@ -274,8 +280,8 @@ export class PayslipListComponent implements OnInit {
           this.downloadingPdf.set(false);
           return;
         }
-        const month = this.monthCtrl.value ?? this.currentMonth();
-        const year = this.yearCtrl.value ?? this.currentYear();
+        const month = this.monthCtrl.value ?? this.payrollFilter.month();
+        const year = this.yearCtrl.value ?? this.payrollFilter.year();
         this.runBulkDownload(items.map(i => i.id), `payslips-${month}-${year}.pdf`);
       },
       error: () => {
@@ -312,10 +318,11 @@ export class PayslipListComponent implements OnInit {
 
   clearFilters() {
     this.searchCtrl.setValue('');
-    this.clientCtrl.setValue(null);
     this.statusCtrl.setValue(null);
-    this.monthCtrl.setValue(this.currentMonth());
-    this.yearCtrl.setValue(this.currentYear());
+    this.payrollFilter.resetAll();
+    this.monthCtrl.setValue(this.payrollFilter.month(), { emitEvent: false });
+    this.yearCtrl.setValue(this.payrollFilter.year(), { emitEvent: false });
+    this.clientCtrl.setValue(this.payrollFilter.clientId(), { emitEvent: false });
   }
 
   private runBulkDownload(ids: string[], filename: string) {
@@ -354,11 +361,11 @@ export class PayslipListComponent implements OnInit {
   }
 
   private currentMonth(): number {
-    return new Date().getMonth() + 1;
+    return this.payrollFilter.month();
   }
 
   private currentYear(): number {
-    return new Date().getFullYear();
+    return this.payrollFilter.year();
   }
 
   private buildYearOptions(): number[] {

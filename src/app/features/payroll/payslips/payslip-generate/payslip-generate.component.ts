@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,6 +15,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
+import { PayrollFilterService } from '../../../../core/services/payroll-filter.service';
 import { EmployeeService } from '../../../../core/services/employee.service';
 import { ClientsService } from '../../../../core/services/clients.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -49,6 +50,8 @@ import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-
 export class PayslipGenerateComponent implements OnInit {
 
   private readonly payslipService = inject(PayslipService);
+  private readonly payrollFilter = inject(PayrollFilterService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly employeeService = inject(EmployeeService);
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
@@ -68,9 +71,9 @@ export class PayslipGenerateComponent implements OnInit {
   readonly searchCtrl = new FormControl('');
 
   readonly form = new FormGroup({
-    month: new FormControl(new Date().getMonth() + 1, { nonNullable: true, validators: Validators.required }),
-    year: new FormControl(new Date().getFullYear(), { nonNullable: true, validators: Validators.required }),
-    clientId: new FormControl<string | null>(null),
+    month: new FormControl(this.payrollFilter.month(), { nonNullable: true, validators: Validators.required }),
+    year: new FormControl(this.payrollFilter.year(), { nonNullable: true, validators: Validators.required }),
+    clientId: new FormControl<string | null>(this.payrollFilter.clientId()),
   });
 
   readonly filteredEmployees = computed(() => {
@@ -84,6 +87,14 @@ export class PayslipGenerateComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.payrollFilter.bindControls(
+      {
+        month: this.form.controls.month,
+        year: this.form.controls.year,
+        clientId: this.form.controls.clientId,
+      },
+      this.destroyRef,
+    );
 
     this.clientsService.getAllForSelect().subscribe({
       next: clients => this.clients.set(clients),
@@ -160,9 +171,7 @@ export class PayslipGenerateComponent implements OnInit {
       next: result => {
         this.progress.set(100);
         this.notification.success(`${result.generated} payslip(s) generated successfully.`);
-        setTimeout(() => this.router.navigate(['/payroll/payslips'], {
-          queryParams: { month, year, clientId: clientId ?? undefined },
-        }), 800);
+        setTimeout(() => this.router.navigate(['/payroll/payslips']), 800);
       },
       error: err => {
         this.generating.set(false);
