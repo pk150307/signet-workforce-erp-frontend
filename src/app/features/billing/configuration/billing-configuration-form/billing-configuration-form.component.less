@@ -1,0 +1,51 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../shared/billing-layout.less';
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.components-panel {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: var(--color-bg);
+}
+
+.component-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-divider);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.component-code {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-divider);
+}
+
+.mobile-down({
+  .form-grid { grid-template-columns: 1fr; }
+  .form-actions button { width: 100%; }
+  .component-row { flex-direction: column; align-items: flex-start; }
+});

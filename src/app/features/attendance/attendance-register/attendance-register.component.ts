@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { AttendanceService } from '../../../core/services/attendance.service';
+import { AttendanceFilterService } from '../../../core/services/attendance-filter.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../core/utils/dialog.util';
 import { ClientsService } from '../../../core/services/clients.service';
@@ -69,11 +70,13 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 })
 export class AttendanceRegisterComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceService);
+  private readonly attendanceFilter = inject(AttendanceFilterService);
   private readonly clientsService = inject(ClientsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
 
   private skipFilterReload = false;
 
@@ -102,9 +105,9 @@ export class AttendanceRegisterComponent implements OnInit {
   readonly cellShort = cellShort;
 
   readonly filters = new FormGroup({
-    clientId: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    month: new FormControl(new Date().getMonth() + 1, { nonNullable: true }),
-    year: new FormControl(new Date().getFullYear(), { nonNullable: true }),
+    clientId: new FormControl(this.attendanceFilter.clientIdOrEmpty(), { nonNullable: true, validators: Validators.required }),
+    month: new FormControl(this.attendanceFilter.month(), { nonNullable: true }),
+    year: new FormControl(this.attendanceFilter.year(), { nonNullable: true }),
   });
 
   period!: RegisterPeriod;
@@ -159,12 +162,21 @@ export class AttendanceRegisterComponent implements OnInit {
 
   ngOnInit() {
     const q = this.route.snapshot.queryParamMap;
+    if (q.get('clientId')) {
+      this.attendanceFilter.patch({
+        clientId: q.get('clientId'),
+        month: Number(q.get('month')) || this.attendanceFilter.month(),
+        year: Number(q.get('year')) || this.attendanceFilter.year(),
+      });
+    }
+
     this.skipFilterReload = true;
+    const stored = this.attendanceFilter.filters();
     this.filters.patchValue({
-      clientId: q.get('clientId') ?? '',
-      month: Number(q.get('month')) || new Date().getMonth() + 1,
-      year: Number(q.get('year')) || new Date().getFullYear(),
-    });
+      clientId: stored.clientId ?? '',
+      month: stored.month,
+      year: stored.year,
+    }, { emitEvent: false });
     this.skipFilterReload = false;
 
     if (!this.filters.value.clientId) {
@@ -174,6 +186,16 @@ export class AttendanceRegisterComponent implements OnInit {
 
     this.syncPeriodFromFilters();
 
+    this.attendanceFilter.bindControls(
+      {
+        month: this.filters.controls.month,
+        year: this.filters.controls.year,
+        clientId: this.filters.controls.clientId,
+      },
+      this.destroyRef,
+      () => this.onFiltersChanged(),
+    );
+
     this.clientsService.getAllForSelect().subscribe({
       next: clients => {
         this.clients.set(clients);
@@ -182,7 +204,6 @@ export class AttendanceRegisterComponent implements OnInit {
       error: () => this.clientsLoading.set(false),
     });
 
-    this.filters.valueChanges.subscribe(() => this.onFiltersChanged());
     this.load();
   }
 

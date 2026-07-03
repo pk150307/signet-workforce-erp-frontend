@@ -1,43 +1,55 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgFor, NgIf, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
+import { BillingFilterService } from '../../../../core/services/billing-filter.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
+import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
 import { getMockBillingDashboard, getMockSiteBillingSummary } from '../../invoices/invoice.mock';
 import { SiteBillingSummary } from '../../../../core/models/invoice.models';
 
 @Component({
   selector: 'app-invoice-dashboard',
   standalone: true,
-  imports: [NgIf, NgFor, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, SkeletonLoaderComponent],
+  imports: [NgIf, NgFor, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, SkeletonLoaderComponent, BillingSubnavComponent],
   templateUrl: './invoice-dashboard.component.html',
   styleUrl: './invoice-dashboard.component.less',
 })
 export class InvoiceDashboardComponent implements OnInit {
 
   private readonly invoiceService = inject(InvoiceService);
+  private readonly billingFilter = inject(BillingFilterService);
   private readonly notification = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
   readonly usingMock = signal(false);
   readonly kpis = signal(getMockBillingDashboard());
   readonly siteSummary = signal<SiteBillingSummary[]>([]);
 
-  readonly month = new Date().getMonth() + 1;
-  readonly year = new Date().getFullYear();
-
   ngOnInit() {
     this.loadData();
+    this.billingFilter.filterChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadData());
+  }
+
+  periodLabel(): string {
+    return `${this.billingFilter.month()}/${this.billingFilter.year()}`;
   }
 
   loadData() {
     this.loading.set(true);
+    const clientId = this.billingFilter.clientIdOrUndefined();
 
-    this.invoiceService.getDashboardData(this.month, this.year).subscribe({
+    this.invoiceService.getDashboardData(
+      this.billingFilter.month(),
+      this.billingFilter.year(),
+      clientId,
+    ).subscribe({
       next: ({ kpis, siteSummary }) => {
         this.kpis.set(kpis);
         this.siteSummary.set(siteSummary);

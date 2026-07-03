@@ -52,4 +52,59 @@ export const BILLING_ROUTES: Routes = [
     },
     loadComponent: () => import('./invoices/invoice-detail/invoice-detail.component').then(m => m.InvoiceDetailComponent),
   },
+  {
+    path: 'configurations',
+    data: { breadcrumb: 'Billing Configuration' },
+    loadComponent: () => import('./configuration/billing-configuration-list/billing-configuration-list.component').then(m => m.BillingConfigurationListComponent),
+  },
+  {
+    path: 'configurations/new',
+    data: {
+      breadcrumb: [
+        { label: 'Configuration', route: '/billing/configurations' },
+        'New Configuration',
+      ],
+    },
+    loadComponent: () => import('./configuration/billing-configuration-form/billing-configuration-form.component').then(m => m.BillingConfigurationFormComponent),
+  },
+  {
+    path: 'configurations/:id/edit',
+    data: {
+      breadcrumb: [
+        { label: 'Configuration', route: '/billing/configurations' },
+        'Edit Configuration',
+      ],
+    },
+    loadComponent: () => import('./configuration/billing-configuration-form/billing-configuration-form.component').then(m => m.BillingConfigurationFormComponent),
+  },
+  {
+    path: 'contracts',
+    data: { breadcrumb: 'Contracts' },
+    loadComponent: () => import('./contracts/contract-list/contract-list.component').then(m => m.ContractListComponent),
+  },
+  {
+    path: 'contracts/new',
+    data: {
+      breadcrumb: [
+        { label: 'Contracts', route: '/billing/contracts' },
+        'New Contract',
+      ],
+    },
+    loadComponent: () => import('./contracts/contract-form/contract-form.component').then(m => m.ContractFormComponent),
+  },
+  {
+    path: 'contracts/:id/edit',
+    data: {
+      breadcrumb: [
+        { label: 'Contracts', route: '/billing/contracts' },
+        'Edit Contract',
+      ],
+    },
+    loadComponent: () => import('./contracts/contract-form/contract-form.component').then(m => m.ContractFormComponent),
+  },
+  {
+    path: 'reports',
+    data: { breadcrumb: 'Billing Reports' },
+    loadComponent: () => import('./reports/billing-reports/billing-reports.component').then(m => m.BillingReportsComponent),
+  },
 ];

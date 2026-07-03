@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass, NgFor, NgIf, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -20,15 +21,15 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
 import { InvoicePdfService } from '../../../../core/services/invoice-pdf.service';
-import { ClientsService } from '../../../../core/services/clients.service';
+import { BillingFilterService } from '../../../../core/services/billing-filter.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
+import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
 import { PaginatedResult } from '../../../../core/models/api.models';
 import { InvoiceListItem, InvoiceStatus } from '../../../../core/models/invoice.models';
-import { ClientListItem } from '../../../../core/models/client.models';
 import { INVOICE_STATUS_OPTIONS, getInvoiceStatusClass, getMockInvoiceList } from '../invoice.mock';
 import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
 import { mapInvoiceStatusLabel } from '../../../../core/utils/api-response.util';
@@ -64,6 +65,7 @@ interface StatusAction {
     MatCheckboxModule,
     EmptyStateComponent,
     SkeletonLoaderComponent,
+    BillingSubnavComponent,
   ],
   templateUrl: './invoice-list.component.html',
   styleUrl: './invoice-list.component.less',
@@ -72,26 +74,22 @@ export class InvoiceListComponent implements OnInit {
 
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoicePdfService = inject(InvoicePdfService);
-  private readonly clientsService = inject(ClientsService);
+  private readonly billingFilter = inject(BillingFilterService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
   readonly downloadingPdf = signal(false);
   readonly usingMock = signal(false);
   readonly data = signal<PaginatedResult<InvoiceListItem> | null>(null);
-  readonly clients = signal<ClientListItem[]>([]);
   readonly selection = new SelectionModel<InvoiceListItem>(true, []);
 
   readonly statusOptions = INVOICE_STATUS_OPTIONS;
   readonly searchCtrl = new FormControl('');
   readonly statusCtrl = new FormControl<InvoiceStatus | null>(null);
-  readonly clientCtrl = new FormControl<string | null>(null);
-  readonly monthCtrl = new FormControl<number>(this.currentMonth());
-  readonly yearCtrl = new FormControl<number>(this.currentYear());
 
-  readonly years = this.buildYearOptions();
   readonly displayedColumns = ['select', 'invoiceNumber', 'client', 'invoiceDate', 'dueDate', 'totalAmount', 'status', 'actions'];
   readonly statusLabel = mapInvoiceStatusLabel;
 
@@ -109,19 +107,16 @@ export class InvoiceListComponent implements OnInit {
   ngOnInit() {
     this.loadData();
 
-    this.clientsService.getAllForSelect().subscribe({
-      next: clients => this.clients.set(clients),
-    });
-
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
       this.page = 1;
       this.loadData();
     });
 
     this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.clientCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.monthCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.yearCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
+    this.billingFilter.filterChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.page = 1;
+      this.loadData();
+    });
   }
 
   loadData() {
@@ -203,6 +198,16 @@ export class InvoiceListComponent implements OnInit {
         { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
       ],
       Cancelled: [],
+      Generated: [
+        { status: 'Approved', label: 'Approve', icon: 'verified' },
+        { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
+        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+      ],
+      Approved: [
+        { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
+        { status: 'Archived', label: 'Archive', icon: 'inventory_2' },
+      ],
+      Archived: [],
     };
     return map[item.status] ?? [];
   }
@@ -260,8 +265,8 @@ export class InvoiceListComponent implements OnInit {
           this.downloadingPdf.set(false);
           return;
         }
-        const month = this.monthCtrl.value ?? this.currentMonth();
-        const year = this.yearCtrl.value ?? this.currentYear();
+        const month = this.billingFilter.month();
+        const year = this.billingFilter.year();
         this.runBulkDownload(items.map(i => i.id), `invoices-${month}-${year}.pdf`);
       },
       error: () => {
@@ -332,9 +337,6 @@ export class InvoiceListComponent implements OnInit {
   clearFilters() {
     this.searchCtrl.setValue('');
     this.statusCtrl.setValue(null);
-    this.clientCtrl.setValue(null);
-    this.monthCtrl.setValue(this.currentMonth());
-    this.yearCtrl.setValue(this.currentYear());
   }
 
   private runBulkDownload(ids: string[], filename: string) {
@@ -365,22 +367,9 @@ export class InvoiceListComponent implements OnInit {
     return {
       search: this.searchCtrl.value || undefined,
       status: this.statusCtrl.value ?? undefined,
-      clientId: this.clientCtrl.value ?? undefined,
-      month: this.monthCtrl.value ?? undefined,
-      year: this.yearCtrl.value ?? undefined,
+      clientId: this.billingFilter.clientIdOrUndefined(),
+      month: this.billingFilter.month(),
+      year: this.billingFilter.year(),
     };
-  }
-
-  private currentMonth(): number {
-    return new Date().getMonth() + 1;
-  }
-
-  private currentYear(): number {
-    return new Date().getFullYear();
-  }
-
-  private buildYearOptions(): number[] {
-    const y = this.currentYear();
-    return [y - 1, y, y + 1];
   }
 }

@@ -1,0 +1,38 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/module-layout.less';
+@import '../../shared/billing-layout.less';
+
+.billing-hero--compact {
+  padding: 20px 24px;
+
+  h1 { font-size: 22px; }
+
+  .billing-hero__icon {
+    width: 48px;
+    height: 48px;
+    mat-icon { font-size: 24px; width: 24px; height: 24px; }
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-divider);
+}
+
+.mobile-down({
+  .form-grid { grid-template-columns: 1fr; }
+  .form-actions button { width: 100%; }
+});
+
+.responsive-form-page-header();

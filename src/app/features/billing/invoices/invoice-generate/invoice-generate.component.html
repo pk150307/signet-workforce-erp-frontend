@@ -1,10 +1,12 @@
 <div class="page-container billing-page">
+  <app-billing-subnav></app-billing-subnav>
+
   <section class="billing-hero">
     <div class="billing-hero__content">
       <div class="billing-hero__icon"><mat-icon>auto_awesome</mat-icon></div>
       <div>
         <h1>Auto Generate Invoice</h1>
-        <p>Pick month, year and site. We pull attendance, overtime, department rates, PF/ESIC and GST automatically.</p>
+        <p>Select a site and preview the tax invoice. Line items follow the Signet billing template (manpower, EPF, ESIC, LWF, service charge, GST).</p>
       </div>
     </div>
     <div class="billing-hero__actions">
@@ -15,25 +17,20 @@
 
   <div class="generate-layout">
     <mat-card class="panel form-panel">
-      <h3>1. Select billing period & site</h3>
+      <h3>1. Select site</h3>
+      <p class="form-hint">Client, month, and year are set in the billing toolbar above.</p>
+
+      <app-billing-prerequisites
+        [month]="billingFilter.month()"
+        [year]="billingFilter.year()"
+        [clientId]="selectedSite()?.clientId ?? billingFilter.clientId()"
+        [siteId]="form.controls.siteId.value || null">
+      </app-billing-prerequisites>
+
       @if (loadingSites()) {
-        <app-skeleton-loader type="card" [rows]="4"></app-skeleton-loader>
+        <app-skeleton-loader type="card" [rows]="2"></app-skeleton-loader>
       } @else {
-      <form [formGroup]="form" class="form-grid" (ngSubmit)="loadPreview()">
-        <mat-form-field appearance="outline">
-          <mat-label>Month</mat-label>
-          <mat-select formControlName="month">
-            <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Year</mat-label>
-          <mat-select formControlName="year">
-            <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
+      <form [formGroup]="form" class="form-grid form-grid--site" (ngSubmit)="loadPreview()">
         <mat-form-field appearance="outline" class="span-2">
           <mat-label>Site</mat-label>
           <mat-select formControlName="siteId">
@@ -41,11 +38,6 @@
               {{ site.siteName }} — {{ site.clientName }}
             </mat-option>
           </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>GST Rate (%)</mat-label>
-          <input matInput type="number" formControlName="gstRate" min="0" max="28">
         </mat-form-field>
 
         <div class="form-actions span-2">
@@ -62,49 +54,70 @@
       <app-skeleton-loader type="card" [rows]="6"></app-skeleton-loader>
     </mat-card>
 
-    <mat-card class="panel preview-panel" *ngIf="!loadingPreview() && preview() as p">
+    <mat-card class="panel preview-panel tax-invoice-preview" *ngIf="!loadingPreview() && preview() as p">
       <div class="preview-header">
         <div>
-          <p class="eyebrow">Step 2 · Review & generate</p>
+          <p class="eyebrow">Step 2 · Tax invoice preview</p>
           <h3>{{ p.clientName }} · {{ p.siteName }}</h3>
-          <p>{{ p.employeeCount }} employees · {{ p.totalManDays }} man-days · {{ p.totalOvertimeHours }} OT hrs · {{ p.workingDays }} working days</p>
+          <p>SAC {{ p.sacCode }} · {{ p.natureOfService }}</p>
         </div>
         <mat-chip-set>
           <mat-chip *ngIf="p.alreadyInvoiced" color="warn">Already invoiced</mat-chip>
+          <mat-chip *ngIf="!p.validation.valid" color="warn">Validation issues</mat-chip>
         </mat-chip-set>
       </div>
 
-      <div class="stat-cards">
-        <div class="stat-card"><span>Subtotal</span><strong>₹{{ p.subTotal | number:'1.0-0' }}</strong></div>
-        <div class="stat-card"><span>GST ({{ p.gstRate }}%)</span><strong>₹{{ p.gstAmount | number:'1.0-0' }}</strong></div>
-        <div class="stat-card"><span>Employer PF</span><strong>₹{{ p.totalEmployerPf | number:'1.0-0' }}</strong></div>
-        <div class="stat-card"><span>Employer ESIC</span><strong>₹{{ p.totalEmployerEsi | number:'1.0-0' }}</strong></div>
-        <div class="stat-card stat-card--total"><span>Total</span><strong>₹{{ p.totalAmount | number:'1.0-0' }}</strong></div>
+      <div class="validation-errors" *ngIf="p.validation.errors.length">
+        <p *ngFor="let err of p.validation.errors">{{ err }}</p>
+      </div>
+      <div class="validation-warnings" *ngIf="p.validation.warnings.length">
+        <p *ngFor="let w of p.validation.warnings">{{ w }}</p>
       </div>
 
-      <table class="preview-table">
+      <table class="tax-invoice-table">
         <thead>
           <tr>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Amount</th>
+            <th>S.no.</th>
+            <th>Description of Services</th>
+            <th>SAC Code</th>
+            <th class="num">Taxable Amount</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of p.lineItems">
-            <td><span class="type-badge">{{ categoryLabel(item.category) }}</span></td>
+          <tr *ngFor="let item of p.components; let i = index">
+            <td class="center">{{ i + 1 }}</td>
             <td>{{ item.description }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>₹{{ item.unitRate | number:'1.2-2' }}</td>
-            <td>₹{{ item.amount | number:'1.2-2' }}</td>
+            <td class="center">{{ item.hsnSacCode }}</td>
+            <td class="num">₹{{ item.amount | number:'1.0-0' }}</td>
+          </tr>
+          <tr class="taxable-total">
+            <td colspan="3">Total Taxable Value</td>
+            <td class="num">₹{{ p.taxableValue | number:'1.0-0' }}</td>
           </tr>
         </tbody>
       </table>
 
+      <div class="tax-summary">
+        <div class="tax-summary__row">
+          <span>CGST ({{ p.tax.cgstRate }}%)</span>
+          <strong>₹{{ p.tax.cgstAmount | number:'1.2-2' }}</strong>
+        </div>
+        <div class="tax-summary__row">
+          <span>SGST ({{ p.tax.sgstRate }}%)</span>
+          <strong>₹{{ p.tax.sgstAmount | number:'1.2-2' }}</strong>
+        </div>
+        <div class="tax-summary__row">
+          <span>IGST ({{ p.tax.igstRate }}%)</span>
+          <strong>₹{{ p.tax.igstAmount | number:'1.2-2' }}</strong>
+        </div>
+        <div class="tax-summary__row tax-summary__row--total">
+          <span>Total Invoice Value</span>
+          <strong>₹{{ p.grandTotal | number:'1.0-0' }}</strong>
+        </div>
+      </div>
+
       <div class="preview-actions">
-        <button mat-raised-button color="primary" (click)="generate()" [disabled]="generating() || p.alreadyInvoiced || !p.lineItems.length">
+        <button mat-raised-button color="primary" (click)="generate()" [disabled]="generating() || p.alreadyInvoiced || !p.components.length || !p.validation.valid">
           <mat-icon>receipt_long</mat-icon>
           {{ generating() ? 'Generating…' : 'Generate Invoice' }}
         </button>
@@ -114,7 +127,7 @@
     <mat-card class="panel preview-panel preview-panel--empty" *ngIf="!loadingPreview() && !preview()">
       <mat-icon>insights</mat-icon>
       <h3>Preview will appear here</h3>
-      <p>Select a site and billing period, then click Preview Invoice to see calculated line items.</p>
+      <p>Select a site and billing period, then click Preview Invoice.</p>
     </mat-card>
   </div>
 </div>

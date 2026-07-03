@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,8 +11,8 @@ import { InvoicePdfService } from '../../../../core/services/invoice-pdf.service
 import { NotificationService } from '../../../../core/services/notification.service';
 import { InvoiceDetail } from '../../../../core/models/invoice.models';
 import { InvoiceDocumentComponent } from '../invoice-document/invoice-document.component';
-
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
+
 @Component({
   selector: 'app-invoice-print',
   standalone: true,
@@ -32,27 +33,53 @@ export class InvoicePrintComponent implements OnInit {
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoicePdfService = inject(InvoicePdfService);
   private readonly notification = inject(NotificationService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly loading = signal(true);
   readonly downloading = signal(false);
   readonly invoice = signal<InvoiceDetail | null>(null);
-  readonly documentRef = viewChild(InvoiceDocumentComponent);
+  readonly serverHtml = signal<SafeHtml | null>(null);
+  readonly useServerHtml = signal(false);
 
   ngOnInit() {
     const id = this.route.snapshot.params['id'];
     this.invoiceService.getById(id).subscribe({
-      next: (detail) => {
-        this.invoice.set(detail);
+      next: (detail) => this.invoice.set(detail),
+    });
+
+    this.invoiceService.getPrintHtml(id).subscribe({
+      next: (html) => {
+        this.serverHtml.set(this.sanitizer.bypassSecurityTrustHtml(html));
+        this.useServerHtml.set(true);
         this.loading.set(false);
-        if (this.route.snapshot.queryParamMap.get('autoprint') === '1') {
-          setTimeout(() => window.print(), 400);
-        }
-        if (this.route.snapshot.queryParamMap.get('pdf') === '1') {
-          setTimeout(() => this.downloadPdf(), 500);
+        this.scheduleAutoActions();
+      },
+      error: () => {
+        this.useServerHtml.set(false);
+        if (!this.invoice()) {
+          this.invoiceService.getById(id).subscribe({
+            next: (detail) => {
+              this.invoice.set(detail);
+              this.loading.set(false);
+              this.scheduleAutoActions();
+            },
+            error: () => this.loading.set(false),
+          });
+        } else {
+          this.loading.set(false);
+          this.scheduleAutoActions();
         }
       },
-      error: () => this.loading.set(false),
     });
+  }
+
+  private scheduleAutoActions() {
+    if (this.route.snapshot.queryParamMap.get('autoprint') === '1') {
+      setTimeout(() => window.print(), 400);
+    }
+    if (this.route.snapshot.queryParamMap.get('pdf') === '1') {
+      setTimeout(() => this.downloadPdf(), 500);
+    }
   }
 
   print() {
@@ -61,15 +88,18 @@ export class InvoicePrintComponent implements OnInit {
 
   async downloadPdf() {
     const inv = this.invoice();
-    if (!inv || this.downloading()) return;
+    if (this.downloading()) return;
 
     this.downloading.set(true);
     try {
-      const host = document.querySelector('app-invoice-document .invoice-document') as HTMLElement | null;
+      const host = document.querySelector('.invoice-preview-wrap .invoice-document, .server-invoice-html') as HTMLElement | null;
+      const filename = inv ? `${inv.invoiceNumber}.pdf` : 'invoice.pdf';
       if (host) {
-        await this.invoicePdfService.saveElementAsPdf(host, `${inv.invoiceNumber}.pdf`);
-      } else {
+        await this.invoicePdfService.saveElementAsPdf(host, filename);
+      } else if (inv) {
         await this.invoicePdfService.downloadInvoice(inv);
+      } else {
+        throw new Error('No preview available');
       }
       this.notification.success('Invoice PDF downloaded.');
     } catch {

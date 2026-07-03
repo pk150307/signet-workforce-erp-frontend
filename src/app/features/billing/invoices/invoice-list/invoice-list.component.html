@@ -1,4 +1,6 @@
 <div class="page-container billing-page">
+  <app-billing-subnav></app-billing-subnav>
+
   <section class="billing-hero">
     <div class="billing-hero__content">
       <div class="billing-hero__icon"><mat-icon>receipt_long</mat-icon></div>
@@ -20,56 +22,34 @@
     </div>
   </section>
 
-  <section class="kpi-row" *ngIf="!loading() && data() as d">
-    <div class="kpi-card">
+  <section class="billing-kpi-row" *ngIf="!loading() && data() as d">
+    <div class="billing-kpi-card">
       <span>Total Invoices</span>
       <strong>{{ d.totalCount | number }}</strong>
     </div>
-    <div class="kpi-card">
+    <div class="billing-kpi-card">
       <span>Page Total</span>
       <strong>₹{{ pageTotal() | number:'1.0-0' }}</strong>
     </div>
-    <div class="kpi-card kpi-card--warn">
+    <div class="billing-kpi-card billing-kpi-card--warn">
       <span>Overdue</span>
       <strong>{{ overdueCount() }}</strong>
     </div>
-    <div class="kpi-card kpi-card--success">
+    <div class="billing-kpi-card billing-kpi-card--success">
       <span>Paid</span>
       <strong>{{ paidCount() }}</strong>
     </div>
   </section>
 
-  <section class="filters-card">
-    <mat-form-field appearance="outline" class="filters-card__search">
+  <section class="billing-filters-card card">
+    <mat-form-field appearance="outline" class="billing-filters-card__search" subscriptSizing="dynamic">
       <mat-label>Search invoices</mat-label>
       <mat-icon matPrefix>search</mat-icon>
       <input matInput [formControl]="searchCtrl" autocomplete="off" placeholder="Invoice # or client">
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Client</mat-label>
-      <mat-select [formControl]="clientCtrl">
-        <mat-option [value]="null">All Clients</mat-option>
-        <mat-option *ngFor="let c of clients()" [value]="c.id">{{ c.companyName }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Month</mat-label>
-      <mat-select [formControl]="monthCtrl">
-        <mat-option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">{{ monthLabel(m) }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Year</mat-label>
-      <mat-select [formControl]="yearCtrl">
-        <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <button mat-icon-button matTooltip="Clear filters" aria-label="Clear filters" (click)="clearFilters()"
-            *ngIf="searchCtrl.value || statusCtrl.value || clientCtrl.value">
+    <button mat-icon-button matTooltip="Clear search & status" aria-label="Clear filters" (click)="clearFilters()"
+            *ngIf="searchCtrl.value || statusCtrl.value">
       <mat-icon>filter_alt_off</mat-icon>
     </button>
   </section>
@@ -80,7 +60,7 @@
     </mat-chip-listbox>
   </div>
 
-  <section class="table-card">
+  <section class="card card--flush table-card">
     <app-skeleton-loader *ngIf="loading()" type="table" [rows]="8"></app-skeleton-loader>
 
     <app-empty-state *ngIf="!loading() && !data()?.items?.length"
@@ -91,85 +71,85 @@
     </app-empty-state>
 
     <div class="table-scroll">
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
-      <ng-container matColumnDef="select">
-        <mat-header-cell *matHeaderCellDef>
-          <mat-checkbox [checked]="isAllSelected()" (change)="toggleAllRows()"></mat-checkbox>
-        </mat-header-cell>
-        <mat-cell *matCellDef="let inv">
-          <mat-checkbox (click)="$event.stopPropagation()"
-                        [checked]="selection.isSelected(inv)"
-                        (change)="selection.toggle(inv)"></mat-checkbox>
-        </mat-cell>
-      </ng-container>
+      <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+        <ng-container matColumnDef="select">
+          <mat-header-cell *matHeaderCellDef>
+            <mat-checkbox [checked]="isAllSelected()" (change)="toggleAllRows()"></mat-checkbox>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let inv">
+            <mat-checkbox (click)="$event.stopPropagation()"
+                          [checked]="selection.isSelected(inv)"
+                          (change)="selection.toggle(inv)"></mat-checkbox>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="invoiceNumber">
-        <mat-header-cell *matHeaderCellDef>Invoice</mat-header-cell>
-        <mat-cell *matCellDef="let inv">
-          <div class="cell-stack">
-            <strong class="inv-number">{{ inv.invoiceNumber }}</strong>
-            <span class="cell-muted">{{ inv.month }}/{{ inv.year }}</span>
-          </div>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="client">
-        <mat-header-cell *matHeaderCellDef>Client / Site</mat-header-cell>
-        <mat-cell *matCellDef="let inv">
-          <div class="cell-stack">
-            <span>{{ inv.clientName }}</span>
-            <span class="cell-muted">{{ inv.siteName || '—' }}</span>
-          </div>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="site">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let inv"></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="invoiceDate">
-        <mat-header-cell *matHeaderCellDef>Issued</mat-header-cell>
-        <mat-cell *matCellDef="let inv">{{ inv.invoiceDate | apiDate }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="dueDate">
-        <mat-header-cell *matHeaderCellDef>Due</mat-header-cell>
-        <mat-cell *matCellDef="let inv">{{ inv.dueDate | apiDate }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="totalAmount">
-        <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
-        <mat-cell *matCellDef="let inv"><strong>₹{{ inv.totalAmount | number:'1.0-0' }}</strong></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let inv">
-          <span class="status-badge" [ngClass]="'status-badge--' + getStatusClass(inv.status)">{{ statusLabel(inv.status) }}</span>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let inv">
-          <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" aria-label="More actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu>
-            <button mat-menu-item (click)="viewInvoice(inv.id)"><mat-icon>visibility</mat-icon> View</button>
-            <button mat-menu-item (click)="editInvoice(inv)" *ngIf="inv.status === 'Draft'"><mat-icon>edit</mat-icon> Edit</button>
-            <button mat-menu-item (click)="openPrint(inv)"><mat-icon>print</mat-icon> Print</button>
-            <button mat-menu-item (click)="downloadPdf(inv)"><mat-icon>download</mat-icon> Download</button>
-            <button mat-menu-item (click)="emailInvoice(inv)"><mat-icon>send</mat-icon> Email</button>
-            @for (action of availableActions(inv); track action.status) {
-              <button mat-menu-item (click)="transitionStatus(inv, action)">
-                <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
-              </button>
-            }
-            <mat-divider></mat-divider>
-            <button mat-menu-item (click)="deleteInvoice(inv)">
-              <mat-icon color="warn">delete</mat-icon> Delete
+        <ng-container matColumnDef="invoiceNumber">
+          <mat-header-cell *matHeaderCellDef>Invoice</mat-header-cell>
+          <mat-cell *matCellDef="let inv">
+            <div class="cell-stack">
+              <strong class="inv-number">{{ inv.invoiceNumber }}</strong>
+              <span class="cell-muted">{{ inv.month }}/{{ inv.year }}</span>
+            </div>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="client">
+          <mat-header-cell *matHeaderCellDef>Client / Site</mat-header-cell>
+          <mat-cell *matCellDef="let inv">
+            <div class="cell-stack">
+              <span>{{ inv.clientName }}</span>
+              <span class="cell-muted">{{ inv.siteName || '—' }}</span>
+            </div>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="site">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let inv"></mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="invoiceDate">
+          <mat-header-cell *matHeaderCellDef>Issued</mat-header-cell>
+          <mat-cell *matCellDef="let inv">{{ inv.invoiceDate | apiDate }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="dueDate">
+          <mat-header-cell *matHeaderCellDef>Due</mat-header-cell>
+          <mat-cell *matCellDef="let inv">{{ inv.dueDate | apiDate }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="totalAmount">
+          <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
+          <mat-cell *matCellDef="let inv"><strong>₹{{ inv.totalAmount | number:'1.0-0' }}</strong></mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+          <mat-cell *matCellDef="let inv">
+            <span class="status-badge" [ngClass]="'status-badge--' + getStatusClass(inv.status)">{{ statusLabel(inv.status) }}</span>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let inv">
+            <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" aria-label="More actions">
+              <mat-icon>more_vert</mat-icon>
             </button>
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row" (click)="viewInvoice(row.id)"></mat-row>
-    </mat-table>
+            <mat-menu #menu>
+              <button mat-menu-item (click)="viewInvoice(inv.id)"><mat-icon>visibility</mat-icon> View</button>
+              <button mat-menu-item (click)="editInvoice(inv)" *ngIf="inv.status === 'Draft'"><mat-icon>edit</mat-icon> Edit</button>
+              <button mat-menu-item (click)="openPrint(inv)"><mat-icon>print</mat-icon> Print</button>
+              <button mat-menu-item (click)="downloadPdf(inv)"><mat-icon>download</mat-icon> Download</button>
+              <button mat-menu-item (click)="emailInvoice(inv)"><mat-icon>send</mat-icon> Email</button>
+              @for (action of availableActions(inv); track action.status) {
+                <button mat-menu-item (click)="transitionStatus(inv, action)">
+                  <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+                </button>
+              }
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="deleteInvoice(inv)">
+                <mat-icon color="warn">delete</mat-icon> Delete
+              </button>
+            </mat-menu>
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row" (click)="viewInvoice(row.id)"></mat-row>
+      </mat-table>
     </div>
 
     <mat-paginator *ngIf="(data()?.totalCount ?? 0) > 0"

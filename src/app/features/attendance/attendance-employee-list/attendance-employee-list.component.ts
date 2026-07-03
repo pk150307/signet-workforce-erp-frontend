@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AttendanceService } from '../../../core/services/attendance.service';
+import { AttendanceFilterService } from '../../../core/services/attendance-filter.service';
 import { ClientsService } from '../../../core/services/clients.service';
 import {
   AttendanceEmployeeListItem,
@@ -33,6 +34,8 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 })
 export class AttendanceEmployeeListComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceService);
+  private readonly attendanceFilter = inject(AttendanceFilterService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly clientsService = inject(ClientsService);
   private readonly router = inject(Router);
 
@@ -46,23 +49,36 @@ export class AttendanceEmployeeListComponent implements OnInit {
   readonly cols = ['employee', 'department', 'site', 'present', 'absent', 'leave', 'overtime', 'night', 'punctuality', 'unmarked', 'status', 'actions'];
 
   readonly filters = new FormGroup({
-    clientId: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    month: new FormControl(new Date().getMonth() + 1, { nonNullable: true }),
-    year: new FormControl(new Date().getFullYear(), { nonNullable: true }),
+    clientId: new FormControl(this.attendanceFilter.clientIdOrEmpty(), { nonNullable: true, validators: Validators.required }),
+    month: new FormControl(this.attendanceFilter.month(), { nonNullable: true }),
+    year: new FormControl(this.attendanceFilter.year(), { nonNullable: true }),
   });
 
   readonly years = [2024, 2025, 2026, 2027];
 
   ngOnInit() {
+    this.attendanceFilter.bindControls(
+      {
+        month: this.filters.controls.month,
+        year: this.filters.controls.year,
+        clientId: this.filters.controls.clientId,
+      },
+      this.destroyRef,
+      () => this.load(),
+    );
+
     this.clientsLoading.set(true);
     this.clientsService.getAllForSelect().subscribe({
       next: c => {
         this.clients.set(c);
         this.clientsLoading.set(false);
+        if (!this.filters.value.clientId && c.length === 1) {
+          this.filters.controls.clientId.setValue(c[0].id);
+        }
       },
       error: () => this.clientsLoading.set(false),
     });
-    this.filters.valueChanges.subscribe(() => this.load());
+
     this.load();
   }
 

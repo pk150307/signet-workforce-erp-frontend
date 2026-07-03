@@ -1,4 +1,6 @@
 <div class="page-container billing-page" *ngIf="!loading() && invoice() as inv; else loadingOrNotFound">
+  <app-billing-subnav></app-billing-subnav>
+
   <section class="detail-hero">
     <div class="detail-hero__main">
       <button mat-icon-button routerLink="/billing/invoices" class="back-btn" aria-label="Back to invoices"><mat-icon>arrow_back</mat-icon></button>
@@ -12,6 +14,7 @@
     <div class="detail-hero__actions">
       <button mat-stroked-button *ngIf="canEdit(inv)" [routerLink]="['/billing/invoices', inv.id, 'edit']"><mat-icon>edit</mat-icon> Edit</button>
       <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
+      <button mat-stroked-button *ngIf="canRecordPayment(inv)" (click)="recordPayment()"><mat-icon>payments</mat-icon> Record Payment</button>
       <button mat-stroked-button (click)="downloadPdf()"><mat-icon>download</mat-icon> Download</button>
       <button mat-stroked-button color="warn" (click)="deleteInvoice()"><mat-icon>delete</mat-icon> Delete</button>
       <button mat-raised-button color="primary" (click)="emailInvoice()" *ngIf="inv.status !== 'Cancelled' && inv.status !== 'Paid'">
@@ -66,6 +69,25 @@
         </table>
       </div>
 
+      <div class="panel">
+        <div class="panel__header"><h3>Payments</h3><span *ngIf="paymentSummary() as ps">Balance ₹{{ ps.balanceAmount | number:'1.0-0' }}</span></div>
+        <app-skeleton-loader *ngIf="loadingPayments()" type="table" [rows]="2"></app-skeleton-loader>
+        <table class="line-items-table" *ngIf="!loadingPayments() && payments().length">
+          <thead>
+            <tr><th>Date</th><th>Mode</th><th>Reference</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pay of payments()">
+              <td>{{ pay.paymentDate | apiDate }}</td>
+              <td>{{ pay.paymentMode | uppercase }}</td>
+              <td>{{ pay.utrNumber || pay.referenceNumber || '—' }}</td>
+              <td>₹{{ pay.amount | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="empty-hint" *ngIf="!loadingPayments() && !payments().length">No payments recorded yet.</p>
+      </div>
+
       <div class="panel" *ngIf="inv.notes">
         <h3>Notes</h3>
         <p class="notes">{{ inv.notes }}</p>
@@ -93,8 +115,8 @@
 
       <div class="panel">
         <h3>Activity Timeline</h3>
-        <div class="timeline" *ngIf="inv.timeline?.length; else noTimeline">
-          <div class="timeline-item" *ngFor="let entry of inv.timeline">
+        <div class="timeline" *ngIf="activity().length; else legacyTimeline">
+          <div class="timeline-item" *ngFor="let entry of activity()">
             <div class="timeline-dot"></div>
             <div class="timeline-content">
               <strong>{{ entry.action }}</strong>
@@ -103,6 +125,18 @@
             </div>
           </div>
         </div>
+        <ng-template #legacyTimeline>
+          <div class="timeline" *ngIf="inv.timeline?.length; else noTimeline">
+            <div class="timeline-item" *ngFor="let entry of inv.timeline">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <strong>{{ entry.action }}</strong>
+                <p>{{ entry.description }}</p>
+                <span>{{ entry.performedBy }} · {{ entry.performedAt | apiDate:'short' }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
         <ng-template #noTimeline>
           <p class="empty-hint">No activity recorded yet.</p>
         </ng-template>

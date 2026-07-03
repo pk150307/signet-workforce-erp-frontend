@@ -1,0 +1,81 @@
+<div class="page-container billing-page">
+  <app-billing-subnav></app-billing-subnav>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Contracts</h1>
+      <p class="page-header__subtitle">Contract billing rates aligned to tax invoice (EPF, ESIC, LWF, service charge, GST)</p>
+    </div>
+    <div class="page-header__actions">
+      <a mat-raised-button color="primary" routerLink="/billing/contracts/new">
+        <mat-icon>add</mat-icon> New Contract
+      </a>
+    </div>
+  </div>
+
+  <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
+
+  <ng-container *ngIf="!loading() && data() as result">
+    <app-empty-state
+      *ngIf="!result.items.length"
+      icon="description"
+      title="No contracts"
+      description="Create a contract for your client/site to satisfy billing prerequisites.">
+      <a mat-raised-button color="primary" routerLink="/billing/contracts/new">New Contract</a>
+    </app-empty-state>
+
+    <div class="card card--flush" *ngIf="result.items.length">
+      <div class="table-scroll">
+        <table mat-table [dataSource]="result.items" class="data-table">
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Code</th>
+            <td mat-cell *matCellDef="let row">{{ row.contractCode }}</td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let row">{{ row.contractName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="client">
+            <th mat-header-cell *matHeaderCellDef>Client</th>
+            <td mat-cell *matCellDef="let row">{{ row.clientName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="site">
+            <th mat-header-cell *matHeaderCellDef>Site</th>
+            <td mat-cell *matCellDef="let row">{{ row.siteName ?? 'All sites' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="period">
+            <th mat-header-cell *matHeaderCellDef>Period</th>
+            <td mat-cell *matCellDef="let row">{{ row.startDate | apiDate }} — {{ row.endDate ? (row.endDate | apiDate) : 'Open' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="billingRates">
+            <th mat-header-cell *matHeaderCellDef>Invoice rates</th>
+            <td mat-cell *matCellDef="let row"><small>{{ billingRatesLabel(row) }}</small></td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let row">
+              <mat-chip>{{ row.status }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <a mat-icon-button [routerLink]="['/billing/contracts', row.id, 'edit']" matTooltip="Edit contract">
+                <mat-icon>edit</mat-icon>
+              </a>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols"></tr>
+        </table>
+      </div>
+      <mat-paginator
+        [length]="result.totalCount"
+        [pageSize]="result.pageSize"
+        [pageIndex]="result.page - 1"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="onPage($event)">
+      </mat-paginator>
+    </div>
+  </ng-container>
+</div>

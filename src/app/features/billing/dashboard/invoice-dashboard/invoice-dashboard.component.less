@@ -1,38 +1,14 @@
 @import '../../../../shared/styles/page-layout.less';
 @import '../../../../shared/styles/breakpoints.less';
-@import '../../../../shared/styles/dashboard-grids.less';
-
-.kpi-grid {
-  .kpi-grid-responsive(4, 2, 1);
-  margin-bottom: 24px;
-}
+@import '../../shared/billing-layout.less';
 
 .site-summary {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-
-  h3 {
-    margin: 0 0 16px;
-    font-size: 16px;
-  }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 .summary-table {
   width: 100%;
   border-collapse: collapse;
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-
-  thead, tbody, tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .mobile-down({
-    min-width: 520px;
-  });
 
   th {
     text-align: left;
@@ -42,6 +18,7 @@
     color: var(--color-text-secondary);
     padding: 8px 12px;
     border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
   }
 
   td {
@@ -56,8 +33,11 @@
   }
 }
 
-.quick-links {
-  margin-top: 20px;
+.billing-quick-links a mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
 }
 
 .mock-badge {
@@ -70,3 +50,7 @@
   background: rgba(245, 127, 23, 0.12);
   color: var(--color-warning);
 }
+
+.mobile-down({
+  .summary-table { min-width: 520px; }
+});

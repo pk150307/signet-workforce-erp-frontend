@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,20 +8,25 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatInputModule } from '@angular/material/input';
 import { finalize } from 'rxjs';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
+import { BillingEngineService } from '../../../../core/services/billing-engine.service';
+import { BillingFilterService } from '../../../../core/services/billing-filter.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { InvoicePreview, SiteBillingSummary } from '../../../../core/models/invoice.models';
-
+import { BillingEngineResult } from '../../../../core/models/billing.models';
+import { SiteBillingSummary } from '../../../../core/models/invoice.models';
+import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
+import { BillingPrerequisitesComponent } from '../../shared/billing-prerequisites.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
+
 @Component({
   selector: 'app-invoice-generate',
   standalone: true,
   imports: [
+    BillingSubnavComponent,
+    BillingPrerequisitesComponent,
     SkeletonLoaderComponent,
     NgIf,
     NgFor,
@@ -32,9 +38,7 @@ import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    MatProgressSpinnerModule,
     MatChipsModule,
-    MatInputModule,
   ],
   templateUrl: './invoice-generate.component.html',
   styleUrl: './invoice-generate.component.less',
@@ -42,32 +46,37 @@ import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-
 export class InvoiceGenerateComponent implements OnInit {
 
   private readonly invoiceService = inject(InvoiceService);
+  private readonly engineService = inject(BillingEngineService);
+  readonly billingFilter = inject(BillingFilterService);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loadingSites = signal(true);
   readonly loadingPreview = signal(false);
   readonly generating = signal(false);
-  readonly sites = signal<SiteBillingSummary[]>([]);
-  readonly preview = signal<InvoicePreview | null>(null);
+  readonly allSites = signal<SiteBillingSummary[]>([]);
+  readonly preview = signal<BillingEngineResult | null>(null);
 
-  readonly months = [
-    { value: 1, label: 'January' }, { value: 2, label: 'February' }, { value: 3, label: 'March' },
-    { value: 4, label: 'April' }, { value: 5, label: 'May' }, { value: 6, label: 'June' },
-    { value: 7, label: 'July' }, { value: 8, label: 'August' }, { value: 9, label: 'September' },
-    { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' },
-  ];
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly sites = computed(() => {
+    const clientId = this.billingFilter.clientId();
+    const items = this.allSites();
+    return clientId ? items.filter(s => s.clientId === clientId) : items;
+  });
 
   readonly form = new FormGroup({
-    month: new FormControl(new Date().getMonth() + 1, { nonNullable: true, validators: Validators.required }),
-    year: new FormControl(new Date().getFullYear(), { nonNullable: true, validators: Validators.required }),
     siteId: new FormControl('', { nonNullable: true, validators: Validators.required }),
-    gstRate: new FormControl(18, { nonNullable: true, validators: Validators.required }),
   });
 
   ngOnInit() {
     this.loadSites();
+    this.billingFilter.filterChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.preview.set(null);
+      const siteId = this.form.controls.siteId.value;
+      if (siteId && !this.sites().some(s => s.siteId === siteId)) {
+        this.form.controls.siteId.setValue('');
+      }
+    });
   }
 
   loadSites() {
@@ -75,35 +84,66 @@ export class InvoiceGenerateComponent implements OnInit {
     this.invoiceService.getGenerateSites().pipe(
       finalize(() => this.loadingSites.set(false)),
     ).subscribe({
-      next: sites => this.sites.set(sites),
+      next: sites => this.allSites.set(sites),
       error: () => this.notification.error('Failed to load sites.'),
     });
   }
 
+  selectedSite(): SiteBillingSummary | undefined {
+    const siteId = this.form.controls.siteId.value;
+    return this.sites().find(s => s.siteId === siteId);
+  }
+
   loadPreview() {
     if (this.form.invalid) return;
-    const { month, year, siteId, gstRate } = this.form.getRawValue();
+    const site = this.selectedSite();
+    if (!site?.clientId) {
+      this.notification.warning('Select a client in the billing toolbar and choose a site.');
+      return;
+    }
+
     this.loadingPreview.set(true);
     this.preview.set(null);
 
-    this.invoiceService.previewForSite(siteId, month, year, gstRate).pipe(
+    this.engineService.preview({
+      month: this.billingFilter.month(),
+      year: this.billingFilter.year(),
+      clientId: site.clientId,
+      siteId: site.siteId,
+    }).pipe(
       finalize(() => this.loadingPreview.set(false)),
     ).subscribe({
-      next: (data) => this.preview.set(data),
+      next: (data) => {
+        this.preview.set(data);
+        const messages = [...data.validation.errors, ...data.validation.warnings];
+        if (messages.length) {
+          this.notification.warning(messages.join(' '));
+        }
+      },
       error: (err) => {
-        this.notification.error(err?.error?.message ?? 'Failed to load invoice preview.');
+        this.notification.error(err?.error?.title ?? err?.error?.message ?? 'Failed to load invoice preview.');
       },
     });
   }
 
   generate() {
     const preview = this.preview();
-    if (!preview || preview.alreadyInvoiced || this.generating()) return;
+    const site = this.selectedSite();
+    if (!preview || preview.alreadyInvoiced || this.generating() || !site?.clientId) return;
 
-    const { month, year, siteId, gstRate } = this.form.getRawValue();
+    if (!preview.validation.valid) {
+      this.notification.error(preview.validation.errors.join(' ') || 'Fix validation issues before generating.');
+      return;
+    }
+
     this.generating.set(true);
 
-    this.invoiceService.generateForSite({ siteId, month, year, gstRate }).pipe(
+    this.invoiceService.generateFromEngine({
+      month: this.billingFilter.month(),
+      year: this.billingFilter.year(),
+      clientId: site.clientId,
+      siteId: site.siteId,
+    }).pipe(
       finalize(() => this.generating.set(false)),
     ).subscribe({
       next: (res) => {
@@ -111,18 +151,18 @@ export class InvoiceGenerateComponent implements OnInit {
         this.router.navigate(['/billing/invoices', res.invoiceId]);
       },
       error: (err) => {
-        this.notification.error(err?.error?.message ?? 'Failed to generate invoice.');
+        const status = err?.status;
+        const msg = err?.error?.message ?? err?.error?.title ?? err?.error?.detail;
+        if (status === 409) {
+          this.notification.warning(msg ?? 'An invoice already exists for this site and period.');
+          return;
+        }
+        if (status === 500 && /database|connection|timeout/i.test(String(msg ?? ''))) {
+          this.notification.error('Database connection issue. Please retry in a moment.');
+          return;
+        }
+        this.notification.error(msg ?? 'Failed to generate invoice.');
       },
     });
-  }
-
-  categoryLabel(category: string): string {
-    const map: Record<string, string> = {
-      manpower: 'Manpower',
-      overtime: 'Overtime',
-      pf: 'PF',
-      esi: 'ESIC',
-    };
-    return map[category] ?? category;
   }
 }

@@ -10,6 +10,9 @@ export const INVOICE_STATUS_OPTIONS: { value: InvoiceStatus | null; label: strin
   { value: 'Paid', label: 'Paid' },
   { value: 'Overdue', label: 'Overdue' },
   { value: 'Cancelled', label: 'Cancelled' },
+  { value: 'Generated', label: 'Generated' },
+  { value: 'Approved', label: 'Approved' },
+  { value: 'Archived', label: 'Archived' },
 ];
 
 const MOCK_INVOICES: InvoiceListItem[] = [
@@ -76,9 +79,9 @@ export function getMockBillingDashboard() {
 
 export function getMockSiteBillingSummary(): SiteBillingSummary[] {
   return [
-    { siteId: 'site-001', siteName: 'Bandra Kurla Complex', clientName: 'Tata Realty', headcount: 45, billingRate: 12000, monthlyAmount: 540000, invoicedAmount: 540000, pendingAmount: 1003000 },
-    { siteId: 'site-002', siteName: 'Navi Mumbai SEZ', clientName: 'Reliance Industries', headcount: 38, billingRate: 11500, monthlyAmount: 437000, invoicedAmount: 731600, pendingAmount: 0 },
-    { siteId: 'site-003', siteName: 'Hinjewadi Phase 2', clientName: 'Infosys Ltd', headcount: 28, billingRate: 11000, monthlyAmount: 308000, invoicedAmount: 566400, pendingAmount: 566400 },
+    { siteId: 'site-001', clientId: 'cli-001', siteName: 'Bandra Kurla Complex', clientName: 'Tata Realty', headcount: 45, billingRate: 12000, monthlyAmount: 540000, invoicedAmount: 540000, pendingAmount: 1003000 },
+    { siteId: 'site-002', clientId: 'cli-002', siteName: 'Navi Mumbai SEZ', clientName: 'Reliance Industries', headcount: 38, billingRate: 11500, monthlyAmount: 437000, invoicedAmount: 731600, pendingAmount: 0 },
+    { siteId: 'site-003', clientId: 'cli-003', siteName: 'Hinjewadi Phase 2', clientName: 'Infosys Ltd', headcount: 28, billingRate: 11000, monthlyAmount: 308000, invoicedAmount: 566400, pendingAmount: 566400 },
   ];
 }
 
@@ -91,6 +94,9 @@ export function getInvoiceStatusClass(status: InvoiceStatus): string {
     Paid: 'paid',
     Cancelled: 'cancelled',
     Overdue: 'overdue',
+    Generated: 'generated',
+    Approved: 'approved',
+    Archived: 'archived',
   };
   return map[status] ?? 'inactive';
 }

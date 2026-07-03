@@ -1,0 +1,27 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../shared/billing-layout.less';
+
+.billing-reports-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.billing-reports-tabs {
+  ::ng-deep .mat-mdc-tab-header {
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 16px;
+  }
+}
+
+.billing-reports-kpi--compact {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.data-table {
+  width: 100%;
+}
+
+.mobile-down({
+  .billing-reports-kpi--compact { grid-template-columns: repeat(2, 1fr); }
+});

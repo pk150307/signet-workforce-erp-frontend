@@ -4,11 +4,11 @@
     <span *ngIf="invoice() as inv">{{ inv.invoiceNumber }}</span>
   </div>
   <div class="print-toolbar__actions">
-    <button mat-stroked-button (click)="downloadPdf()" [disabled]="!invoice() || downloading()">
+    <button mat-stroked-button (click)="downloadPdf()" [disabled]="(!invoice() && !useServerHtml()) || downloading()">
       <mat-icon>picture_as_pdf</mat-icon>
       {{ downloading() ? 'Generating…' : 'Download PDF' }}
     </button>
-    <button mat-raised-button color="primary" (click)="print()" [disabled]="!invoice()">
+    <button mat-raised-button color="primary" (click)="print()" [disabled]="!invoice() && !useServerHtml()">
       <mat-icon>print</mat-icon> Print
     </button>
   </div>
@@ -18,6 +18,10 @@
   <app-skeleton-loader type="card" [rows]="10"></app-skeleton-loader>
 </div>
 
-<div class="invoice-preview-wrap" *ngIf="!loading() && invoice() as inv">
+<div class="invoice-preview-wrap" *ngIf="!loading() && useServerHtml() && serverHtml() as html">
+  <div class="server-invoice-html" [innerHTML]="html"></div>
+</div>
+
+<div class="invoice-preview-wrap" *ngIf="!loading() && !useServerHtml() && invoice() as inv">
   <app-invoice-document [inv]="inv" />
 </div>

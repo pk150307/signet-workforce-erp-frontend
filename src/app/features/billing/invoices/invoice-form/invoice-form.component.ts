@@ -20,10 +20,12 @@ import { SiteListItem } from '../../../../core/models/sites.models';
 import { BillableDepartmentOption, InvoiceDetail } from '../../../../core/models/invoice.models';
 
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
+import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
 @Component({
   selector: 'app-invoice-form',
   standalone: true,
   imports: [
+    BillingSubnavComponent,
     SkeletonLoaderComponent,
     NgIf,
     NgFor,

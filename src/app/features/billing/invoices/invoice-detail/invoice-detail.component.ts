@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgClass, NgFor, NgIf, DecimalPipe } from '@angular/common';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NgClass, NgFor, NgIf, DecimalPipe, UpperCasePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,15 +10,21 @@ import { MatDialog } from '@angular/material/dialog';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
 import { InvoicePdfService } from '../../../../core/services/invoice-pdf.service';
+import { BillingPaymentService } from '../../../../core/services/billing-payment.service';
+import { BillingAuditService } from '../../../../core/services/billing-audit.service';
+import { BillingFilterService } from '../../../../core/services/billing-filter.service';
 import { BreadcrumbService } from '../../../../core/services/breadcrumb.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { InvoiceDetail, InvoiceStatus } from '../../../../core/models/invoice.models';
+import { InvoiceActivityEntry, InvoicePayment, InvoicePaymentSummary } from '../../../../core/models/billing.models';
 import { getInvoiceStatusClass } from '../invoice.mock';
 import { mapInvoiceStatusLabel } from '../../../../core/utils/api-response.util';
 import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
+import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
+import { InvoicePaymentDialogComponent } from '../invoice-payment-dialog/invoice-payment-dialog.component';
 
 interface StatusAction {
   status: InvoiceStatus;
@@ -34,6 +41,7 @@ interface StatusAction {
     NgFor,
     NgClass,
     DecimalPipe,
+    UpperCasePipe,
     RouterLink,
     ApiDatePipe,
     MatButtonModule,
@@ -41,6 +49,7 @@ interface StatusAction {
     MatDividerModule,
     MatMenuModule,
     SkeletonLoaderComponent,
+    BillingSubnavComponent,
   ],
   templateUrl: './invoice-detail.component.html',
   styleUrl: './invoice-detail.component.less',
@@ -51,14 +60,22 @@ export class InvoiceDetailComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoicePdfService = inject(InvoicePdfService);
+  private readonly paymentService = inject(BillingPaymentService);
+  private readonly auditService = inject(BillingAuditService);
+  private readonly billingFilter = inject(BillingFilterService);
   private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
+  readonly loadingPayments = signal(false);
   readonly downloadingPdf = signal(false);
   readonly notFound = signal(false);
   readonly invoice = signal<InvoiceDetail | null>(null);
+  readonly payments = signal<InvoicePayment[]>([]);
+  readonly paymentSummary = signal<InvoicePaymentSummary | null>(null);
+  readonly activity = signal<InvoiceActivityEntry[]>([]);
   readonly statusLabel = mapInvoiceStatusLabel;
 
   getStatusClass = getInvoiceStatusClass;
@@ -66,6 +83,12 @@ export class InvoiceDetailComponent implements OnInit {
   ngOnInit() {
     const id = this.route.snapshot.params['id'];
     this.loadInvoice(id);
+
+    // The shared billing filter bar (client / month / year) can't narrow a single
+    // invoice, so applying a filter here takes the user to the filtered invoice list.
+    this.billingFilter.filterChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.router.navigate(['/billing/invoices']));
   }
 
   loadInvoice(id: string) {
@@ -79,6 +102,8 @@ export class InvoiceDetailComponent implements OnInit {
         }
         this.invoice.set(detail);
         this.setBreadcrumbs(detail);
+        this.loadPayments(id);
+        this.loadActivity(id);
         this.loading.set(false);
       },
       error: () => {
@@ -120,12 +145,70 @@ export class InvoiceDetailComponent implements OnInit {
         { status: 'Cancelled', label: 'Cancel', icon: 'cancel', color: 'warn' },
       ],
       Cancelled: [],
+      Generated: [
+        { status: 'Approved', label: 'Approve', icon: 'verified', color: 'primary' },
+        { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
+        { status: 'Cancelled', label: 'Cancel', icon: 'cancel', color: 'warn' },
+      ],
+      Approved: [
+        { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
+        { status: 'Archived', label: 'Archive', icon: 'inventory_2' },
+      ],
+      Archived: [],
     };
     return map[inv.status] ?? [];
   }
 
   canEdit(inv: InvoiceDetail): boolean {
-    return inv.status === 'Draft';
+    return inv.status === 'Draft' && !inv.isLocked;
+  }
+
+  canRecordPayment(inv: InvoiceDetail): boolean {
+    return inv.balanceAmount > 0 && inv.status !== 'Cancelled' && inv.status !== 'Archived';
+  }
+
+  loadPayments(invoiceId: string) {
+    this.loadingPayments.set(true);
+    this.paymentService.listByInvoice(invoiceId).subscribe({
+      next: items => { this.payments.set(items); this.loadingPayments.set(false); },
+      error: () => this.loadingPayments.set(false),
+    });
+    this.paymentService.getSummary(invoiceId).subscribe({
+      next: summary => this.paymentSummary.set(summary),
+    });
+  }
+
+  loadActivity(invoiceId: string) {
+    this.auditService.getActivity(invoiceId).subscribe({
+      next: entries => this.activity.set(entries),
+    });
+  }
+
+  recordPayment() {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.dialog.open(InvoicePaymentDialogComponent, {
+      width: '420px',
+      data: { invoiceId: inv.id, balanceAmount: inv.balanceAmount },
+    }).afterClosed().subscribe(result => {
+      if (!result) return;
+      this.paymentService.record(inv.id, {
+        paymentDate: result.paymentDate,
+        amount: result.amount,
+        paymentMode: result.paymentMode,
+        utrNumber: result.utrNumber || undefined,
+        remarks: result.remarks || undefined,
+      }).subscribe({
+        next: ({ summary }) => {
+          this.paymentSummary.set(summary);
+          this.notification.success('Payment recorded.');
+          this.loadPayments(inv.id);
+          this.loadInvoice(inv.id);
+        },
+        error: (err) => this.notification.error(err?.error?.message ?? 'Failed to record payment.'),
+      });
+    });
   }
 
   transitionStatus(action: StatusAction) {
