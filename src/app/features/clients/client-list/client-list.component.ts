@@ -13,6 +13,7 @@ import {
   CursorPaginationState,
   emptyCursorPage,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 
@@ -67,13 +68,8 @@ export class ClientListComponent implements OnInit {
   }
 
   onPaginationNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const params = this.pager.nextPageParams();
-      if (params) this.load(params);
-      return;
-    }
-    const params = this.pager.prevPageParams();
-    if (params) this.load(params);
+    const p = resolvePaginationNavigate(this.pager, event);
+    if (p) this.load(p);
   }
 
   deleteClient(client: ClientListItem) {

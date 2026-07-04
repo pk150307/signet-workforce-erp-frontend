@@ -13,6 +13,7 @@ import { CursorPageParams } from '../../../../core/models/api.models';
 import {
   CursorPaginationState,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../../library/components/pagination/pagination.component';
 
@@ -115,22 +116,12 @@ export class BillingReportsComponent implements OnInit {
   }
 
   onOutstandingNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const p = this.outstandingPager.nextPageParams();
-      if (p) this.loadOutstanding(p);
-      return;
-    }
-    const p = this.outstandingPager.prevPageParams();
+    const p = resolvePaginationNavigate(this.outstandingPager, event);
     if (p) this.loadOutstanding(p);
   }
 
   onCollectionsNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const p = this.collectionsPager.nextPageParams();
-      if (p) this.loadCollections(p);
-      return;
-    }
-    const p = this.collectionsPager.prevPageParams();
+    const p = resolvePaginationNavigate(this.collectionsPager, event);
     if (p) this.loadCollections(p);
   }
 }
