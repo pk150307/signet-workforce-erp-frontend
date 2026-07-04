@@ -322,6 +322,10 @@
   });
 
   .card--flush {
+    &:has(signet-pagination) {
+      overflow: visible;
+    }
+
     .tablet-down({
       overflow: visible;
     });

@@ -80,6 +80,11 @@
     padding: 0;
     overflow: hidden;
 
+    // Keep page-size dropdown visible above the table footer.
+    &:has(signet-pagination) {
+      overflow: visible;
+    }
+
     .tablet-down({
       overflow: visible;
     });
