@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPageParams, CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 export interface LoginHistoryItem {
   id: string;
@@ -31,9 +32,7 @@ export interface LoginHistorySummary {
   lastLoginAt: string | null;
 }
 
-export interface LoginHistoryQuery {
-  page?: number;
-  pageSize?: number;
+export interface LoginHistoryQuery extends CursorPageParams {
   userId?: string;
   loginStatus?: string;
   dateFrom?: string;
@@ -46,10 +45,12 @@ export interface LoginHistoryQuery {
 export class LoginHistoryService {
   private readonly http = inject(HttpClient);
 
-  list(query: LoginHistoryQuery = {}): Observable<PaginatedResult<LoginHistoryItem>> {
-    return this.http.get<PaginatedResult<LoginHistoryItem>>(
+  list(query: LoginHistoryQuery = {}): Observable<CursorPaginatedResult<LoginHistoryItem>> {
+    return this.http.get<unknown>(
       `${environment.apiUrl}${API_ENDPOINTS.loginHistory.base}`,
-      { params: this.toParams(query) },
+      { params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }) },
+    ).pipe(
+      map(res => normalizeCursorPaginated<LoginHistoryItem>(res)),
     );
   }
 
@@ -64,17 +65,21 @@ export class LoginHistoryService {
     );
   }
 
-  listForUser(userId: string, query: LoginHistoryQuery = {}): Observable<PaginatedResult<LoginHistoryItem>> {
-    return this.http.get<PaginatedResult<LoginHistoryItem>>(
+  listForUser(userId: string, query: LoginHistoryQuery = {}): Observable<CursorPaginatedResult<LoginHistoryItem>> {
+    return this.http.get<unknown>(
       `${environment.apiUrl}${API_ENDPOINTS.users.loginHistory(userId)}`,
-      { params: this.toParams(query) },
+      { params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }) },
+    ).pipe(
+      map(res => normalizeCursorPaginated<LoginHistoryItem>(res)),
     );
   }
 
-  myHistory(query: LoginHistoryQuery = {}): Observable<PaginatedResult<LoginHistoryItem>> {
-    return this.http.get<PaginatedResult<LoginHistoryItem>>(
+  myHistory(query: LoginHistoryQuery = {}): Observable<CursorPaginatedResult<LoginHistoryItem>> {
+    return this.http.get<unknown>(
       `${environment.apiUrl}${API_ENDPOINTS.auth.loginHistory}`,
-      { params: this.toParams(query) },
+      { params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }) },
+    ).pipe(
+      map(res => normalizeCursorPaginated<LoginHistoryItem>(res)),
     );
   }
 
@@ -82,18 +87,5 @@ export class LoginHistoryService {
     return this.http.get<LoginHistorySummary>(
       `${environment.apiUrl}${API_ENDPOINTS.auth.loginHistorySummary}`,
     );
-  }
-
-  private toParams(query: LoginHistoryQuery): HttpParams {
-    let params = new HttpParams();
-    if (query.page) params = params.set('page', String(query.page));
-    if (query.pageSize) params = params.set('pageSize', String(query.pageSize));
-    if (query.userId) params = params.set('userId', query.userId);
-    if (query.loginStatus) params = params.set('loginStatus', query.loginStatus);
-    if (query.dateFrom) params = params.set('dateFrom', query.dateFrom);
-    if (query.dateTo) params = params.set('dateTo', query.dateTo);
-    if (query.search) params = params.set('search', query.search);
-    if (query.isNewDevice !== undefined) params = params.set('isNewDevice', String(query.isNewDevice));
-    return params;
   }
 }

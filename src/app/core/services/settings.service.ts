@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult } from '../models/api.models';
 import { EmailTemplateItem, SettingsQueryParams, SystemConfig } from '../models/settings.models';
 import { paginateMock } from '../utils/mock-pagination.util';
 
@@ -30,7 +30,7 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
  */
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
-  getEmailTemplates(params: SettingsQueryParams = {}): Observable<PaginatedResult<EmailTemplateItem>> {
+  getEmailTemplates(params: SettingsQueryParams = {}): Observable<CursorPaginatedResult<EmailTemplateItem>> {
     return of(paginateMock(DEFAULT_EMAIL_TEMPLATES, params, ['templateCode', 'templateName', 'subject']));
   }
 

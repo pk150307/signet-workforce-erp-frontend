@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import { AuditLogDetail, AuditLogListItem, IamQueryParams } from '../models/iam.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 export interface AuditLogSummary {
   totalLogs: number;
@@ -19,8 +20,12 @@ export class AuditLogsService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}${API_ENDPOINTS.auditLogs.base}`;
 
-  list(query: IamQueryParams = {}): Observable<PaginatedResult<AuditLogListItem>> {
-    return this.http.get<PaginatedResult<AuditLogListItem>>(this.base, { params: this.toParams(query) });
+  list(query: IamQueryParams = {}): Observable<CursorPaginatedResult<AuditLogListItem>> {
+    return this.http.get<unknown>(this.base, {
+      params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<AuditLogListItem>(res)),
+    );
   }
 
   getById(id: string): Observable<AuditLogDetail> {
@@ -37,21 +42,8 @@ export class AuditLogsService {
 
   exportCsv(query: IamQueryParams = {}): Observable<string> {
     return this.http.get(`${environment.apiUrl}${API_ENDPOINTS.auditLogs.export}`, {
-      params: this.toParams(query),
+      params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }),
       responseType: 'text',
     });
-  }
-
-  private toParams(query: IamQueryParams): HttpParams {
-    let params = new HttpParams();
-    if (query.page) params = params.set('page', String(query.page));
-    if (query.pageSize) params = params.set('pageSize', String(query.pageSize));
-    if (query.search) params = params.set('search', query.search);
-    if (query.module) params = params.set('module', query.module);
-    if (query.action) params = params.set('action', query.action);
-    if (query.entityType) params = params.set('entityType', query.entityType);
-    if (query.dateFrom) params = params.set('dateFrom', query.dateFrom);
-    if (query.dateTo) params = params.set('dateTo', query.dateTo);
-    return params;
   }
 }

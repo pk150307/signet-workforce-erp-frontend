@@ -1,3 +1,5 @@
+import { CursorPaginationMeta } from './api.models';
+
 export interface BillingComponentMaster {
   id: string;
   code: string;
@@ -157,6 +159,17 @@ export interface BillingPeriodSummary {
   igstAmount: number;
 }
 
+export interface OutstandingReportItem {
+  id: string;
+  invoiceNumber: string;
+  clientName: string;
+  siteName: string | null;
+  dueDate: string;
+  balanceAmount: number;
+  daysOverdue: number;
+  agingBucket: string;
+}
+
 export interface OutstandingReport {
   asOfDate: string;
   summary: {
@@ -168,16 +181,8 @@ export interface OutstandingReport {
     days61To90: number;
     days90Plus: number;
   };
-  items: Array<{
-    id: string;
-    invoiceNumber: string;
-    clientName: string;
-    siteName: string | null;
-    dueDate: string;
-    balanceAmount: number;
-    daysOverdue: number;
-    agingBucket: string;
-  }>;
+  items: OutstandingReportItem[];
+  pagination: CursorPaginationMeta;
 }
 
 export interface CollectionsReport {
@@ -190,6 +195,7 @@ export interface CollectionsReport {
     byClient: Array<{ clientId: string; clientName: string; count: number; amount: number }>;
   };
   items: InvoicePayment[];
+  pagination: CursorPaginationMeta;
 }
 
 export interface GstReport {

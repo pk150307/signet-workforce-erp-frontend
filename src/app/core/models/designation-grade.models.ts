@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface DesignationGradeListItem {
   id: string;
   designationId: string;
@@ -50,9 +52,7 @@ export interface CreateDesignationGradePayload {
 export type CreateDesignationGradeRequest = CreateDesignationGradePayload;
 export interface UpdateDesignationGradePayload extends CreateDesignationGradePayload {}
 
-export interface DesignationGradeQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface DesignationGradeQueryParams extends CursorPageParams {
   clientId?: string;
   designationId?: string;
   departmentId?: string;

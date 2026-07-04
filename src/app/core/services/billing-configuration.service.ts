@@ -1,24 +1,33 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   BillingComponentMaster,
   BillingConfigurationDetail,
   BillingConfigurationListItem,
 } from '../models/billing.models';
-import { camelCaseKeys, normalizePaginated, unwrapApiData } from '../utils/api-response.util';
+import { camelCaseKeys, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class BillingConfigurationService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}${API_ENDPOINTS.billing.configurations}`;
 
-  list(params: { page?: number; pageSize?: number; clientId?: string; siteId?: string; search?: string; isActive?: boolean }) {
-    return this.http.get<unknown>(this.base, { params: this.toParams(params) }).pipe(
-      map(res => normalizePaginated<BillingConfigurationListItem>(res, mapConfigListItem)),
+  list(params: {
+    pageSize?: number;
+    cursor?: string | null;
+    direction?: 'next' | 'prev';
+    clientId?: string;
+    siteId?: string;
+    search?: string;
+    isActive?: boolean;
+  } = {}) {
+    return this.http.get<unknown>(this.base, { params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }) }).pipe(
+      map(res => normalizeCursorPaginated<BillingConfigurationListItem>(res, mapConfigListItem)),
     );
   }
 
@@ -57,15 +66,6 @@ export class BillingConfigurationService {
     return this.http.delete(`${this.base}/${id}`);
   }
 
-  private toParams(params: Record<string, unknown>): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }
 
 function mapComponentMaster(raw: unknown): BillingComponentMaster {

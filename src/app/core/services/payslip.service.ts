@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EMPTY, map, expand, reduce } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   BulkPayslipActionRequest,
   GeneratePayslipsRequest,
@@ -13,7 +13,8 @@ import {
   PayslipStatus,
   UpdatePayslipStatusRequest,
 } from '../models/payslip.models';
-import { mapPayslipDetail, mapPayslipListItem, normalizePaginated, unwrapApiData } from '../utils/api-response.util';
+import { mapPayslipDetail, mapPayslipListItem, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 export interface GeneratePayslipsResult {
   generated: number;
@@ -31,16 +32,16 @@ export class PayslipService {
     return this.http.get<unknown>(this.baseUrl, {
       params: this.toParams(params),
     }).pipe(
-      map(res => normalizePaginated<PayslipListItem>(res, mapPayslipListItem)),
+      map(res => normalizeCursorPaginated<PayslipListItem>(res, mapPayslipListItem)),
     );
   }
 
-  getAllForPeriod(params: Omit<PayslipQueryParams, 'page' | 'pageSize'> = {}) {
+  getAllForPeriod(params: Omit<PayslipQueryParams, 'cursor' | 'direction' | 'pageSize'> = {}) {
     const pageSize = 100;
-    return this.getAll({ ...params, page: 1, pageSize }).pipe(
+    return this.getAll({ ...params, pageSize }).pipe(
       expand(result =>
-        result.hasNextPage
-          ? this.getAll({ ...params, page: result.page + 1, pageSize })
+        result.pagination.hasNext
+          ? this.getAll({ ...params, pageSize, cursor: result.pagination.nextCursor, direction: 'next' })
           : EMPTY,
       ),
       map(result => result.items),
@@ -99,16 +100,14 @@ export class PayslipService {
   }
 
   private toParams(params: PayslipQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        if (key === 'status') {
-          p = p.set(key, PAYSLIP_STATUS_TO_API[value as PayslipStatus] ?? String(value).toLowerCase());
-          return;
-        }
-        p = p.set(key, String(value));
-      }
+    const status = params.status == null
+      ? undefined
+      : (PAYSLIP_STATUS_TO_API[params.status as PayslipStatus] ?? String(params.status).toLowerCase());
+
+    return toHttpParams({
+      ...params,
+      status,
+      pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
     });
-    return p;
   }
 }

@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface DepartmentListItem {
   id: string;
   clientId: string;
@@ -35,9 +37,7 @@ export interface CreateDepartmentRequest {
   isActive: boolean;
 }
 
-export interface DepartmentQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface DepartmentQueryParams extends CursorPageParams {
   clientId?: string;
   search?: string;
   isActive?: boolean;

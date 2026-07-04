@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface ClientListItem {
   id: string;
   clientCode: string;
@@ -38,9 +40,7 @@ export interface CreateClientRequest {
   isActive?: boolean;
 }
 
-export interface ClientQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface ClientQueryParams extends CursorPageParams {
   search?: string;
   isActive?: boolean;
 }

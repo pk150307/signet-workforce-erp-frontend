@@ -1,3 +1,5 @@
+import { CursorPageParams, CursorPaginationMeta } from './api.models';
+
 export interface AttendanceSummary {
   present: number;
   absent: number;
@@ -27,9 +29,7 @@ export interface AttendanceCorrectionRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
 }
 
-export interface AttendanceQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface AttendanceQueryParams extends CursorPageParams {
   search?: string;
 }
 
@@ -113,6 +113,7 @@ export interface AttendanceEmployeeListItem {
 export interface AttendanceEmployeeListResponse {
   register: AttendanceRegisterMeta;
   items: AttendanceEmployeeListItem[];
+  pagination: CursorPaginationMeta;
 }
 
 export interface AttendanceGridEmployee {

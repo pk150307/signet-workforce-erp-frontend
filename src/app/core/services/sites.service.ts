@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache, invalidateLookupKey, lookupCacheKey } from '../utils/lookup-cache.util';
-import { mapSiteDetail, normalizePaginated, mapSiteListItem } from '../utils/api-response.util';
+import { mapSiteDetail, mapSiteListItem } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import { environment } from '@env/environment';
 import { DeleteActionResult } from '../models/delete-action.models';
 import { deleteWithApproval } from '../utils/delete-api.util';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   CreateSiteRequest,
   SiteDetail,
@@ -35,20 +36,20 @@ export class SitesService {
     );
   }
 
-  getAll(params: SiteQueryParams = {}): Observable<PaginatedResult<SiteListItem>> {
-    return this.http.get<unknown>(this.base, { params: this.toParams(params) }).pipe(
-      map(res => normalizePaginated<SiteListItem>(res, mapSiteListItem)),
+  getAll(params: SiteQueryParams = {}): Observable<CursorPaginatedResult<SiteListItem>> {
+    return this.http.get<unknown>(this.base, { params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }) }).pipe(
+      map(res => normalizeCursorPaginated<SiteListItem>(res, mapSiteListItem)),
     );
   }
 
-  getAllForSelect(params: Omit<SiteQueryParams, 'page' | 'pageSize'> = {}): Observable<SiteListItem[]> {
+  getAllForSelect(params: Omit<SiteQueryParams, 'cursor' | 'direction' | 'pageSize'> = {}): Observable<SiteListItem[]> {
     const key = lookupCacheKey(params);
     return cachedLookup('sites', key, () => {
       const pageSize = 20;
-      return this.getAll({ ...params, page: 1, pageSize }).pipe(
+      return this.getAll({ ...params, pageSize }).pipe(
         expand(result =>
-          result.hasNextPage
-            ? this.getAll({ ...params, page: result.page + 1, pageSize })
+          result.pagination.hasNext
+            ? this.getAll({ ...params, pageSize, cursor: result.pagination.nextCursor, direction: 'next' })
             : EMPTY,
         ),
         map(result => result.items),
@@ -101,13 +102,4 @@ export class SitesService {
     );
   }
 
-  private toParams(params: SiteQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }

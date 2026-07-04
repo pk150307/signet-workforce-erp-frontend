@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import { IamQueryParams, IamUserDetail, IamUserListItem } from '../models/iam.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 export interface CreateUserPayload {
   email: string;
@@ -35,8 +36,12 @@ export class UsersService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}${API_ENDPOINTS.users.base}`;
 
-  list(query: IamQueryParams = {}): Observable<PaginatedResult<IamUserListItem>> {
-    return this.http.get<PaginatedResult<IamUserListItem>>(this.base, { params: this.toParams(query) });
+  list(query: IamQueryParams = {}): Observable<CursorPaginatedResult<IamUserListItem>> {
+    return this.http.get<unknown>(this.base, {
+      params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<IamUserListItem>(res)),
+    );
   }
 
   getById(id: string): Observable<IamUserDetail> {
@@ -63,15 +68,5 @@ export class UsersService {
       `${environment.apiUrl}${API_ENDPOINTS.users.resetPassword(id)}`,
       payload,
     );
-  }
-
-  private toParams(query: IamQueryParams): HttpParams {
-    let params = new HttpParams();
-    if (query.page) params = params.set('page', String(query.page));
-    if (query.pageSize) params = params.set('pageSize', String(query.pageSize));
-    if (query.search) params = params.set('search', query.search);
-    if (query.isActive !== undefined) params = params.set('isActive', String(query.isActive));
-    if (query.status) params = params.set('status', query.status);
-    return params;
   }
 }

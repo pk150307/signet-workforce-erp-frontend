@@ -1,18 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { PayrollRunListItem } from '../models/payroll.models';
-import { camelCaseKeys, normalizeArrayResponse, unwrapApiData } from '../utils/api-response.util';
+import { CursorPageParams, CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
+import { camelCaseKeys, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class PayrollService {
   private readonly http = inject(HttpClient);
 
-  listRuns() {
-    return this.http.get<unknown>(`${environment.apiUrl}${API_ENDPOINTS.payroll.base}`).pipe(
-      map(res => normalizeArrayResponse(res, r => camelCaseKeys(r) as PayrollRunListItem)),
+  listRuns(params: CursorPageParams = {}): Observable<CursorPaginatedResult<PayrollRunListItem>> {
+    return this.http.get<unknown>(`${environment.apiUrl}${API_ENDPOINTS.payroll.base}`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<PayrollRunListItem>(res, r => camelCaseKeys(r) as PayrollRunListItem)),
     );
   }
 

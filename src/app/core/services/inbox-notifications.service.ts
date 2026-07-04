@@ -1,18 +1,23 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import { IamQueryParams, InboxNotificationItem, InboxNotificationSummary } from '../models/iam.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class InboxNotificationsService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}${API_ENDPOINTS.notifications.base}`;
 
-  list(query: IamQueryParams = {}): Observable<PaginatedResult<InboxNotificationItem>> {
-    return this.http.get<PaginatedResult<InboxNotificationItem>>(this.base, { params: this.toParams(query) });
+  list(query: IamQueryParams = {}): Observable<CursorPaginatedResult<InboxNotificationItem>> {
+    return this.http.get<unknown>(this.base, {
+      params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<InboxNotificationItem>(res)),
+    );
   }
 
   summary(): Observable<InboxNotificationSummary> {
@@ -32,15 +37,5 @@ export class InboxNotificationsService {
 
   dismiss(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}${API_ENDPOINTS.notifications.byId(id)}`);
-  }
-
-  private toParams(query: IamQueryParams): HttpParams {
-    let params = new HttpParams();
-    if (query.page) params = params.set('page', String(query.page));
-    if (query.pageSize) params = params.set('pageSize', String(query.pageSize));
-    if (query.unreadOnly) params = params.set('unreadOnly', 'true');
-    if (query.notificationType) params = params.set('notificationType', query.notificationType);
-    if (query.search) params = params.set('search', query.search);
-    return params;
   }
 }

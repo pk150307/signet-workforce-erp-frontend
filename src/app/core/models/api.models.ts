@@ -1,11 +1,55 @@
+/** Cursor pagination direction. */
+export type CursorDirection = 'next' | 'prev';
+
+/** Query params for cursor-paginated list endpoints. */
+export interface CursorPageParams {
+  pageSize?: number;
+  cursor?: string | null;
+  direction?: CursorDirection;
+  /** @deprecated Ignored by cursor APIs; kept so transitional callers compile. */
+  page?: number;
+}
+
+/** Pagination metadata returned by cursor-paginated APIs. */
+export interface CursorPaginationMeta {
+  pageSize: number;
+  nextCursor: string | null;
+  prevCursor: string | null;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+/**
+ * Cursor-paginated list result used by list screens.
+ * `items` is the collection; `pagination` holds cursor metadata.
+ */
+export interface CursorPaginatedResult<T> {
+  items: T[];
+  data?: T[];
+  pagination: CursorPaginationMeta;
+  /** Transitional fields for screens still reading offset-style metadata. */
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+}
+
+/**
+ * @deprecated Prefer CursorPaginatedResult for list endpoints.
+ * Kept for backward compatibility with any remaining offset-based callers.
+ */
 export interface PaginatedResult<T> {
   items: T[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+  /** Present when API already returns cursor metadata. */
+  pagination?: CursorPaginationMeta;
 }
 
 export interface ApiError {
@@ -30,3 +74,6 @@ export interface PageState {
   page: number;
   pageSize: number;
 }
+
+/** Default page size for cursor-paginated lists. */
+export const DEFAULT_PAGE_SIZE = 10;

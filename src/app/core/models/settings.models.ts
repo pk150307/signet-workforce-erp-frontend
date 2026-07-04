@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface RoleListItem {
   id: string;
   roleName: string;
@@ -52,9 +54,7 @@ export interface SystemConfig {
   enableAuditLog: boolean;
 }
 
-export interface SettingsQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface SettingsQueryParams extends CursorPageParams {
   search?: string;
   isActive?: boolean;
 }

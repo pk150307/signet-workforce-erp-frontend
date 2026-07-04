@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EMPTY, Observable, catchError, expand, forkJoin, map, of, reduce } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   BillingDashboardData,
   CreateInvoiceRequest,
@@ -18,15 +18,8 @@ import {
   UpdateInvoiceRequest,
   UpdateInvoiceStatusRequest,
 } from '../models/invoice.models';
-import {
-  mapInvoiceDetail,
-  mapInvoiceListItem,
-  mapInvoicePreview,
-  mapSuggestedInvoiceLineItem,
-  normalizeArrayResponse,
-  normalizePaginated,
-  unwrapApiData,
-} from '../utils/api-response.util';
+import { mapInvoiceDetail, mapInvoiceListItem, mapInvoicePreview, mapSuggestedInvoiceLineItem, normalizeArrayResponse, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import { BillingReportsService } from './billing-reports.service';
 import { SitesService } from './sites.service';
 import { SiteListItem } from '../models/sites.models';
@@ -42,16 +35,16 @@ export class InvoiceService {
     return this.http.get<unknown>(this.baseUrl, {
       params: this.toParams(params),
     }).pipe(
-      map(res => normalizePaginated<InvoiceListItem>(res, mapInvoiceListItem)),
+      map(res => normalizeCursorPaginated<InvoiceListItem>(res, mapInvoiceListItem)),
     );
   }
 
-  getAllForPeriod(params: Omit<InvoiceQueryParams, 'page' | 'pageSize'> = {}) {
+  getAllForPeriod(params: Omit<InvoiceQueryParams, 'cursor' | 'direction' | 'pageSize'> = {}) {
     const pageSize = 20;
-    return this.getAll({ ...params, page: 1, pageSize }).pipe(
+    return this.getAll({ ...params, pageSize }).pipe(
       expand(result =>
-        result.hasNextPage
-          ? this.getAll({ ...params, page: result.page + 1, pageSize })
+        result.pagination.hasNext
+          ? this.getAll({ ...params, pageSize, cursor: result.pagination.nextCursor, direction: 'next' })
           : EMPTY,
       ),
       map(result => result.items),
@@ -109,7 +102,7 @@ export class InvoiceService {
     return this.http.get<unknown>(`${this.baseUrl}/by-site/${siteId}`, {
       params: this.toParams(params),
     }).pipe(
-      map(res => normalizePaginated<InvoiceListItem>(res, mapInvoiceListItem)),
+      map(res => normalizeCursorPaginated<InvoiceListItem>(res, mapInvoiceListItem)),
     );
   }
 
@@ -226,19 +219,16 @@ export class InvoiceService {
   }
 
   private toParams(params: InvoiceQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === '') return;
-      if (key === 'status') {
-        const statusVal = typeof value === 'number'
-          ? value
-          : INVOICE_STATUS_TO_API[value as InvoiceStatus];
-        if (statusVal != null) p = p.set('status', String(statusVal));
-        return;
-      }
-      p = p.set(key, String(value));
+    const status =
+      params.status == null ? undefined
+        : typeof params.status === 'number' ? params.status
+          : INVOICE_STATUS_TO_API[params.status as InvoiceStatus];
+
+    return toHttpParams({
+      ...params,
+      status,
+      pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
     });
-    return p;
   }
 
   private computeKpis(invoices: InvoiceListItem[]): BillingDashboardData['kpis'] {

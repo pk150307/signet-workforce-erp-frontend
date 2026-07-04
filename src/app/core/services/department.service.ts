@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache, lookupCacheKey } from '../utils/lookup-cache.util';
-import { normalizePaginated, mapDepartmentDetail, mapDepartmentListItem } from '../utils/api-response.util';
+import { mapDepartmentDetail, mapDepartmentListItem } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import { environment } from '@env/environment';
 import { DeleteActionResult } from '../models/delete-action.models';
 import { deleteWithApproval } from '../utils/delete-api.util';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   CreateDepartmentRequest,
   DepartmentDetail,
@@ -19,23 +20,23 @@ export class DepartmentService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/departments`;
 
-  getAll(params: DepartmentQueryParams = {}): Observable<PaginatedResult<DepartmentListItem>> {
+  getAll(params: DepartmentQueryParams = {}): Observable<CursorPaginatedResult<DepartmentListItem>> {
     return this.http.get<unknown>(this.base, {
-      params: this.toParams(params),
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
     }).pipe(
-      map(res => normalizePaginated<DepartmentListItem>(res, mapDepartmentListItem)),
+      map(res => normalizeCursorPaginated<DepartmentListItem>(res, mapDepartmentListItem)),
     );
   }
 
   /** Loads all departments for dropdowns (paginated fetch). */
-  getAllForSelect(params: Omit<DepartmentQueryParams, 'page' | 'pageSize'> = {}): Observable<DepartmentListItem[]> {
+  getAllForSelect(params: Omit<DepartmentQueryParams, 'cursor' | 'direction' | 'pageSize'> = {}): Observable<DepartmentListItem[]> {
     const key = lookupCacheKey({ ...params, isActive: params.isActive ?? true });
     return cachedLookup('departments', key, () => {
       const pageSize = 100;
-      return this.getAll({ ...params, page: 1, pageSize, isActive: params.isActive ?? true }).pipe(
+      return this.getAll({ ...params, pageSize, isActive: params.isActive ?? true }).pipe(
         expand(result =>
-          result.hasNextPage
-            ? this.getAll({ ...params, page: result.page + 1, pageSize, isActive: params.isActive ?? true })
+          result.pagination.hasNext
+            ? this.getAll({ ...params, pageSize, isActive: params.isActive ?? true, cursor: result.pagination.nextCursor, direction: 'next' })
             : EMPTY,
         ),
         map(result => result.items),
@@ -81,13 +82,4 @@ export class DepartmentService {
     );
   }
 
-  private toParams(params: DepartmentQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }

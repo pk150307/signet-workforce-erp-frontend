@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface CompanyProfile {
   id: string;
   companyName: string;
@@ -39,9 +41,7 @@ export interface OfficeListItem {
   isActive: boolean;
 }
 
-export interface CompanyQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface CompanyQueryParams extends CursorPageParams {
   search?: string;
   isActive?: boolean;
 }

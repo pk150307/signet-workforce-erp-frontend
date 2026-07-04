@@ -2,10 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EMPTY, Observable, catchError, expand, map, of, reduce, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache, lookupCacheKey } from '../utils/lookup-cache.util';
-import { normalizePaginated, parseApiDate, mapEmployeeListItem } from '../utils/api-response.util';
+import { parseApiDate, mapEmployeeListItem } from '../utils/api-response.util';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
-import { paginateMock } from '../utils/mock-pagination.util';
+import { CursorPaginatedResult, CursorPageParams, DEFAULT_PAGE_SIZE } from '../models/api.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import {
   CreateEmployeeDraftRequest,
   CreateEmployeeRequest,
@@ -21,9 +21,7 @@ import {
   RejoinEmployeeRequest,
 } from '../models/employee.models';
 
-export interface EmployeeFilter {
-  page?: number;
-  pageSize?: number;
+export interface EmployeeFilter extends CursorPageParams {
   search?: string;
   departmentId?: string;
   designationId?: string;
@@ -165,27 +163,20 @@ export class EmployeeService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/employees`;
 
-  getAll(filter: EmployeeFilter = {}): Observable<PaginatedResult<EmployeeListItem>> {
-    let params = new HttpParams();
-    if (filter.page)           params = params.set('page', filter.page);
-    if (filter.pageSize)       params = params.set('pageSize', filter.pageSize);
-    if (filter.search)         params = params.set('search', filter.search);
-    if (filter.departmentId)   params = params.set('departmentId', filter.departmentId);
-    if (filter.designationId)  params = params.set('designationId', filter.designationId);
-    if (filter.siteId)         params = params.set('siteId', filter.siteId);
-    if (filter.clientId)       params = params.set('clientId', filter.clientId);
-    if (filter.status === 'all') params = params.set('status', 'all');
-    else if (filter.status != null) params = params.set('status', filter.status);
-    if (filter.sortBy)         params = params.set('sortBy', filter.sortBy);
-    if (filter.sortDir)        params = params.set('sortDir', filter.sortDir);
+  getAll(filter: EmployeeFilter = {}): Observable<CursorPaginatedResult<EmployeeListItem>> {
+    const params = toHttpParams({
+      ...filter,
+      pageSize: filter.pageSize ?? DEFAULT_PAGE_SIZE,
+      status: filter.status === 'all' ? 'all' : filter.status,
+    });
 
     return this.http.get<unknown>(this.base, { params }).pipe(
-      map(res => normalizePaginated<EmployeeListItem>(res, mapEmployeeListItem)),
+      map(res => normalizeCursorPaginated<EmployeeListItem>(res, mapEmployeeListItem)),
     );
   }
 
-  /** Loads employees for dropdowns using backend-safe page size (20). */
-  getAllForSelect(filter: Omit<EmployeeFilter, 'page' | 'pageSize'> = {}): Observable<EmployeeListItem[]> {
+  /** Loads employees for dropdowns by walking cursor pages. */
+  getAllForSelect(filter: Omit<EmployeeFilter, 'pageSize' | 'cursor' | 'direction'> = {}): Observable<EmployeeListItem[]> {
     const effectiveFilter = {
       ...filter,
       status: filter.status ?? EmployeeStatus.Active,
@@ -193,10 +184,15 @@ export class EmployeeService {
     const key = lookupCacheKey(effectiveFilter as Record<string, unknown>);
     return cachedLookup('employees-select', key, () => {
       const pageSize = 20;
-      return this.getAll({ ...effectiveFilter, page: 1, pageSize }).pipe(
+      return this.getAll({ ...effectiveFilter, pageSize }).pipe(
         expand(result =>
-          result.hasNextPage
-            ? this.getAll({ ...effectiveFilter, page: result.page + 1, pageSize })
+          result.pagination.hasNext && result.pagination.nextCursor
+            ? this.getAll({
+                ...effectiveFilter,
+                pageSize,
+                cursor: result.pagination.nextCursor,
+                direction: 'next',
+              })
             : EMPTY,
         ),
         map(result => result.items),

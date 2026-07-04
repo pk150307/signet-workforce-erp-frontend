@@ -1,14 +1,14 @@
 // Common models and interfaces used across the application
 
-export interface PaginatedResult<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-}
+export type {
+  CursorDirection,
+  CursorPageParams,
+  CursorPaginatedResult,
+  CursorPaginationMeta,
+  PaginatedResult,
+} from './api.models';
+
+export { DEFAULT_PAGE_SIZE } from './api.models';
 
 export interface ApiResponse<T> {
   success: boolean;

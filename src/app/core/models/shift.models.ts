@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface ShiftListItem {
   id: string;
   shiftCode: string;
@@ -41,9 +43,7 @@ export interface ShiftAssignRequest {
   effectiveFrom: string;
 }
 
-export interface ShiftQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface ShiftQueryParams extends CursorPageParams {
   search?: string;
   isActive?: boolean;
 }

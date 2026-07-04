@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface IamUserListItem {
   id: string;
   username: string;
@@ -138,9 +140,7 @@ export interface InboxNotificationSummary {
   byType: Array<{ notificationType: string; count: number; unreadCount: number }>;
 }
 
-export interface IamQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface IamQueryParams extends CursorPageParams {
   search?: string;
   isActive?: boolean;
   status?: string;

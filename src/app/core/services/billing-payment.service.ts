@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
@@ -8,8 +8,9 @@ import {
   InvoicePaymentSummary,
   PaymentMode,
 } from '../models/billing.models';
-import { PaginatedResult } from '../models/api.models';
-import { camelCaseKeys, normalizePaginated, unwrapApiData } from '../utils/api-response.util';
+import { CursorPageParams, DEFAULT_PAGE_SIZE } from '../models/api.models';
+import { camelCaseKeys, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class BillingPaymentService {
@@ -50,13 +51,16 @@ export class BillingPaymentService {
     );
   }
 
-  listAll(params: { page?: number; pageSize?: number; invoiceId?: string; clientId?: string; fromDate?: string; toDate?: string }) {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([k, v]) => {
-      if (v != null && v !== '') p = p.set(k, String(v));
-    });
-    return this.http.get<unknown>(this.base, { params: p }).pipe(
-      map(res => normalizePaginated<InvoicePayment>(res, mapPayment)),
+  listAll(params: {
+    invoiceId?: string;
+    clientId?: string;
+    fromDate?: string;
+    toDate?: string;
+  } & CursorPageParams = {}) {
+    return this.http.get<unknown>(this.base, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<InvoicePayment>(res, mapPayment)),
     );
   }
 }

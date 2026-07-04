@@ -2,11 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EMPTY, Observable, expand, map, reduce, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache, lookupCacheKey } from '../utils/lookup-cache.util';
-import { normalizePaginated, mapDesignationDetail, mapDesignationListItem } from '../utils/api-response.util';
+import { mapDesignationDetail, mapDesignationListItem } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import { environment } from '@env/environment';
 import { DeleteActionResult } from '../models/delete-action.models';
 import { deleteWithApproval } from '../utils/delete-api.util';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   CreateDesignationRequest,
   DesignationDetail,
@@ -19,23 +20,23 @@ export class DesignationService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/designations`;
 
-  getAll(params: DesignationQueryParams = {}): Observable<PaginatedResult<DesignationListItem>> {
+  getAll(params: DesignationQueryParams = {}): Observable<CursorPaginatedResult<DesignationListItem>> {
     return this.http.get<unknown>(this.base, {
-      params: this.toParams(params),
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
     }).pipe(
-      map(res => normalizePaginated<DesignationListItem>(res, mapDesignationListItem)),
+      map(res => normalizeCursorPaginated<DesignationListItem>(res, mapDesignationListItem)),
     );
   }
 
   /** Loads designations for dropdowns, optionally filtered by department. */
-  getAllForSelect(params: Omit<DesignationQueryParams, 'page' | 'pageSize'> = {}): Observable<DesignationListItem[]> {
+  getAllForSelect(params: Omit<DesignationQueryParams, 'cursor' | 'direction' | 'pageSize'> = {}): Observable<DesignationListItem[]> {
     const key = lookupCacheKey({ ...params, isActive: params.isActive ?? true });
     return cachedLookup('designations', key, () => {
       const pageSize = 100;
-      return this.getAll({ ...params, page: 1, pageSize, isActive: params.isActive ?? true }).pipe(
+      return this.getAll({ ...params, pageSize, isActive: params.isActive ?? true }).pipe(
         expand(result =>
-          result.hasNextPage
-            ? this.getAll({ ...params, page: result.page + 1, pageSize, isActive: params.isActive ?? true })
+          result.pagination.hasNext
+            ? this.getAll({ ...params, pageSize, isActive: params.isActive ?? true, cursor: result.pagination.nextCursor, direction: 'next' })
             : EMPTY,
         ),
         map(result => result.items),
@@ -83,13 +84,4 @@ export class DesignationService {
     );
   }
 
-  private toParams(params: DesignationQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }

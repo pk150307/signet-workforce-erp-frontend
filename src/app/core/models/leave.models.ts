@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface LeaveType {
   id: string;
   leaveCode: string;
@@ -36,9 +38,7 @@ export interface LeaveSummary {
   onLeaveToday: number;
 }
 
-export interface LeaveQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface LeaveQueryParams extends CursorPageParams {
   search?: string;
   status?: string;
   leaveType?: string;

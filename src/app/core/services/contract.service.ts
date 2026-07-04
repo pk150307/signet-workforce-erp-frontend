@@ -3,21 +3,29 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { DEFAULT_PAGE_SIZE } from '../models/api.models';
 import { ContractDetail, ContractListItem } from '../models/billing.models';
-import { camelCaseKeys, normalizePaginated, unwrapApiData } from '../utils/api-response.util';
+import { camelCaseKeys, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class ContractService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}${API_ENDPOINTS.contracts.base}`;
 
-  list(params: { page?: number; pageSize?: number; clientId?: string; siteId?: string; status?: string; search?: string }) {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([k, v]) => {
-      if (v != null && v !== '') p = p.set(k, String(v));
-    });
-    return this.http.get<unknown>(this.base, { params: p }).pipe(
-      map(res => normalizePaginated<ContractListItem>(res, r => camelCaseKeys(r) as ContractListItem)),
+  list(params: {
+    pageSize?: number;
+    cursor?: string | null;
+    direction?: 'next' | 'prev';
+    clientId?: string;
+    siteId?: string;
+    status?: string;
+    search?: string;
+  } = {}) {
+    return this.http.get<unknown>(this.base, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<ContractListItem>(res, r => camelCaseKeys(r) as ContractListItem)),
     );
   }
 

@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface DesignationListItem {
   id: string;
   designationCode: string;
@@ -38,9 +40,7 @@ export interface CreateDesignationRequest {
   isActive: boolean;
 }
 
-export interface DesignationQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface DesignationQueryParams extends CursorPageParams {
   clientId?: string;
   search?: string;
   departmentId?: string;

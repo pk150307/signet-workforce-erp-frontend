@@ -23,8 +23,12 @@ function normalizeFilters(raw: Partial<ModulePeriodFilters> | null | undefined):
   const month = Number(raw.month);
   const year = Number(raw.year);
 
+  const clientId = raw.clientId != null && String(raw.clientId).trim() !== ''
+    ? String(raw.clientId).trim()
+    : null;
+
   return {
-    clientId: raw.clientId ?? null,
+    clientId,
     month: month >= 1 && month <= 12 ? month : defaults.month,
     year: year >= 2000 && year <= 2100 ? year : defaults.year,
   };
@@ -50,7 +54,10 @@ export class ModuleFilterStore {
   clientId = () => this.filtersSignal().clientId;
   month = () => this.filtersSignal().month;
   year = () => this.filtersSignal().year;
-  clientIdOrUndefined = () => this.filtersSignal().clientId ?? undefined;
+  clientIdOrUndefined = () => {
+    const id = this.filtersSignal().clientId;
+    return id && id.trim() ? id.trim() : undefined;
+  };
 
   setClientId(clientId: string | null) {
     this.patch({ clientId });

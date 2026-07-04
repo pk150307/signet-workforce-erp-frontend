@@ -1,28 +1,25 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { cachedLookup, invalidateLookupCache } from '../utils/lookup-cache.util';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   CreateDesignationGradeRequest,
   DesignationGradeListItem,
   DesignationGradeQueryParams,
 } from '../models/designation-grade.models';
-import {
-  mapDesignationGradeListItem,
-  normalizeArrayResponse,
-  normalizePaginated,
-} from '../utils/api-response.util';
+import { mapDesignationGradeListItem, normalizeArrayResponse } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class DesignationGradeService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/designation-grades`;
 
-  getAll(params: DesignationGradeQueryParams = {}): Observable<PaginatedResult<DesignationGradeListItem>> {
-    return this.http.get<unknown>(this.base, { params: this.toParams(params) }).pipe(
-      map(res => normalizePaginated<DesignationGradeListItem>(res, mapDesignationGradeListItem)),
+  getAll(params: DesignationGradeQueryParams = {}): Observable<CursorPaginatedResult<DesignationGradeListItem>> {
+    return this.http.get<unknown>(this.base, { params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }) }).pipe(
+      map(res => normalizeCursorPaginated<DesignationGradeListItem>(res, mapDesignationGradeListItem)),
     );
   }
 
@@ -59,13 +56,4 @@ export class DesignationGradeService {
     );
   }
 
-  private toParams(params: DesignationGradeQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }

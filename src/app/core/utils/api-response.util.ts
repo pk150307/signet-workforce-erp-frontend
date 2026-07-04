@@ -273,6 +273,13 @@ export function parseApiDate(value: unknown): Date | null {
     return isNaN(d.getTime()) ? null : d;
   }
 
+  // API sometimes returns truncated dates like "Thu Jun 25"
+  const dayMonth = trimmed.match(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+([A-Za-z]{3})\s+(\d{1,2})$/i);
+  if (dayMonth) {
+    d = new Date(`${dayMonth[1]} ${dayMonth[2]}, ${new Date().getFullYear()}`);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   return null;
 }
 
@@ -323,13 +330,40 @@ export function normalizePaginated<T>(response: unknown, mapItem?: (raw: unknown
   }
 
   const r = response as Record<string, unknown>;
+  const paginationRaw = (r['pagination'] ?? r['Pagination']) as Record<string, unknown> | undefined;
   const nested = r['data'] ?? r['Data'];
-  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
-    return normalizePaginated<T>(nested, mapItem);
+
+  // Cursor contract: { data: [...], pagination: {...} }
+  if (paginationRaw && Array.isArray(nested)) {
+    const items = mapItems(nested);
+    const pageSize = Number(paginationRaw['pageSize'] ?? paginationRaw['PageSize'] ?? items.length) || 10;
+    const hasNext = Boolean(paginationRaw['hasNext'] ?? paginationRaw['HasNext']);
+    const hasPrev = Boolean(paginationRaw['hasPrev'] ?? paginationRaw['HasPrev']);
+    return {
+      items,
+      page: 1,
+      pageSize,
+      totalCount: items.length + (hasNext ? pageSize : 0),
+      totalPages: hasNext ? 2 : 1,
+      hasPreviousPage: hasPrev,
+      hasNextPage: hasNext,
+      pagination: {
+        pageSize,
+        nextCursor: paginationRaw['nextCursor'] != null ? String(paginationRaw['nextCursor']) : null,
+        prevCursor: paginationRaw['prevCursor'] != null ? String(paginationRaw['prevCursor']) : null,
+        hasNext,
+        hasPrev,
+      },
+    };
   }
 
+  // Prefer items at this level before recursing into `data` (metadata wrappers
+  // sometimes include a non-paginated `data` object alongside `items`).
   const rawItems = (r['items'] ?? r['Items'] ?? (Array.isArray(nested) ? nested : null)) as unknown[] | null;
   if (!Array.isArray(rawItems)) {
+    if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+      return normalizePaginated<T>(nested, mapItem);
+    }
     return emptyPaginated();
   }
 
@@ -338,6 +372,8 @@ export function normalizePaginated<T>(response: unknown, mapItem?: (raw: unknown
   const pageSize = Number(r['pageSize'] ?? r['PageSize'] ?? (items.length || 20));
   const totalCount = Number(r['totalCount'] ?? r['TotalCount'] ?? items.length);
   const totalPages = Number(r['totalPages'] ?? r['TotalPages'] ?? Math.max(1, Math.ceil(totalCount / pageSize)));
+  const hasPreviousPage = Boolean(r['hasPreviousPage'] ?? r['HasPreviousPage'] ?? page > 1);
+  const hasNextPage = Boolean(r['hasNextPage'] ?? r['HasNextPage'] ?? page < totalPages);
 
   return {
     items,
@@ -345,8 +381,17 @@ export function normalizePaginated<T>(response: unknown, mapItem?: (raw: unknown
     pageSize,
     totalCount,
     totalPages,
-    hasPreviousPage: Boolean(r['hasPreviousPage'] ?? r['HasPreviousPage'] ?? page > 1),
-    hasNextPage: Boolean(r['hasNextPage'] ?? r['HasNextPage'] ?? page < totalPages),
+    hasPreviousPage,
+    hasNextPage,
+    pagination: paginationRaw
+      ? {
+          pageSize,
+          nextCursor: paginationRaw['nextCursor'] != null ? String(paginationRaw['nextCursor']) : null,
+          prevCursor: paginationRaw['prevCursor'] != null ? String(paginationRaw['prevCursor']) : null,
+          hasNext: hasNextPage,
+          hasPrev: hasPreviousPage,
+        }
+      : undefined,
   };
 }
 
@@ -677,6 +722,8 @@ export function mapPayslipListItem(raw: unknown): PayslipListItem {
     employeeCode: pickString(r, 'employeeCode', 'code') ?? '',
     employeeName,
     department: pickString(r, 'department', 'departmentName') ?? '',
+    clientId: pickString(r, 'clientId') ?? null,
+    clientName: pickString(r, 'clientName', 'client', 'clientCompanyName') ?? null,
     month: pickNumber(r, 'month') || 1,
     year: pickNumber(r, 'year') || new Date().getFullYear(),
     grossSalary: pickNumber(r, 'grossSalary', 'grossEarnings', 'gross'),

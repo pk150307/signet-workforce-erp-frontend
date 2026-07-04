@@ -1,16 +1,34 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map, shareReplay, tap } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   BranchListItem,
   CompanyProfile,
   CompanyQueryParams,
   OfficeListItem,
 } from '../models/company.models';
-import { mapCompanyProfile, unwrapApiData } from '../utils/api-response.util';
+import { camelCaseKeys, mapCompanyProfile, unwrapApiData } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import { DEFAULT_COMPANY_LOGO } from '../constants/company.constants';
+
+export interface BranchPayload {
+  branchCode: string;
+  branchName: string;
+  city: string;
+  state: string;
+  isActive?: boolean;
+}
+
+export interface OfficePayload {
+  officeCode: string;
+  officeName: string;
+  branchId: string;
+  floor: string;
+  capacity: number;
+  isActive?: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class CompanyService {
@@ -57,16 +75,44 @@ export class CompanyService {
     );
   }
 
-  getBranches(params: CompanyQueryParams = {}): Observable<PaginatedResult<BranchListItem>> {
-    return this.http.get<PaginatedResult<BranchListItem>>(`${this.base}/branches`, {
-      params: this.toParams(params),
-    });
+  getBranches(params: CompanyQueryParams = {}): Observable<CursorPaginatedResult<BranchListItem>> {
+    return this.http.get<unknown>(`${this.base}/branches`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<BranchListItem>(res, r => camelCaseKeys(r) as BranchListItem)),
+    );
   }
 
-  getOffices(params: CompanyQueryParams = {}): Observable<PaginatedResult<OfficeListItem>> {
-    return this.http.get<PaginatedResult<OfficeListItem>>(`${this.base}/offices`, {
-      params: this.toParams(params),
-    });
+  createBranch(payload: BranchPayload): Observable<BranchListItem> {
+    return this.http.post<unknown>(`${this.base}/branches`, payload).pipe(
+      map(res => camelCaseKeys(unwrapApiData(res) ?? res) as BranchListItem),
+    );
+  }
+
+  updateBranch(id: string, payload: BranchPayload): Observable<BranchListItem> {
+    return this.http.put<unknown>(`${this.base}/branches/${id}`, payload).pipe(
+      map(res => camelCaseKeys(unwrapApiData(res) ?? res) as BranchListItem),
+    );
+  }
+
+  getOffices(params: CompanyQueryParams = {}): Observable<CursorPaginatedResult<OfficeListItem>> {
+    return this.http.get<unknown>(`${this.base}/offices`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<OfficeListItem>(res, r => camelCaseKeys(r) as OfficeListItem)),
+    );
+  }
+
+  createOffice(payload: OfficePayload): Observable<OfficeListItem> {
+    return this.http.post<unknown>(`${this.base}/offices`, payload).pipe(
+      map(res => camelCaseKeys(unwrapApiData(res) ?? res) as OfficeListItem),
+    );
+  }
+
+  updateOffice(id: string, payload: OfficePayload): Observable<OfficeListItem> {
+    return this.http.put<unknown>(`${this.base}/offices/${id}`, payload).pipe(
+      map(res => camelCaseKeys(unwrapApiData(res) ?? res) as OfficeListItem),
+    );
   }
 
   deleteBranch(id: string): Observable<void> {
@@ -77,13 +123,4 @@ export class CompanyService {
     return this.http.delete<void>(`${this.base}/offices/${id}`);
   }
 
-  private toParams(params: CompanyQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }

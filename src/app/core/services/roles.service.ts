@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   IamPermissionItem,
   IamPermissionModuleGroup,
@@ -11,14 +11,19 @@ import {
   IamRoleDetail,
   IamRoleListItem,
 } from '../models/iam.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class RolesService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}${API_ENDPOINTS.roles.base}`;
 
-  list(query: IamQueryParams = {}): Observable<PaginatedResult<IamRoleListItem>> {
-    return this.http.get<PaginatedResult<IamRoleListItem>>(this.base, { params: this.toParams(query) });
+  list(query: IamQueryParams = {}): Observable<CursorPaginatedResult<IamRoleListItem>> {
+    return this.http.get<unknown>(this.base, {
+      params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<IamRoleListItem>(res)),
+    );
   }
 
   getById(id: string): Observable<IamRoleDetail> {
@@ -47,14 +52,5 @@ export class RolesService {
       `${environment.apiUrl}${API_ENDPOINTS.permissions.base}`,
       { params },
     );
-  }
-
-  private toParams(query: IamQueryParams): HttpParams {
-    let params = new HttpParams();
-    if (query.page) params = params.set('page', String(query.page));
-    if (query.pageSize) params = params.set('pageSize', String(query.pageSize));
-    if (query.search) params = params.set('search', query.search);
-    if (query.isActive !== undefined) params = params.set('isActive', String(query.isActive));
-    return params;
   }
 }

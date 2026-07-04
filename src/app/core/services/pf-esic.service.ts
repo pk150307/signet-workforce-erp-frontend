@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   PfEsicBulkUpdateItem,
   PfEsicDetail,
@@ -9,6 +10,7 @@ import {
   PfEsicQueryParams,
   PfEsicUpdateRequest,
 } from '../models/pf-esic.models';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 @Injectable({ providedIn: 'root' })
 export class PfEsicService {
@@ -16,9 +18,11 @@ export class PfEsicService {
   private readonly baseUrl = `${environment.apiUrl}/statutory/pf-esic`;
 
   getAll(params: PfEsicQueryParams = {}) {
-    return this.http.get<PaginatedResult<PfEsicEmployee>>(this.baseUrl, {
-      params: this.toParams(params),
-    });
+    return this.http.get<unknown>(this.baseUrl, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<PfEsicEmployee>(res)),
+    );
   }
 
   getByEmployeeId(employeeId: string) {
@@ -35,7 +39,7 @@ export class PfEsicService {
 
   export(params: PfEsicQueryParams = {}) {
     return this.http.get(`${this.baseUrl}/export`, {
-      params: this.toParams(params),
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
       responseType: 'blob',
     });
   }
@@ -44,15 +48,5 @@ export class PfEsicService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ imported: number; errors: string[] }>(`${this.baseUrl}/import`, formData);
-  }
-
-  private toParams(params: PfEsicQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
   }
 }

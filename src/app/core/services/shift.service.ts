@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { normalizePaginated, mapShiftListItem } from '../utils/api-response.util';
+import { mapShiftListItem } from '../utils/api-response.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   CreateShiftRequest,
   ShiftAssignRequest,
@@ -17,11 +18,11 @@ export class ShiftService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/shifts`;
 
-  getAll(params: ShiftQueryParams = {}): Observable<PaginatedResult<ShiftListItem>> {
+  getAll(params: ShiftQueryParams = {}): Observable<CursorPaginatedResult<ShiftListItem>> {
     return this.http.get<unknown>(this.base, {
-      params: this.toParams(params),
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
     }).pipe(
-      map(res => normalizePaginated<ShiftListItem>(res, mapShiftListItem)),
+      map(res => normalizeCursorPaginated<ShiftListItem>(res, mapShiftListItem)),
     );
   }
 
@@ -45,13 +46,4 @@ export class ShiftService {
     return this.http.post<{ assigned: number }>(`${this.base}/assign`, request);
   }
 
-  private toParams(params: ShiftQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 }

@@ -1,14 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPageParams, CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
+import {
+  EMPTY_CURSOR_PAGINATION,
+  normalizeCursorPaginated,
+  toHttpParams,
+} from '../utils/cursor-pagination.util';
 import {
   AttendanceCorrectionRequest,
+  AttendanceEmployeeListItem,
   AttendanceEmployeeListResponse,
   AttendanceGridResponse,
   AttendanceQueryParams,
   AttendanceRecord,
+  AttendanceRegisterMeta,
   AttendanceSummary,
   EmployeeAttendanceCalendar,
   ImportPreviewResult,
@@ -16,6 +23,7 @@ import {
   SubmitEmployeeRowResponse,
   UnlockLogEntry,
 } from '../models/attendance.models';
+import { camelCaseKeys } from '../utils/api-response.util';
 import { paginateMock } from '../utils/mock-pagination.util';
 
 const MOCK_SUMMARY: AttendanceSummary = {
@@ -50,22 +58,37 @@ export class AttendanceService {
     );
   }
 
-  getRecords(params: AttendanceQueryParams = {}): Observable<PaginatedResult<AttendanceRecord>> {
-    return this.http.get<PaginatedResult<AttendanceRecord>>(`${this.base}/records`, { params: this.toParams(params) }).pipe(
+  getRecords(params: AttendanceQueryParams = {}): Observable<CursorPaginatedResult<AttendanceRecord>> {
+    return this.http.get<unknown>(`${this.base}/records`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<AttendanceRecord>(res)),
       catchError(() => of(paginateMock(MOCK_RECORDS, params, ['employeeName', 'employeeCode', 'siteName', 'status']))),
     );
   }
 
-  getCorrections(params: AttendanceQueryParams = {}): Observable<PaginatedResult<AttendanceCorrectionRequest>> {
-    return this.http.get<PaginatedResult<AttendanceCorrectionRequest>>(`${this.base}/corrections`, { params: this.toParams(params) }).pipe(
+  getCorrections(params: AttendanceQueryParams = {}): Observable<CursorPaginatedResult<AttendanceCorrectionRequest>> {
+    return this.http.get<unknown>(`${this.base}/corrections`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<AttendanceCorrectionRequest>(res)),
       catchError(() => of(paginateMock(MOCK_CORRECTIONS, params, ['employeeName', 'reason', 'status']))),
     );
   }
 
-  getEmployeeList(params: RegisterPeriod) {
-    return this.http.get<AttendanceEmployeeListResponse>(`${this.base}/registers/employees`, {
-      params: this.periodParams(params),
-    });
+  getEmployeeList(params: RegisterPeriod & CursorPageParams) {
+    return this.http.get<unknown>(`${this.base}/registers/employees`, {
+      params: toHttpParams({
+        clientId: params.clientId,
+        month: params.month,
+        year: params.year,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        cursor: params.cursor,
+        direction: params.direction,
+      }),
+    }).pipe(
+      map(res => mapAttendanceEmployeeListResponse(res)),
+    );
   }
 
   getGrid(params: RegisterPeriod) {
@@ -126,11 +149,15 @@ export class AttendanceService {
   }
 
   lockRegister(body: RegisterPeriod & { verified: boolean }) {
-    return this.http.post<AttendanceEmployeeListResponse>(`${this.base}/registers/lock`, body);
+    return this.http.post<unknown>(`${this.base}/registers/lock`, body).pipe(
+      map(res => mapAttendanceEmployeeListResponse(res)),
+    );
   }
 
   unlockRegister(body: RegisterPeriod & { reason: string }) {
-    return this.http.post<AttendanceEmployeeListResponse>(`${this.base}/registers/unlock`, body);
+    return this.http.post<unknown>(`${this.base}/registers/unlock`, body).pipe(
+      map(res => mapAttendanceEmployeeListResponse(res)),
+    );
   }
 
   getUnlockHistory(params: RegisterPeriod) {
@@ -145,15 +172,6 @@ export class AttendanceService {
     });
   }
 
-  private toParams(params: AttendanceQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
-  }
 
   private periodParams(params: RegisterPeriod): HttpParams {
     return new HttpParams()
@@ -161,4 +179,52 @@ export class AttendanceService {
       .set('month', String(params.month))
       .set('year', String(params.year));
   }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? camelCaseKeys<Record<string, unknown>>(value)
+    : {};
+}
+
+function mapAttendanceEmployeeListResponse(res: unknown): AttendanceEmployeeListResponse {
+  const root = asRecord(res);
+  const nestedData = root['data'];
+  const payload = Array.isArray(nestedData)
+    ? root
+    : asRecord(nestedData ?? res);
+
+  const itemsRaw = payload['items'] ?? payload['Items']
+    ?? (Array.isArray(nestedData) ? nestedData : []);
+  const page = normalizeCursorPaginated<AttendanceEmployeeListItem>({
+    data: Array.isArray(itemsRaw) ? itemsRaw : [],
+    pagination: root['pagination'] ?? payload['pagination'],
+  });
+
+  const registerRaw = payload['register'] ?? root['register'];
+  const register = registerRaw
+    ? camelCaseKeys<AttendanceRegisterMeta>(registerRaw)
+    : {
+        id: '',
+        clientId: '',
+        clientName: '',
+        month: 0,
+        year: 0,
+        status: 'draft' as const,
+        lockedAt: null,
+        lockedBy: null,
+        submittedAt: null,
+        submittedBy: null,
+        totalEmployees: page.items.length,
+        totalDays: 0,
+        markedCells: 0,
+        unmarkedCells: 0,
+        isComplete: false,
+      };
+
+  return {
+    register,
+    items: page.items,
+    pagination: page.pagination ?? { ...EMPTY_CURSOR_PAGINATION },
+  };
 }

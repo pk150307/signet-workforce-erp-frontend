@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export type InvoiceStatus =
   | 'Draft'
   | 'Sent'
@@ -193,9 +195,7 @@ export interface GenerateSiteInvoicesRequest {
   notes?: string;
 }
 
-export interface InvoiceQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface InvoiceQueryParams extends CursorPageParams {
   search?: string;
   status?: InvoiceStatus | number;
   clientId?: string;

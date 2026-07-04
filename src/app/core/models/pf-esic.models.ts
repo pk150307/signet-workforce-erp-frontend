@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export type PfEsicStatus = 'Active' | 'Inactive' | 'Pending' | 'Suspended';
 
 export interface PfEsicEmployee {
@@ -61,9 +63,7 @@ export interface PfEsicBulkUpdateItem {
   effectiveDate?: string;
 }
 
-export interface PfEsicQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface PfEsicQueryParams extends CursorPageParams {
   search?: string;
   status?: PfEsicStatus;
   employeeStatus?: number | 'all';

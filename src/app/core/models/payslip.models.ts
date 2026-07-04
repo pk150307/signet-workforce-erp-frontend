@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export type PayslipStatus = 'Generated' | 'Sent' | 'Downloaded' | 'Failed' | 'Draft' | 'Cancelled';
 
 export const PAYSLIP_STATUS_TO_API: Record<PayslipStatus, string> = {
@@ -15,6 +17,8 @@ export interface PayslipListItem {
   employeeCode: string;
   employeeName: string;
   department: string;
+  clientId?: string | null;
+  clientName?: string | null;
   month: number;
   year: number;
   grossSalary: number;
@@ -56,9 +60,7 @@ export interface GeneratePayslipsRequest {
   siteId?: string;
 }
 
-export interface PayslipQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface PayslipQueryParams extends CursorPageParams {
   search?: string;
   month?: number;
   year?: number;

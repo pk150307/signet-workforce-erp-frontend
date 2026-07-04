@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '@env/environment';
-import { PaginatedResult } from '../models/api.models';
+import { CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../models/api.models';
 import {
   LeaveBalance,
   LeaveQueryParams,
@@ -11,6 +11,7 @@ import {
   LeaveType,
 } from '../models/leave.models';
 import { paginateMock } from '../utils/mock-pagination.util';
+import { normalizeCursorPaginated, toHttpParams } from '../utils/cursor-pagination.util';
 
 const MOCK_LEAVE_TYPES: LeaveType[] = [
   { id: '1', leaveCode: 'CL', leaveName: 'Casual Leave', maxDays: 12, isPaid: true, isActive: true },
@@ -52,31 +53,30 @@ export class LeaveService {
     );
   }
 
-  getLeaveTypes(params: LeaveQueryParams = {}): Observable<PaginatedResult<LeaveType>> {
-    return this.http.get<PaginatedResult<LeaveType>>(`${this.base}/types`, { params: this.toParams(params) }).pipe(
-      catchError(() => of(paginateMock(MOCK_LEAVE_TYPES, params, ['leaveCode', 'leaveName'])))
+  getLeaveTypes(params: LeaveQueryParams = {}): Observable<CursorPaginatedResult<LeaveType>> {
+    return this.http.get<unknown>(`${this.base}/types`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<LeaveType>(res)),
+      catchError(() => of(paginateMock(MOCK_LEAVE_TYPES, params, ['leaveCode', 'leaveName']))),
     );
   }
 
-  getRequests(params: LeaveQueryParams = {}): Observable<PaginatedResult<LeaveRequest>> {
-    return this.http.get<PaginatedResult<LeaveRequest>>(`${this.base}/requests`, { params: this.toParams(params) }).pipe(
-      catchError(() => of(paginateMock(MOCK_LEAVE_REQUESTS, params, ['employeeName', 'employeeCode', 'leaveType'])))
+  getRequests(params: LeaveQueryParams = {}): Observable<CursorPaginatedResult<LeaveRequest>> {
+    return this.http.get<unknown>(`${this.base}/requests`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<LeaveRequest>(res)),
+      catchError(() => of(paginateMock(MOCK_LEAVE_REQUESTS, params, ['employeeName', 'employeeCode', 'leaveType']))),
     );
   }
 
-  getBalances(params: LeaveQueryParams = {}): Observable<PaginatedResult<LeaveBalance>> {
-    return this.http.get<PaginatedResult<LeaveBalance>>(`${this.base}/balances`, { params: this.toParams(params) }).pipe(
-      catchError(() => of(paginateMock(MOCK_LEAVE_BALANCES, params, ['employeeName', 'employeeCode', 'leaveType'])))
+  getBalances(params: LeaveQueryParams = {}): Observable<CursorPaginatedResult<LeaveBalance>> {
+    return this.http.get<unknown>(`${this.base}/balances`, {
+      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+    }).pipe(
+      map(res => normalizeCursorPaginated<LeaveBalance>(res)),
+      catchError(() => of(paginateMock(MOCK_LEAVE_BALANCES, params, ['employeeName', 'employeeCode', 'leaveType']))),
     );
-  }
-
-  private toParams(params: LeaveQueryParams): HttpParams {
-    let p = new HttpParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        p = p.set(key, String(value));
-      }
-    });
-    return p;
   }
 }

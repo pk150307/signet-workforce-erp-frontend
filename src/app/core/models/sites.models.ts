@@ -1,3 +1,5 @@
+import { CursorPageParams } from './api.models';
+
 export interface SiteListItem {
   id: string;
   siteCode: string;
@@ -30,9 +32,7 @@ export interface SiteSummary {
   understaffedSites: number;
 }
 
-export interface SiteQueryParams {
-  page?: number;
-  pageSize?: number;
+export interface SiteQueryParams extends CursorPageParams {
   search?: string;
   clientId?: string;
   isActive?: boolean;
