@@ -11,6 +11,7 @@ import { CursorPageParams } from '../../../core/models/api.models';
 import {
   CursorPaginationState,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 
@@ -88,12 +89,7 @@ export class PayrollRunsComponent implements OnInit {
   }
 
   onPaginationNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const p = this.pager.nextPageParams();
-      if (p) this.loadRuns(p);
-      return;
-    }
-    const p = this.pager.prevPageParams();
+    const p = resolvePaginationNavigate(this.pager, event);
     if (p) this.loadRuns(p);
   }
 

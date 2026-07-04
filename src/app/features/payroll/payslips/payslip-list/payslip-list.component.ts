@@ -19,6 +19,7 @@ import {
   CursorPaginationState,
   emptyCursorPage,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../../library/components/pagination/pagination.component';
 import { PayslipListItem, PayslipStatus } from '../../../../core/models/payslip.models';
@@ -130,13 +131,8 @@ export class PayslipListComponent implements OnInit {
   }
 
   onPaginationNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const p = this.pager.nextPageParams();
-      if (p) this.loadData(p);
-    } else {
-      const p = this.pager.prevPageParams();
-      if (p) this.loadData(p);
-    }
+    const p = resolvePaginationNavigate(this.pager, event);
+    if (p) this.loadData(p);
   }
 
   setStatusFilter(status: PayslipStatus | null) {
