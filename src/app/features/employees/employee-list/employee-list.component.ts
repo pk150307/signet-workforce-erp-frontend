@@ -17,6 +17,7 @@ import {
   CursorPaginationState,
   emptyCursorPage,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { featureDialogConfig } from '../../../core/utils/dialog.util';
@@ -124,13 +125,8 @@ export class EmployeeListComponent implements OnInit {
   }
 
   onPaginationNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const params = this.pager.nextPageParams();
-      if (params) this.loadData(params);
-      return;
-    }
-    const params = this.pager.prevPageParams();
-    if (params) this.loadData(params);
+    const p = resolvePaginationNavigate(this.pager, event);
+    if (p) this.loadData(p);
   }
 
   private reloadFirstPage() {

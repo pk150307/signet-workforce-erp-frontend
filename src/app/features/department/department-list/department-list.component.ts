@@ -18,6 +18,7 @@ import {
   CursorPaginationState,
   emptyCursorPage,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -124,13 +125,8 @@ export class DepartmentListComponent implements OnInit {
   }
 
   onPaginationNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const p = this.pager.nextPageParams();
-      if (p) this.load(p);
-    } else {
-      const p = this.pager.prevPageParams();
-      if (p) this.load(p);
-    }
+    const p = resolvePaginationNavigate(this.pager, event);
+    if (p) this.load(p);
   }
 
   addDepartmentLink(): string[] {
