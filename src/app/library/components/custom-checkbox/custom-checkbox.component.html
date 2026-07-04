@@ -1,0 +1,31 @@
+<label class="permission-checkbox" [ngClass]="{
+    disabled: disabled,
+    'rounded-disabled': rounded && disabled
+  }">
+    <!-- Hidden native checkbox stays disabled too -->
+    @if(rounded){
+    <input type="radio" [checked]="checked" [disabled]="disabled" [name]="groupName" (change)="onChange($event)" />
+
+    <img class="checkbox-icon" [class.marginRightZero]="marginRightZero" [src]="
+      disabled
+        ? 'assets/images/icons/radio_disabled.png'
+        : checked
+        ? 'assets/images/icons/radio_checked_dark.png'
+        : 'assets/images/icons/radio_unchecked_dark.png'
+    " alt="" />
+    }@else {
+    <input type="checkbox" [checked]="checked" [disabled]="disabled" (change)="onChange($event)" />
+    <img class="checkbox-icon" [src]="
+    disabled
+      ? (checked 
+          ? 'assets/images/icons/checked_disabled.png' 
+          : 'assets/images/icons/unchecked.png')
+      : (checked 
+          ? 'assets/images/icons/checked.png' 
+          : 'assets/images/icons/unchecked.png')
+  " alt="" />
+
+    }
+
+    <span class="label-text" [class.disabledText]="disabled" [class.label-text--required]="required && label">{{ label }}</span>
+</label>

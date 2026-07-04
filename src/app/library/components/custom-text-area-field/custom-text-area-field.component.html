@@ -1,0 +1,22 @@
+<div class="signet-textarea-section">
+    <label for="" class="signet-textarea-section__label" *ngIf="fieldTitle && showTitle" [ngClass]="{
+        'signet-textarea-section__label--required': required,
+        'signet-textarea-section__label--disabled': disabled
+      }">{{ fieldTitle }}</label>
+    <div class="signet-textarea-section__input" [style]="{ width: width + widthUnit, height: height + heightUnit }"
+        [ngClass]="{
+        'signet-textarea-section__input--readonly': readOnly,
+        'signet-textarea-section__input--disabled': disabled,
+        'signet-textarea-section__input--error': showError
+      }">
+        <textarea [ngModel]="textValue" (keyup)="validateInput()" (ngModelChange)="onUpdate($event)"
+            maxlength="{{ charLimitMaxVal === 0 ? '' : charLimitMaxVal }}" placeholder="{{ resolvedPlaceholder }}"
+            (keydown)="disableEnter($event)" aria-label="text area" [attr.tabindex]="disabled ? '-1' : '0'"
+            id="textArea" [ngClass]="{ 'signet-textarea-section--readonly': readOnly }"></textarea>
+        <span class="signet-textarea-section__input--limitcounter" *ngIf="limitCounterRequired">{{ textValue.length }}/{{
+            charLimitMaxVal }}</span>
+    </div>
+    <div class="signet-textarea-section__error" *ngIf="errorMessage && (showError || isErrorMsgRequired)">
+        {{ errorMessage }}
+    </div>
+</div>

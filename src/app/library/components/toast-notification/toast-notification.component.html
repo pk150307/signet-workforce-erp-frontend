@@ -1,0 +1,15 @@
+@if(visible){
+<div class="toast" [class.error]="variant == 'error' || variant =='quickError'">
+    <div class="toast--icon">
+        <img alt="icon" [src]="iconUrl" />
+    </div>
+    <div class="toast--message">
+        {{ message }}
+        <p *ngIf="helptext && helptext!=''" class="toast--message--help-text">{{helptext}}</p>
+    </div>
+    <div class="toast--close">
+        <img alt="icon" class="toast--close-img" [src]="'/assets/images/icons/user-access/close-line.png'"
+            (click)="close()" />
+    </div>
+</div>
+}

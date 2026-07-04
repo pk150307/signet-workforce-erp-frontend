@@ -1,0 +1,46 @@
+<div class="custom-select-dropdown-field" [ngClass]="{ 'custom-select-dropdown-field--selected': showDropdown }"
+    [ngStyle]="{ width: width + widthUnit }">
+    <div class="custom-select-dropdown-field__input"
+        [ngClass]="{'custom-select-dropdown-field__input--read-only':disabled}" #inputField>
+        <label class="custom-select-dropdown-field__input__label" *ngIf="fieldTitle" [attr.for]="inputId" [ngClass]="{
+        'custom-select-dropdown-field__input__label--required': required,
+        'custom-select-dropdown-field__input__label--texttransform':
+          noTextTransform
+      }">
+            {{ fieldTitle }}:
+        </label>
+        <label *ngIf="!fieldTitle" class="custom-select-dropdown-field__input__sr-label" [attr.for]="inputId">
+            {{ resolvedPlaceholder }}
+        </label>
+        <input [id]="inputId" type="text" class="custom-select-dropdown-field__input__value"
+            [placeholder]="resolvedPlaceholder" readonly [ngClass]="{
+        disabled: disabled,
+        'custom-select-dropdown-field__input__value__right-top-bottom-border':
+          !fieldTitle
+      }" [ngStyle]="{ height: height + heightUnit }" tabindex="0" role="textbox" (keyup.enter)="openDropdown()"
+            (click)="openDropdown()" [value]="displayValue" title="{{ displayValue }}" />
+    </div>
+    <div class="custom-dropdown" [ngClass]="{
+      'open-dropdown': !disabled && showDropdown,
+      'custom-dropdown--for-modal': forModal
+    }" #SelectDropdown (click)="$event.stopPropagation()" (mouseleave)="showDropdown = false">
+        <div class="dropdown-items-container">
+            <div class="custom-dropdown-item all" *ngIf="options && options.length > 0"
+                (click)="checkAll($event)" (keyup.enter)="checkAll($event)">
+                <div class="custom-dropdown-normal-checkbox" tabindex="0" role="status"
+                    [ngClass]="{ 'green-bg': isAllChecked }"></div>
+                <div>{{ allText }}</div>
+            </div>
+
+            <div class="custom-dropdown-item" *ngFor="let option of options;trackBy: groupOptions; let last = last"
+                [class.last]="last" (click)="onClick($event, option.key)" (keyup.enter)="onClick($event, option.key)"
+                role="listitem">
+                <div class="custom-dropdown-normal-checkbox"
+                    [ngClass]="{ checked: value.includes(option.key) }"></div>
+                <div class="custom-dropdown-item__text-div" [title]="option.value">
+                    {{ option.value }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

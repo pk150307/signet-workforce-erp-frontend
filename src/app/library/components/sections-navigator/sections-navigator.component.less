@@ -1,0 +1,42 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+@import '../../../../assets/styles/mediaqueries.less';
+
+:host {
+  display: block;
+}
+
+.selection-navigator {
+    display: grid;
+    grid-template-columns: repeat(var(--nav-cols, 1), minmax(0, 1fr));
+    height: var(--nav-height, 36px);
+    border: var(--nav-border, none);
+    background-color: var(--nav-bg, var(--color-surface));
+    border-radius: 10px;
+    align-items: center;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    &__section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        min-width: 0;
+        padding: 0 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        box-sizing: border-box;
+        background: transparent;
+        .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 13px, 18px);
+
+        &.active {
+            border-radius: 8px;
+            height: calc(100% - 8px);
+            margin: 4px;
+            background: var(--nav-active-bg, #0a0a0a);
+            .signet-text-style(var(--color-text-on-gold), ProximaNova-Medium, 13px, 18px);
+        }
+    }
+}

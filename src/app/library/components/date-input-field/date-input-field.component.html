@@ -1,0 +1,18 @@
+<signet-custom-text-field
+  [fieldTitle]="fieldTitle"
+  [required]="required"
+  [placeholder]="resolvedPlaceholder"
+  type="text"
+  [value]="display"
+  [disabled]="disabled"
+  [prefixIcon]="'/assets/images/icons/calendar-line-grey.png'"
+  (prefixIconClicked)="openPicker()"
+  [disableEdit]="true"
+  [width]="width"
+  [widthUnit]="widthUnit"
+  [autofocusField]="autofocusField"
+  [defaultFocus]="defaultFocus"
+  [readOnly]="readOnly"
+  [disableFieldOnly]="disableFieldOnly"
+  [prefixIconClickable]="!disableFieldOnly"
+></signet-custom-text-field>

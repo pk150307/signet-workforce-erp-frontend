@@ -1,0 +1,72 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+@import '../../../../assets/styles/mediaqueries.less';
+
+.toggle-button {
+    &__toggle-switch {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+
+        input[type="checkbox"] {
+            display: none;
+        }
+    }
+
+    &__toggle-slider {
+        position: relative;
+        width: 28px;
+        height: 16px;
+        background: var(--color-input-border); // OFF state background
+        border-radius: 12px;
+        transition: background-color 0.3s;
+
+        &::before {
+            content: "";
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            top: 2px;
+            left: 2px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+            z-index: 1;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            top: 6px;
+            left: 6px;
+            border-radius: 50%;
+            background: var(--color-input-border);
+            transition: transform 0.3s, background-color 0.3s;
+            z-index: 2;
+        }
+
+        input:checked+& {
+            background: var(--color-primary); // ON state background
+
+            &::before {
+                transform: translateX(12px);
+            }
+
+            &::after {
+                transform: translateX(12px);
+                background: var(--color-primary);
+            }
+        }
+    }
+
+    &__toggle-label {
+        margin-left: 8px;
+        .signet-text-style(#000000, ProximaNova-Regular, 14px, 20px);
+    }
+}

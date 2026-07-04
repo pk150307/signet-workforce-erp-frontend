@@ -1,0 +1,102 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+@import '../../../../assets/styles/mediaqueries.less';
+
+.info-tooltip {
+    margin: auto;
+    position: relative;
+    width: 24px;
+    height: 24px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    &__wrapper {
+        position: fixed !important;
+        display: block;
+        max-width: 324px;
+        z-index: 9999;
+        visibility: hidden;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 6px 12px;
+        border-radius: 4px;
+        background: #1a1a1a;
+        border: 1px solid var(--color-input-border);
+        box-shadow: 0px 12px 24px 0px rgba(14, 18, 27, 0.06),
+            0px 1px 2px 0px rgba(14, 18, 27, 0.03);
+
+        &-content {
+            overflow: hidden;
+            width: 100%;
+            margin: 0px;
+            padding: 0px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--color-input-border);
+            list-style: none;
+
+            &:first-of-type {
+                border: none;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            &__item {
+                width: 100%;
+                display: flex;
+                gap: 5px;
+                align-items: flex-end;
+
+                &-label {
+                    white-space: nowrap;
+                    .signet-text-style(var(--color-text-secondary), ProximaNova-Regular, 12px, 16px);
+                    white-space: normal;
+                }
+
+                &-value {
+                    white-space: normal;
+                    .signet-text-style(var(--color-text-primary), ProximaNova-Regular, 12px, 16px);
+                }
+            }
+        }
+
+        &__loader {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            &-icon {
+                width: 25px;
+                height: 25px;
+                object-fit: contain;
+                object-position: center;
+            }
+        }
+    }
+
+    &__arrow {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #1a1a1a;
+        border-left: 1px solid var(--color-input-border);
+        border-top: 1px solid var(--color-input-border);
+        transform: rotate(45deg);
+        z-index: 1;
+    }
+}
+
+.info-tooltip__wrapper-top .info-tooltip__arrow {
+    bottom: -5px;
+    transform: rotate(225deg);
+}
+
+.info-tooltip__wrapper:not(.info-tooltip__wrapper-top) .info-tooltip__arrow {
+    top: -5px;
+}

@@ -1,0 +1,33 @@
+<div
+  class="pagination-section"
+  [style.width]="width + widthUnit"
+  [style.height]="height + heightUnit"
+>
+  <div class="pagination-section__meta" *ngIf="showPageSize">
+    <span class="pagination-section__page-size">{{ pageSize }} per page</span>
+  </div>
+
+  <div class="pagination-section__actions">
+    <button
+      type="button"
+      class="pagination-section__previous"
+      [class.disabled]="!canGoPrev"
+      [disabled]="!canGoPrev"
+      [attr.tabindex]="canGoPrev ? '0' : '-1'"
+      (click)="onPrevious()"
+    >
+      Previous
+    </button>
+
+    <button
+      type="button"
+      class="pagination-section__next"
+      [class.disabled]="!canGoNext"
+      [disabled]="!canGoNext"
+      [attr.tabindex]="canGoNext ? '0' : '-1'"
+      (click)="onNext()"
+    >
+      Next
+    </button>
+  </div>
+</div>

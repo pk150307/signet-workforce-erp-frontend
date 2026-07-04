@@ -1,0 +1,51 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+@import '../../../../assets/styles/mediaqueries.less';
+
+.otp-field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    &__input {
+        display: flex;
+        gap: 10px;
+
+        &-cell {
+            height: 64px;
+            width: 58px;
+            border-radius: 10px;
+            border: 1px solid var(--color-input-border);
+            background: var(--color-input-bg);
+            box-shadow: 0px 1px 2px 0px rgba(10, 13, 20, 0.03);
+            text-align: center;
+            padding: 16px 8px;
+            box-sizing: border-box;
+            .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 24px, 32px);
+
+            &:focus {
+                outline: none;
+                border-radius: 10px;
+                border: 1px solid #0A0A0A;
+                background: var(--color-input-bg);
+            }
+        }
+    }
+
+    &__error {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px);
+    }
+
+    &--error {
+        .otp-field__input-cell {
+            border-radius: 10px;
+            border: 1px solid #8B1822;
+            background: var(--color-input-bg);
+            box-shadow: 0px 1px 2px 0px rgba(10, 13, 20, 0.03);
+        }
+    }
+}

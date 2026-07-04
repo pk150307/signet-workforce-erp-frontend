@@ -1,0 +1,53 @@
+<div class="datepicker">
+    <div class="datepicker-header">
+        <div class="datepicker-header__left">
+            <img [src]="'/assets/images/icons/calendar-line-grey.png'" alt="Calender Icon" />
+            <div class="datepicker-header__left--title">Select a Date</div>
+        </div>
+        <img [src]="'/assets/images/icons/user-access/close.png'" alt="close calender" (click)="closeCalendar()" />
+    </div>
+
+    <div class="datepicker-body">
+        <div class="datepicker" #datepicker>
+            <ngx-daterangepicker-material [showDropdowns]="true" [singleDatePicker]="true" [autoApply]="true"
+                [locale]="localeConfing" [startDate]="selectedDateRange.startDate" [endDate]="selectedDateRange.endDate"
+                (choosedDate)="updateDate($event)" [alwaysShowCalendars]="true" [maxDate]="maxDate" [minDate]="minDate">
+            </ngx-daterangepicker-material>
+        </div>
+        <fieldset class="time-entry" *ngIf="showTimeFields">
+            <legend class="time-entry--text">Transaction Time</legend>
+            <div class="time-entry__content">
+                <div class="time-fields">
+                    <label for="signet-date-picker-hours" class="datepicker__sr-label">Hours</label>
+                    <input id="signet-date-picker-hours" type="number" class="hour" max="12" min="0" placeholder="HH" [(ngModel)]="hours"
+                        (change)="validateTime(hours,'hours')" required />
+                    <div class="seperator" aria-hidden="true">:</div>
+                    <label for="signet-date-picker-minutes" class="datepicker__sr-label">Minutes</label>
+                    <input id="signet-date-picker-minutes" type="number" class="minutes" max="59" min="0" placeholder="MM" [(ngModel)]="minutes"
+                        (change)="validateTime(minutes,'minutes')" required />
+                    <div class="seperator" aria-hidden="true">:</div>
+                    <label for="signet-date-picker-seconds" class="datepicker__sr-label">Seconds</label>
+                    <input id="signet-date-picker-seconds" type="number" class="second" max="59" min="0" placeholder="SS" [(ngModel)]="seconds"
+                        (change)="validateTime(seconds,'seconds')" required />
+                </div>
+                <div class="time-selection">
+                    <div class="am active" [ngClass]="{ active: selectedTimeRange == 'AM' }" tabindex="0" role="button"
+                        aria-label="AM" (keyup.enter)="toggleTimeRange('AM')" (click)="toggleTimeRange('AM')">
+                        AM
+                    </div>
+                    <div class="pm" [ngClass]="{ active: selectedTimeRange == 'PM' }" tabindex="0" role="timer"
+                        aria-label="PM" (keyup.enter)="toggleTimeRange('PM')" (click)="toggleTimeRange('PM')">
+                        PM
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="datepicker__footer">
+        <signet-button [widthUnit]="'px'" [height]="40" displayText="Cancel" type="secondary" (clicked)="CancelDate()"
+            [width]="74"></signet-button>
+        <signet-button [widthUnit]="'px'" [height]="40" [width]="88" [displayText]="'Continue'" [type]="'primary'"
+            (clicked)="saveDate()"></signet-button>
+    </div>
+</div>

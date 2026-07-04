@@ -1,0 +1,41 @@
+<div class="search-input" [ngStyle]="{'width':width}">
+    <input type="text" class="search-input__search-box" aria-label="search box" [placeholder]="formattedPlaceHolder"
+        [(ngModel)]="searchValue" [disabled]="disabled" [class.disabled]="disabled" />
+    <img *ngIf="searchValue==''" class="search-input__search-icon"
+        src="../../../../../assets/images/icons/search-line-inactive.png" alt="icon-search" />
+    <img *ngIf="searchValue!=''" class="search-input__search-icon"
+        src="../../../../../assets/images/icons/search-line-active.png" alt="icon-search" />
+    <img class="search-input__filter-icon" src="../../../../../assets/images/icons/close-line-search.png"
+        alt="Search Filter" *ngIf="searchValue!=''" (click)="searchReset()" />
+
+    <div class="search-input__search">
+        <ul class="search-input__search__filters" *ngIf="filters && showFilters">
+            <li *ngFor="let filter of filters" class="search-input__search__filters-item"
+                (click)="applyFilter(filter.key)" [title]="filter.displayValue">
+                <span class="search-input__search__filters-item--value">
+                    {{ filter.displayValue }}
+                </span>
+            </li>
+        </ul>
+    </div>
+    <div class="search-input__search" *ngIf="showSearchDropdown">
+        <ul class="search-input__search__filters">
+            <ng-container *ngIf="!showSearchSelectLoader; else contentLoader">
+                <li class="search-input__search__filters-item" *ngFor="let option of searchDropdownOptions" tabindex="0"
+                    role="listitem" (keyup.enter)="emitSearchSelection(option)" (click)="emitSearchSelection(option)"
+                    [title]="option.value">
+                    <span class="search-input__search__filters-item--value">
+                        {{ option.value }}
+                    </span>
+                </li>
+                <li *ngIf="searchDropdownOptions.length === 0" class="search-input__search__filters-item" tabindex="0"
+                    role="listitem">
+                    No results found
+                </li>
+            </ng-container>
+            <ng-template #contentLoader>
+                <div class="search-input__search__dropdown-loader"></div>
+            </ng-template>
+        </ul>
+    </div>
+</div>

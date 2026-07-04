@@ -1,0 +1,76 @@
+<div class="select-wrapper" [class.select-wrapper_label--disabled]="disabled" (clickOutside)="isDropdownOpen = false"
+    [ngStyle]="{ width: width + widthUnit }">
+    <label class="select-wrapper_label" *ngIf="fieldTitle" [attr.for]="isPhoneMode ? phoneInputId : null" [ngClass]="{
+      'select-wrapper_label--required': required
+    }">
+        {{ fieldTitle }}
+    </label>
+    <label *ngIf="isPhoneMode && !fieldTitle" class="select-wrapper_label select-wrapper__sr-label" [attr.for]="phoneInputId">
+        Phone number
+    </label>
+
+    <div class="select-wrapper_phone-field" *ngIf="isPhoneMode">
+        <span class="select-wrapper_phone-field__selected">
+            <img [src]="selectedOption?.flag || '/assets/images/flags/United_States.png'" alt="flag"
+                class="select-wrapper_phone-field__selected--flag" />
+            <span class="select-wrapper_phone-field__selected--value">{{
+                selectedOption?.code || "+1"
+                }}</span>
+            <span class="arrow" [class.open]="isDropdownOpen"><img (click)="toggleDropdown()"
+                    src="/assets/images/icons/user-access/arrow-down-s-line.png" alt="icon" /></span>
+
+            <div class="select-wrapper_phone-field__selected--divider"></div>
+
+            <input [id]="phoneInputId" type="tel" class="select-wrapper_phone-field__selected--phoneInput"
+                [placeholder]="phonePlaceholder || '(555) 000-0000'" [(ngModel)]="phoneValue"
+                (ngModelChange)="onPhoneChange()" />
+        </span>
+    </div>
+    <div class="select-wrapper_select-field" (click)="toggleDropdown()" *ngIf="!isPhoneMode">
+        @if(addPrefixImage){
+        <span class="select-wrapper_select-field--prefix"><img [src]="prefixImage" alt="icon"
+                [class.rounded]="prefixImageRounded" /></span>
+        }
+        <span class="select-wrapper_select-field--data"
+            [ngClass]="{ 'select-wrapper_select-field--value': displayValue != '' }">
+            {{ displayValue || resolvedPlaceholder }}
+        </span>
+
+        <span class="arrow" [class.open]="isDropdownOpen"><img
+                src="/assets/images/icons/user-access/arrow-down-s-line.png" alt="icon" /></span>
+    </div>
+
+    <div class="select-wrapper__dropdown" *ngIf="isDropdownOpen">
+        <div *ngIf="searchFunctionality">
+            <input type="text" class="select-wrapper__dropdown__search-field" aria-label="search field"
+                placeholder="Search..." [(ngModel)]="searchText" (input)="onSearchChange(searchText)" />
+            <img *ngIf="searchText == ''" class="select-wrapper__dropdown__search-icon"
+                src="/assets/images/icons/search-line-inactive.png" alt="icon-search" />
+            <img *ngIf="searchText != ''" class="select-wrapper__dropdown__search-icon"
+                src="/assets/images/icons/search-line-active.png" alt="icon-search" />
+        </div>
+        <div class="select-wrapper__dropdown__options" [ngStyle]="{ maxHeight: dropdownOptionMaxHeight }">
+            <div class="select-wrapper__dropdown__options--option"
+                *ngFor="let option of filteredOptions ;trackBy: trackOptions;" (click)="selectOption(option)">
+                <ng-container *ngIf="isPhoneMode || showPrefixOptionIcon; else defaultOption">
+                    <img *ngIf="option.flag" [src]="option.flag" alt="flag"
+                        class="select-wrapper__dropdown__options--option--flag" />
+                    <div class="select-wrapper__dropdown__options--option--text"
+                        [title]="isPhoneMode ? option.value + ' (' + option.code + ')' : option.value">
+                        {{ option.value }}{{ isPhoneMode ? ' (' + option.code + ')' : '' }}
+                    </div>
+                </ng-container>
+                <ng-template #defaultOption>
+                    {{ option.value }}
+                </ng-template>
+            </div>
+            @if(createNew){
+            <div class="select-wrapper__dropdown__options_create_new" (click)="onCreateNew()">
+                <span>Create New</span>
+                <span>
+                    <img class="plus-icon" src="/assets/images/icons/Vector.png" alt="plus" /></span>
+            </div>
+            }
+        </div>
+    </div>
+</div>

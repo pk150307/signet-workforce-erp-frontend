@@ -1,0 +1,9 @@
+<div class="otp-field" [ngClass]="{
+    'otp-field--error': error
+  }">
+    <div class="otp-field__input">
+        <input #otpInput type="text" class="otp-field__input-cell" id="{{ fieldId }}optCell#{{ $index }}"
+            *ngFor="let cellNumber of [].constructor(digitCount); let $index = index" (keyup)="onKeyUp($event, $index)"
+            maxlength="1" autocomplete="off" />
+    </div>
+</div>

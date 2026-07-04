@@ -1,0 +1,72 @@
+<div class="date-range-picker">
+    <div class="date-range-picker-header">
+        <div class="date-range-picker-header__left">
+            <img [src]="'/assets/images/icons/calendar-line-grey.png'" alt="Calender Icon" />
+            <div class="date-range-picker-header__left--title">Select a range</div>
+        </div>
+        <img [src]="'/assets/images/icons/user-access/close.png'" alt="close calender" (click)="closeCalendar()" />
+    </div>
+    <div class="date-range-picker-body">
+        <div #daterangepicker [ngClass]="{
+          'end-selected': selectedEndDate,
+          'start-date-only':
+            selectedStartDate != null && selectedEndDate == undefined
+        }">
+            <ngx-daterangepicker-material [showDropdowns]="true" [singleDatePicker]="false" [autoApply]="true"
+                [locale]="localeConfing" [startDate]="startDate" [endDate]="endDate" [alwaysShowCalendars]="true"
+                [maxDate]="maxDate" [minDate]="minDate" (endDateChanged)="onEndDateSelected($event)"
+                (startDateChanged)="onStartDateSelected($event)">
+            </ngx-daterangepicker-material>
+        </div>
+        <div class="date-range-picker-body__time" *ngIf="payload.showTimeFields">
+            <fieldset class="date-range-picker-body__time__container date-range-picker-body__time__container--border-right"
+                *ngFor="let idx of [0, 1]">
+                <legend class="date-range-picker-body__time__container--text">
+                    {{ idx === 0 ? 'Start transaction time' : 'End transaction time' }}
+                </legend>
+
+                <div class="date-range-picker-body__time__container__time-entry">
+                    <div class="date-range-picker-body__time__container__time-entry__time-fields">
+                        <label [for]="'signet-date-range-hours-' + idx" class="date-range-picker__sr-label">Hours</label>
+                        <input [id]="'signet-date-range-hours-' + idx" type="number" class="hour" max="12" min="0" placeholder="HH" [(ngModel)]="hours[idx]"
+                            (change)="validateTime(hours[idx], 'hours', idx)" required />
+                        <div class="seperator" aria-hidden="true">:</div>
+
+                        <label [for]="'signet-date-range-minutes-' + idx" class="date-range-picker__sr-label">Minutes</label>
+                        <input [id]="'signet-date-range-minutes-' + idx" type="number" class="minutes" max="59" min="0" placeholder="MM"
+                            [(ngModel)]="minutes[idx]" (change)="validateTime(minutes[idx], 'minutes', idx)" required />
+                        <div class="seperator" aria-hidden="true">:</div>
+
+                        <label [for]="'signet-date-range-seconds-' + idx" class="date-range-picker__sr-label">Seconds</label>
+                        <input [id]="'signet-date-range-seconds-' + idx" type="number" class="second" max="59" min="0" placeholder="SS" [(ngModel)]="seconds[idx]"
+                            (change)="validateTime(seconds[idx], 'seconds', idx)" required />
+                    </div>
+
+                    <div class="date-range-picker-body__time__container__time-entry__time-selection">
+                        <div class="am" [ngClass]="{ active: selectedTimeRange[idx] == 'AM' }" tabindex="0"
+                            role="button" aria-label="AM" (keyup.enter)="toggleTimeRange('AM', idx)"
+                            (click)="toggleTimeRange('AM', idx)">
+                            AM
+                        </div>
+                        <div class="pm" [ngClass]="{ active: selectedTimeRange[idx] == 'PM' }" tabindex="0"
+                            role="button" aria-label="PM" (keyup.enter)="toggleTimeRange('PM', idx)"
+                            (click)="toggleTimeRange('PM', idx)">
+                            PM
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+    <div class="date-range-picker__footer">
+        <div class="date-range-picker__footer__left">
+            <span class="date-range-picker__footer__left--txt">{{ getSelectedDate }}</span>
+        </div>
+        <div class="date-range-picker__footer__right">
+            <signet-button [widthUnit]="'px'" [height]="40" displayText="Cancel" type="secondary" (click)="closeCalendar()"
+                [width]="74"></signet-button>
+            <signet-button [widthUnit]="'px'" [type]="'primary'" (clicked)="saveDate()" [disabled]="getDisabledCondition()" [height]="40"
+                heightUnit="px" [width]="134" widthUnit="px" [displayText]="'Continue'"></signet-button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,307 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+
+:host {
+  display: inline-flex;
+  position: relative;
+  vertical-align: middle;
+  font-family: ProximaNova-Regular, sans-serif;
+}
+
+.action-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: var(--color-bg-subtle);
+      color: var(--color-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__text-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px 10px 10px 12px;
+    border: 1px solid var(--color-input-border);
+    border-radius: var(--radius-md);
+    background: var(--color-input-bg);
+    box-shadow: 0 1px 2px 0 var(--color-input-shadow);
+    cursor: pointer;
+    .signet-text-style(var(--color-text-primary), ProximaNova-Regular, 14px, 20px);
+
+    &:hover {
+      border-color: var(--color-border-strong);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__caret {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-muted);
+    transition: transform 0.3s ease;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  // Mirrors signet-search-select-dropdown .select-wrapper__dropdown
+  &__panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    min-width: 180px;
+    max-width: min(320px, 90vw);
+    max-height: 232px;
+    padding: 8px;
+    box-sizing: border-box;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+
+    &--visible {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  // Mirrors .select-wrapper__dropdown__options
+  &__options {
+    max-height: 216px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__divider {
+    height: 1px;
+    margin: 4px 0;
+    border: none;
+    background: var(--color-border);
+    flex-shrink: 0;
+  }
+
+  // Mirrors .select-wrapper__dropdown__options--option
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    .signet-text-style(var(--color-text-secondary), ProximaNova-Regular, 14px, 20px);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
+
+    &:hover:not(:disabled) {
+      background: var(--color-bg-subtle);
+      color: var(--color-text-primary);
+
+      mat-icon {
+        color: var(--color-text-primary);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+
+    &--danger {
+      color: var(--color-danger);
+
+      mat-icon {
+        color: var(--color-danger);
+      }
+
+      &:hover:not(:disabled) {
+        background: var(--badge-danger-bg);
+        color: var(--color-danger);
+
+        mat-icon {
+          color: var(--color-danger);
+        }
+      }
+    }
+
+    &--disabled,
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  &__item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__item-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__item-description,
+  &__item-meta {
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--color-text-muted);
+    white-space: normal;
+  }
+}
+
+// Projected content keeps the parent component's encapsulation attributes,
+// so option styles must pierce with ::ng-deep (same look as search-select options).
+:host ::ng-deep .action-menu__options {
+  > button,
+  > a,
+  > [actionMenuItem] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    .signet-text-style(var(--color-text-secondary), ProximaNova-Regular, 14px, 20px);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      background: var(--color-bg-subtle);
+      color: var(--color-text-primary);
+      text-decoration: none;
+
+      mat-icon {
+        color: var(--color-text-primary);
+      }
+    }
+
+    &.action-menu__item--danger,
+    &.action-delete {
+      color: var(--color-danger);
+
+      mat-icon {
+        color: var(--color-danger);
+      }
+
+      &:hover {
+        background: var(--badge-danger-bg);
+        color: var(--color-danger);
+
+        mat-icon {
+          color: var(--color-danger);
+        }
+      }
+    }
+  }
+
+  > .action-menu__divider,
+  > hr {
+    height: 1px;
+    margin: 4px 0;
+    border: none;
+    background: var(--color-border);
+    flex-shrink: 0;
+  }
+
+  > .topbar__notifications-header,
+  > .topbar__notifications-empty {
+    display: flex;
+  }
+
+  > button:has(.topbar__notification-item) {
+    align-items: flex-start;
+
+    span {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+    }
+  }
+}

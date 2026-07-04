@@ -1,0 +1,8 @@
+<span
+  class="status-button"
+  [class.status-button--sm]="size === 'sm'"
+  [attr.title]="resolved.value"
+>
+  <span class="status-button__icon" [ngStyle]="{ background: resolved.color }"></span>
+  <span class="status-button__text">{{ resolved.value }}</span>
+</span>

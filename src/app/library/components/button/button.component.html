@@ -1,0 +1,8 @@
+<button class="signet-btn {{ type }}" [disabled]="disabled" (click)="onClick()" [attr.aria-label]="displayText"
+    [ngStyle]="{ width: width + widthUnit, height: height + heightUnit, fontSize: fontSize + fontSizeUnit, borderColor: borderColor, color: fontColor}"
+    [ngClass]="{ 'b-0': !showBorder, 'gravty-btn__partial-bold': enablePartialBold }">
+
+    <img *ngIf="showIcon" [src]="imageUrl" alt="button-icon" class="button-icon"
+        [ngStyle]="{width : imageIconWidth, height : imageIconHeight}" />
+    {{ displayText }}
+</button>

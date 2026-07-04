@@ -1,0 +1,12 @@
+<mat-radio-group [ngModel]="value" (ngModelChange)="emitChange($event)" class="radio-input"
+    [ngClass]="{ 'radio-input--horizontal': alignHorizontal }" [ngStyle]="{ gap: gap }">
+    <mat-radio-button (click)="emitClickAction($event, option)" *ngFor="let option of options" [value]="option.key"
+        class="radio-input__button" [disabled]="disabled" [ngClass]="{
+      'radio-input__button--read-only': readOnly,
+      'radio-input__button--disabled': disabled
+    }">
+        <span [ngStyle]="{ 'font-size': fontSize }">
+            {{ option.value }}
+        </span>
+    </mat-radio-button>
+</mat-radio-group>

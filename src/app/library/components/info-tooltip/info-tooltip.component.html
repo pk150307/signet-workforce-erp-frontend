@@ -1,0 +1,35 @@
+<div #tooltipButton (mouseenter)="showTooltip()" (mouseleave)="hideTooltip()" class="info-tooltip" [ngStyle]="{
+    width: iconSize + 'px',
+    height: iconSize + 'px',
+    backgroundImage: 'url(' + iconUrl + ')'
+  }" [attr.tabindex]="disabled ? '-1' : '0'" role="tooltip" aria-label="info-tooltip" (focus)="onOpen()"
+    (blur)="onClose()">
+    <div #tooltip class="info-tooltip__wrapper" [ngStyle]="{
+      top: tooltipTop + 'px',
+      left: tooltipLeft + 'px',
+      height: enableCustomDesign ? 'fit-content' : tooltipHeight + 'px',
+      width: enableCustomDesign ? 'max-content' : tooltipWidth + 'px',
+      'max-width': maxWidth
+    }">
+        <span #tooltipArrow class="info-tooltip__arrow"></span>
+        <ng-container *ngIf="!showLoader; else loader">
+            <ul class="info-tooltip__wrapper-content" *ngFor="let section of info">
+                <li class="info-tooltip__wrapper-content__item" *ngFor="let item of section">
+                    <div class="info-tooltip__wrapper-content__item-label"
+                        [ngStyle]="{ color: labelColor, 'font-style': fontStyle }">
+                        {{ item.label }} <span *ngIf="keyValyePair">:</span>
+                    </div>
+                    <div class="info-tooltip__wrapper-content__item-value" [ngStyle]="{ color: item.type }">
+                        {{ item.value }}
+                    </div>
+                </li>
+            </ul>
+        </ng-container>
+        <ng-template #loader>
+            <div class="info-tooltip__wrapper__loader">
+                <img src="../../../../../assets/images/img/ring.gif" alt="Loader"
+                    class="info-tooltip__wrapper__loader-icon" />
+            </div>
+        </ng-template>
+    </div>
+</div>

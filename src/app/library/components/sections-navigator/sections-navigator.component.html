@@ -1,0 +1,11 @@
+<div class="selection-navigator">
+  <div
+    class="selection-navigator__section"
+    *ngFor="let item of navigationItems"
+    [class.active]="selectedItem === item.value"
+    (click)="onSelect(item.value)"
+    [attr.title]="item.label"
+  >
+    {{ item.label }}
+  </div>
+</div>

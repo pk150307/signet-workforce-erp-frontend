@@ -1,0 +1,96 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+@import '../../../../assets/styles/mediaqueries.less';
+
+:host {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.signet-btn {
+  box-sizing: border-box;
+  height: 41px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px);
+
+  &:disabled {
+    border-color: transparent;
+    opacity: 0.4 !important;
+  }
+
+  &.default {
+    background: var(--color-surface-elevated);
+    border-color: var(--color-surface-elevated);
+    .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.action {
+    background: var(--color-primary-action-bg);
+    .signet-text-style(var(--color-primary), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.primary {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    .signet-text-style(var(--color-text-on-gold), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.secondary {
+    border-color: var(--color-input-border);
+    background: var(--color-surface-elevated);
+    .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.disabledButton {
+    pointer-events: none;
+    background: var(--color-primary-disabled-bg);
+    .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.error {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-danger-border);
+    background: var(--color-input-bg);
+    .signet-text-style(var(--color-danger-soft), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.warning {
+    border-color: var(--color-danger);
+    background: var(--color-danger);
+    .signet-text-style(var(--color-text-on-gold), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.stroke {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-input-border);
+    box-shadow: 0 1px 2px 0 var(--color-input-shadow);
+    .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.plane {
+    background-color: unset;
+    border: unset;
+    .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px);
+  }
+
+  &.hollow {
+    border: 2px solid var(--color-primary);
+    background: transparent;
+    border-radius: var(--radius-md);
+    .signet-text-style(var(--color-primary), ProximaNova-Regular, 13px, 12px);
+
+    &:hover {
+      background: var(--color-primary-soft);
+    }
+  }
+}

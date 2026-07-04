@@ -1,0 +1,50 @@
+@import '../../../../assets/styles/mixins.less';
+@import '../../../../assets/styles/font.less';
+@import '../../../../assets/styles/mediaqueries.less';
+
+.toast {
+    display: flex;
+    gap: 8px;
+    position: fixed;
+    bottom: 68px;
+    // left: 35%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    padding: 10px 8px;
+    border-radius: 8px;
+    background: #16643b;
+    text-align: center;
+    max-width: 395px;
+
+    &--icon,
+    &--close {
+        display: flex;
+        align-items: flex-start;
+
+        img {
+            width: 20px;
+            height: 20px;
+        }
+
+        &-img {
+            cursor: pointer;
+        }
+    }
+
+    &--message {
+        flex: 1;
+        text-align: left;
+        .signet-text-style(var(--color-text-primary), ProximaNova-Regular, 14px, 20px);
+
+        &--help-text {
+            margin: 0;
+            padding-top: 4px;
+            opacity: 0.72;
+        }
+    }
+
+    &.error {
+        background: #8b1822;
+    }
+}

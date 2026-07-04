@@ -1,0 +1,38 @@
+<div class="upload-image">
+    <div class="upload-image--main">
+        <div class="upload-image--main--image-container" [ngStyle]="{
+          width: imageWidth,
+          height: imageHeight,
+          borderRadius: imageRadius,
+          cursor: 'pointer'
+        }" (click)="triggerFileInput()">
+            <span class="upload-image--main--logo-backdrop" [ngStyle]="{ borderRadius: imageRadius }" [ngClass]="{
+            'upload-image--main--logo-backdrop--showbackdrop':
+              fileIcon || showbackdrop,
+            'upload-image--main--logo-backdrop--banner': isBanner
+          }">
+                <img class="upload-image--main--logo-image" [src]="fileIcon ?? defaultImage" [ngStyle]="{
+              width: imageWidth,
+              height: imageHeight,
+              borderRadius: imageRadius
+            }" [ngClass]="{
+              'upload-image--main--logo-default':
+                fileIcon == null || fileIcon == '',
+              'upload-image--main--logo-image--iscover': isObjectFitCover
+            }" alt="" />
+                <div class="upload-image--main--remove-overlay" *ngIf="fileIcon" (click)="removePhoto(); $event.stopPropagation()">
+                    <span class="upload-image--main--remove-icon">✕</span>
+                </div>
+            </span>
+        </div>
+    </div>
+    @if(showDescription){
+    <div class="upload-image__details">
+        <div class="upload-image__details--title">Program/Company Logo</div>
+        <div class="upload-image__details--desc">Min 400x400px, PNG or JPEG</div>
+    </div>
+    }
+
+    <input type="file" class="upload-image--file-input" (change)="onClick($event)"
+        accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-label="upload file" />
+</div>

@@ -1,0 +1,112 @@
+<div class="signet-text-field" (click)="prefixIconClickable ? prefixIconClick() : null" [ngStyle]="{
+    cursor: prefixIconClickable ? 'pointer' : 'default'
+  }">
+    <label class="signet-text-field__label" *ngIf="fieldTitle" [ngClass]="{
+      'signet-text-field__label--required': required,
+      'signet-text-field__label--disabled': disabled
+    }">
+        {{ fieldTitle }}
+    </label>
+    <div class="signet-text-field__input" [style]="{
+      width: width + widthUnit,
+      'border-color': focusBorder
+    }" [title]="!hideTitle ? (value && value.toString().length > 0 ? value : resolvedPlaceholder):''" [ngClass]="{
+      'signet-text-field__input--disabled': disabled || disableFieldOnly,
+      'signet-text-field__input--readonly': readOnly && !disabled,
+      'signet-text-field__input--warning': toolTipMessage && !focusBorderToolTip,
+      'signet-text-field__input--error': showError
+    }" [ngStyle]="{
+     cursor: prefixIconClickable ? 'pointer' : 'default'
+    }">
+        <div class="signet-text-field__input-prefix-text" [ngClass]="{ cursorIcon: iconClicked, opacity: value == '' }"
+            *ngIf="
+        prefixText !== '' && prefixText !== undefined && prefixText !== null
+      ">
+            {{ prefixText }}
+        </div>
+        <div class="signet-text-field__input-prefix-icon" [ngClass]="{
+        cursorIcon: iconClicked,
+        pointerdisabled: disabled || readOnly
+      }" *ngIf="
+        prefixIcon !== '' && prefixIcon !== undefined && prefixIcon !== null
+      " [ngStyle]="{
+        'background-image': 'url(' + prefixIcon + ')',
+        width: prefixIconWidth,
+        'min-width': prefixIconWidth,
+        height: prefixIconHeight,
+        'min-height': prefixIconHeight,
+        opacity: readOnly ? 0.3 : 1,
+        cursor: prefixIconClickable ? 'pointer' : 'default'
+      }" [attr.tabindex]="'-1'" aria-label="icon" role="button"
+            (click)="prefixIconClickable ? prefixIconClick() : null"></div>
+        <input *ngIf="!commaSeparator" [id]="'noscrol_' + randomNumber" class="signet-text-field__input-field noscroll"
+            [placeholder]="resolvedPlaceholder" [type]="type" [(ngModel)]="value" (keyup)="validateInput()"
+            (keydown)="type == 'number' ? onlyNumber($event) : ''" [readOnly]="readOnly || disableEdit"
+            (blur)="handleBlur()" (focus)="setBorderhighlight()"
+            [title]="!hideTitle ? (value && value.toString().length > 0 ? value : resolvedPlaceholder) : ''"
+            aria-label="text field" [ngClass]="{
+        'signet-text-field__input-field--pl-0':
+          selectDropdownConfig || prefixText,
+        'signet-text-field__suffix-field': suffixText,
+        'signet-text-field__input-field--container': suffixText,
+        'signet-text-field__input-field--alignment': isCentreAlign,
+        'signet-text-field__input-field--warning':
+          toolTipMessage && !focusBorderToolTip,
+        'signet-text-field__input-field--hostSponsorPadding':
+          paddingLeftHostSponsor
+      }" [ngStyle]="{
+        'pointer-events': disableInput || disabled ? 'none' : 'auto',
+        'background-color': fieldColor,
+        'border-color': focusBorder,
+         cursor: prefixIconClickable ? 'pointer' : 'default'
+      }" [attr.maxlength]="maxLength" [disabled]="disabled || disableFieldOnly" (keyup.enter)="enterClicked($event)"
+            [attr.tabindex]="disableInput || disabled ? '-1' : '0'" (keypress)="
+        restrictDecimal
+          ? $event.key === '.'
+            ? $event.preventDefault()
+            : null
+          : null
+      " [attr.autocomplete]="autocomplete" #InputField />
+        <div class="signet-text-field__input-suffix-container" *ngIf="
+        suffixText !== '' && suffixText !== undefined && suffixText !== null
+      ">
+            <span class="signet-text-field__input-suffix-text" title="{{ suffixText }}"
+                [ngStyle]="{ 'text-align': suffixTextAlign }">{{ suffixText }}</span>
+        </div>
+        <input aria-label="text field" *ngIf="commaSeparator" class="signet-text-field__input-field noscroll"
+            [placeholder]="resolvedPlaceholder" type="text" [ngModel]="formatValue(this.value)" (keyup)="validateInput()"
+            (keydown)="type == 'number' ? onlyNumber($event) : ''" (ngModelChange)="onUpdate($event)"
+            [readOnly]="readOnly || disableEdit" [title]="
+        value && value.toString().length > 0
+          ? formatValue(this.value)
+          : resolvedPlaceholder
+      " [ngClass]="{
+        'signet-text-field__input-field--pl-0': selectDropdownConfig
+      }" [ngStyle]="{
+        width: suffixTextWidth + '%'
+      }" [attr.maxlength]="maxLength" (blur)="handleBlur()" (focus)="setBorderhighlight()"
+            [disabled]="disabled || disableFieldOnly" gravtyCommaSeparator="commaSeparator ? true : false"
+            (keyup.enter)="enterClicked($event)" [attr.aria-label]="formatValue(this.value)" [attr.autocomplete]="autocomplete"
+            #InputField />
+        <div class="signet-text-field__input-icon" [ngClass]="{
+        cursorIcon: iconClicked,
+        pointerdisabled: disabled || readOnly
+      }" *ngIf="
+        suffixIcon !== '' && suffixIcon !== undefined && suffixIcon !== null
+      " [ngStyle]="{
+        'background-image': 'url(' + suffixIcon + ')',
+        width: suffixIconWidth,
+        'min-width': suffixIconWidth,
+        height: suffixIconHeight,
+        'min-height': suffixIconHeight,
+        opacity: readOnly ? 0.3 : 1
+      }" [attr.tabindex]="readOnly || disabled ? '-1' : '0'" aria-label="icon" role="button"
+            (keyup.enter)="iconClick()" (click)="iconClick()"></div>
+    </div>
+    <div class="signet-text-field__tooltip" *ngIf="toolTipMessage.length > 0 && showError">
+        <div class="signet-text-field__tooltip_message"
+            [style]="{ width: tooltipWidth + 'px', height: tooltipHeight + 'px' }">
+            {{ toolTipMessage }}
+        </div>
+    </div>
+</div>
