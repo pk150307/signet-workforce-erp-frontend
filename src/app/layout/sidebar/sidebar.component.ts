@@ -9,9 +9,7 @@ import { NAV_ITEMS, NavItem } from '../../core/constants/navigation.constants';
 
 @Component({
   selector: 'app-sidebar',
-  standalone: true,
-  imports: [MatIconModule, MatDividerModule, MatTooltipModule],
-  templateUrl: './sidebar.component.html',
+    templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.less',
 })
 export class SidebarComponent {
@@ -40,11 +38,11 @@ export class SidebarComponent {
     return matchingRoute === route;
   }
 
-  navigate(item: NavItem) {
-    if (item.route) {
-      this.router.navigate([item.route]);
-      this.linkClicked.emit();
-    }
+  navigate(event: Event, item: NavItem) {
+    if (!item.route) return;
+    (event.currentTarget as HTMLElement | null)?.blur();
+    void this.router.navigate([item.route]);
+    this.linkClicked.emit();
   }
 
   private canAccess(item: NavItem): boolean {

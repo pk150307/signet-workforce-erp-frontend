@@ -1,13 +1,6 @@
 import { Component, OnInit, Output, EventEmitter, inject, signal } from '@angular/core';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDividerModule } from '@angular/material/divider';
-
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { InboxNotificationsService } from '../../core/services/inbox-notifications.service';
@@ -15,20 +8,7 @@ import { InboxNotificationItem } from '../../core/models/iam.models';
 
 @Component({
   selector: 'app-topbar',
-  standalone: true,
-  imports: [
-    NgIf,
-    NgFor,
-    DatePipe,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatBadgeModule,
-    MatTooltipModule,
-    MatDividerModule,
-  ],
-  templateUrl: './topbar.component.html',
+    templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.less',
 })
 export class TopbarComponent implements OnInit {
@@ -56,7 +36,7 @@ export class TopbarComponent implements OnInit {
 
   onNotificationsMenuOpened(): void {
     this.loadingNotifications.set(true);
-    this.inboxService.list({ page: 1, pageSize: 10, unreadOnly: false }).subscribe({
+    this.inboxService.list({ pageSize: 10, unreadOnly: false }).subscribe({
       next: (result) => {
         this.notifications.set(result.items);
         this.loadingNotifications.set(false);

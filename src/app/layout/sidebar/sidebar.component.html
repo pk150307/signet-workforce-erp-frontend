@@ -29,12 +29,14 @@
   <div class="sidebar__nav">
     @for (item of navItems(); track item.route) {
       <button
+        type="button"
         class="sidebar__nav-item"
         [class.sidebar__nav-item--active]="isActive(item.route || '')"
-        (click)="navigate(item)"
-        [matTooltip]="collapsed ? item.label : ''"
+        (click)="navigate($event, item)"
+        [matTooltip]="item.label"
+        [matTooltipDisabled]="!collapsed"
         matTooltipPosition="right">
-        <mat-icon class="sidebar__nav-icon">{{ item.icon }}</mat-icon>
+        <mat-icon class="sidebar__nav-icon" aria-hidden="true">{{ item.icon }}</mat-icon>
         @if (!collapsed) {
           <span class="sidebar__nav-label">{{ item.label }}</span>
           @if (item.badge) {

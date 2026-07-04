@@ -2,7 +2,5 @@
   <div class="error-page__code">403</div>
   <h1 class="error-page__title">Access Denied</h1>
   <p class="error-page__message">You don't have permission to access this page.</p>
-  <button mat-raised-button color="primary" routerLink="/dashboard">
-    <mat-icon>home</mat-icon> Go to Dashboard
-  </button>
+  <a routerLink="/dashboard" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Go to Dashboard" /></a>
 </div>

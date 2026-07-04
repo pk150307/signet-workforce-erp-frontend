@@ -5,13 +5,14 @@
 .sidebar {
   height: 100%;
   background: var(--sidebar-bg);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: width var(--transition);
 
   mat-divider {
-    border-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--color-border-subtle) !important;
   }
 
   &__brand {
@@ -29,7 +30,7 @@
   &__brand-logo {
     width: 38px;
     height: 38px;
-    background: linear-gradient(135deg, #1565c0, #1e88e5);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -37,7 +38,7 @@
     flex-shrink: 0;
 
     mat-icon {
-      color: #fff;
+      color: var(--color-text-on-gold);
     }
   }
 
@@ -49,14 +50,14 @@
     display: block;
     font-size: 15px;
     font-weight: 700;
-    color: #fff;
+    color: var(--color-text-primary);
     white-space: nowrap;
   }
 
   &__brand-tagline {
     display: block;
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.8px;
     margin-top: 1px;
@@ -73,8 +74,8 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #1565c0, #1e88e5);
-    color: #fff;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+    color: var(--color-text-on-gold);
     font-size: 14px;
     font-weight: 700;
     display: flex;
@@ -87,7 +88,7 @@
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -96,7 +97,7 @@
   &__user-role {
     display: block;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-muted);
     white-space: nowrap;
   }
 
@@ -114,7 +115,8 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--sidebar-scrollbar-thumb);
+      border-radius: 999px;
     }
   }
 
@@ -126,7 +128,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-text-secondary);
     font-size: 13.5px;
     font-weight: 500;
     font-family: inherit;
@@ -136,18 +138,19 @@
     text-align: left;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.07);
-      color: rgba(255, 255, 255, 0.9);
+      background: var(--color-bg-subtle);
+      color: var(--color-text-primary);
     }
 
     &--active {
-      background: rgba(21, 101, 192, 0.3);
-      color: #fff;
-      border-left: 3px solid #1e88e5;
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      border-left: 3px solid var(--color-primary);
       padding-left: 9px;
+      font-weight: 600;
 
       .sidebar__nav-icon {
-        color: #90caf9;
+        color: var(--color-primary);
       }
     }
   }
@@ -157,6 +160,7 @@
     width: 20px;
     height: 20px;
     flex-shrink: 0;
+    color: var(--color-text-secondary);
     transition: color var(--transition);
   }
 
@@ -168,8 +172,8 @@
   }
 
   &__nav-badge {
-    background: #e65100;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-on-gold);
     font-size: 10px;
     font-weight: 700;
     padding: 1px 6px;
@@ -186,7 +190,7 @@
       border-left: none !important;
 
       &--active {
-        border-left: 2px solid #1e88e5 !important;
+        border-left: 2px solid var(--color-primary) !important;
         padding-left: 8px;
       }
     }

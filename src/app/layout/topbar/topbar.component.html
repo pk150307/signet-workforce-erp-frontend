@@ -15,70 +15,86 @@
       <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
 
-    <button
-      mat-icon-button
-      class="topbar__action-btn"
-      matTooltip="Notifications"
-      aria-label="Notifications"
-      [matMenuTriggerFor]="notificationsMenu"
-      (menuOpened)="onNotificationsMenuOpened()">
-      <mat-icon
-        [matBadge]="unreadCount() || null"
-        matBadgeColor="warn"
-        matBadgeSize="small"
-        [matBadgeHidden]="unreadCount() === 0">
-        notifications
-      </mat-icon>
-    </button>
+    <signet-action-menu
+      align="end"
+      triggerType="custom"
+      panelClass="topbar__notifications-menu"
+      ariaLabel="Notifications"
+      (opened)="onNotificationsMenuOpened()"
+    >
+      <button
+        type="button"
+        actionMenuTrigger
+        mat-icon-button
+        class="topbar__action-btn"
+        matTooltip="Notifications"
+        aria-label="Notifications"
+      >
+        <mat-icon
+          aria-hidden="false"
+          [matBadge]="unreadCount() || null"
+          matBadgeColor="warn"
+          matBadgeSize="small"
+          [matBadgeHidden]="unreadCount() === 0">
+          notifications
+        </mat-icon>
+      </button>
 
-    <mat-menu #notificationsMenu="matMenu" xPosition="before" class="topbar__notifications-menu">
-      <div class="topbar__notifications-header">
+      <div class="topbar__notifications-header" actionMenuKeepOpen>
         <span>Notifications</span>
-        <button mat-button type="button" *ngIf="unreadCount() > 0" (click)="markAllRead(); $event.stopPropagation()">Mark all read</button>
+        <button
+          type="button"
+          class="topbar__notifications-mark-all"
+          *ngIf="unreadCount() > 0"
+          actionMenuKeepOpen
+          (click)="markAllRead(); $event.stopPropagation()"
+        >
+          Mark all read
+        </button>
       </div>
-      <mat-divider></mat-divider>
       <div class="topbar__notifications-empty" *ngIf="!loadingNotifications() && notifications().length === 0">
         No notifications
       </div>
       <button
-        mat-menu-item
         type="button"
+        actionMenuItem
         *ngFor="let item of notifications()"
         (click)="openNotification(item)"
-        [class.topbar__notification--unread]="!item.isRead">
+        [class.topbar__notification--unread]="!item.isRead"
+      >
         <div class="topbar__notification-item">
           <strong>{{ item.title }}</strong>
           <span>{{ item.message }}</span>
           <small>{{ item.createdAt | date:'short' }}</small>
         </div>
       </button>
-    </mat-menu>
+    </signet-action-menu>
 
-    <button mat-button class="topbar__user-btn" [matMenuTriggerFor]="userMenu" aria-label="User account menu">
-      <div class="topbar__user-avatar">
-        {{ (authService.userFullName() || 'U').charAt(0).toUpperCase() }}
-      </div>
-      <mat-icon class="topbar__user-caret">expand_more</mat-icon>
-    </button>
+    <signet-action-menu align="end" triggerType="custom" ariaLabel="User account menu">
+      <button type="button" actionMenuTrigger class="topbar__user-btn" aria-label="User account menu">
+        <div class="topbar__user-avatar">
+          {{ (authService.userFullName() || 'U').charAt(0).toUpperCase() }}
+        </div>
+        <mat-icon class="topbar__user-caret">expand_more</mat-icon>
+      </button>
 
-    <mat-menu #userMenu="matMenu" xPosition="before">
-      <button mat-menu-item routerLink="/auth/profile">
+      <a actionMenuItem routerLink="/auth/profile">
         <mat-icon>person</mat-icon>
         <span>My Profile</span>
-      </button>
-      <button mat-menu-item routerLink="/auth/change-password">
+      </a>
+      <a actionMenuItem routerLink="/auth/change-password">
         <mat-icon>lock</mat-icon>
         <span>Change Password</span>
-      </button>
-      <button mat-menu-item routerLink="/settings">
+      </a>
+      <a actionMenuItem routerLink="/settings">
         <mat-icon>settings</mat-icon>
         <span>Settings</span>
-      </button>
-      <mat-divider />
-      <button mat-menu-item (click)="authService.logout()">
-        <mat-icon color="warn">logout</mat-icon>
+      </a>
+      <div class="action-menu__divider" role="separator"></div>
+      <button type="button" actionMenuItem class="action-delete" (click)="authService.logout()">
+        <mat-icon>logout</mat-icon>
         <span class="topbar__logout">Sign Out</span>
       </button>
-    </mat-menu>
+    </signet-action-menu>
   </div>
 </header>
