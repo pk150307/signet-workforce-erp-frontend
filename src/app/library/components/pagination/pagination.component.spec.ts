@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { PaginationComponent } from './pagination.component';
+import { SearchSelectDropdownComponent } from '../search-select-dropdown/search-select-dropdown.component';
 
 describe('PaginationComponent', () => {
   let component: PaginationComponent;
@@ -9,8 +11,8 @@ describe('PaginationComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PaginationComponent],
-      imports: [CommonModule],
+      declarations: [PaginationComponent, SearchSelectDropdownComponent],
+      imports: [CommonModule, FormsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PaginationComponent);

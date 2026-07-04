@@ -1,5 +1,11 @@
-<div class="select-wrapper" [class.select-wrapper_label--disabled]="disabled" (clickOutside)="isDropdownOpen = false"
-    [ngStyle]="{ width: width + widthUnit }">
+<div
+    class="select-wrapper"
+    [class.select-wrapper_label--disabled]="disabled"
+    [class.select-wrapper--open]="isDropdownOpen"
+    [class.select-wrapper--placement-top]="dropdownPlacement === 'top'"
+    (clickOutside)="isDropdownOpen = false"
+    [ngStyle]="{ width: width + widthUnit }"
+>
     <label class="select-wrapper_label" *ngIf="fieldTitle" [attr.for]="isPhoneMode ? phoneInputId : null" [ngClass]="{
       'select-wrapper_label--required': required
     }">
@@ -40,7 +46,11 @@
                 src="/assets/images/icons/user-access/arrow-down-s-line.png" alt="icon" /></span>
     </div>
 
-    <div class="select-wrapper__dropdown" *ngIf="isDropdownOpen">
+    <div
+        class="select-wrapper__dropdown"
+        [class.select-wrapper__dropdown--up]="dropdownPlacement === 'top'"
+        *ngIf="isDropdownOpen"
+    >
         <div *ngIf="searchFunctionality">
             <input type="text" class="select-wrapper__dropdown__search-field" aria-label="search field"
                 placeholder="Search..." [(ngModel)]="searchText" (input)="onSearchChange(searchText)" />

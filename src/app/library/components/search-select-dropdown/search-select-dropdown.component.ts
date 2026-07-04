@@ -52,6 +52,8 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
   filteredOptions: SelectOption[] = [];
   selectedOption: SelectOption | null = null;
   @Input() dropdownOptionMaxHeight:string='186px'
+  /** Open menu below (default) or above the field — use `top` near page bottoms. */
+  @Input() dropdownPlacement: 'top' | 'bottom' = 'bottom';
   @Input() showPrefixOptionIcon:any=false;
   static activeInstance: SearchSelectDropdownComponent | null = null;
   static nextId = 0;

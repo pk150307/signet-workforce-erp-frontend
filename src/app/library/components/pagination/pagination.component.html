@@ -1,10 +1,26 @@
 <div
   class="pagination-section"
   [style.width]="width + widthUnit"
-  [style.height]="height + heightUnit"
+  [style.min-height]="height + heightUnit"
 >
   <div class="pagination-section__meta" *ngIf="showPageSize">
-    <span class="pagination-section__page-size">{{ pageSize }} per page</span>
+    <div class="pagination-section__page-size">
+      <span class="pagination-section__page-size-label">Rows per page</span>
+      <signet-search-select-dropdown
+        class="pagination-section__page-size-dropdown"
+        [value]="selectedPageSize"
+        [options]="pageSizeSelectOptions"
+        fieldTitle=""
+        placeholder="10"
+        [width]="96"
+        widthUnit="px"
+        [searchFunctionality]="false"
+        [required]="false"
+        dropdownPlacement="top"
+        [dropdownOptionMaxHeight]="'220px'"
+        (valueChange)="onPageSizeChange($event)"
+      />
+    </div>
   </div>
 
   <div class="pagination-section__actions">

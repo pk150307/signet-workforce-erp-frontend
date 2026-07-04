@@ -1,9 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CursorDirection, DEFAULT_PAGE_SIZE } from '../../../core/models/api.models';
+import {
+  ALL_PAGE_SIZE,
+  CursorDirection,
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+} from '../../../core/models/api.models';
 
 export type PaginationNavigateEvent =
   | { direction: CursorDirection; cursor: string }
-  | { direction: 'next' | 'prev'; cursor?: string; url?: string };
+  | { direction: 'next' | 'prev'; cursor?: string; url?: string }
+  | { pageSize: number };
 
 @Component({
   selector: 'signet-pagination',
@@ -11,10 +17,15 @@ export type PaginationNavigateEvent =
   styleUrl: './pagination.component.less',
 })
 export class PaginationComponent {
+  readonly pageSizeSelectOptions = [
+    ...PAGE_SIZE_OPTIONS.map((size) => ({ key: String(size), value: String(size) })),
+    { key: String(ALL_PAGE_SIZE), value: 'All' },
+  ];
+
   @Input() width: number | string = '100';
   @Input() widthUnit: 'px' | '%' | 'rem' | 'em' = '%';
   @Input() heightUnit: 'px' | '%' | 'rem' | 'em' = 'px';
-  @Input() height: number = 47;
+  @Input() height: number = 56;
 
   /** Legacy URL-based tokens (kept for backward compatibility). */
   @Input() previousUrl: string = '';
@@ -28,7 +39,7 @@ export class PaginationComponent {
   @Input() pageSize: number = DEFAULT_PAGE_SIZE;
   @Input() showPageSize = true;
 
-  /** Emits cursor navigation intent. */
+  /** Emits cursor navigation intent or page-size changes. */
   @Output() readonly pageChange = new EventEmitter<PaginationNavigateEvent>();
 
   /** Legacy navigate emitter (URL string). */
@@ -46,6 +57,22 @@ export class PaginationComponent {
       return this.hasNext && Boolean(this.nextCursor);
     }
     return Boolean(this.nextUrl) && this.nextUrl !== 'None';
+  }
+
+  get selectedPageSize(): number {
+    if (this.pageSize >= ALL_PAGE_SIZE) {
+      return ALL_PAGE_SIZE;
+    }
+    return this.pageSize || DEFAULT_PAGE_SIZE;
+  }
+
+  onPageSizeChange(value: string | number | { key: string; value: string }): void {
+    const raw = typeof value === 'object' && value != null ? value.key : value;
+    const pageSize = Number(raw);
+    if (!Number.isFinite(pageSize) || pageSize <= 0 || pageSize === this.pageSize) {
+      return;
+    }
+    this.pageChange.emit({ pageSize });
   }
 
   onPrevious(): void {
