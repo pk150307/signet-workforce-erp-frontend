@@ -20,7 +20,7 @@
   margin: 0 0 16px;
   font-size: 12px;
   color: var(--color-text-muted);
-  font-family: 'Courier New', monospace;
+  font-family: ProximaNova-Medium, sans-serif;
 }
 
 .pf-esic-bulk-wizard__upload {
@@ -28,6 +28,13 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.pf-esic-bulk-wizard__upload-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
 }
 
 .pf-esic-bulk-wizard__filename {
@@ -118,3 +125,8 @@
 });
 
 .list-page-responsive(720px);
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 718) * 110) calc(calc(100% / 718) * 124) calc(calc(100% / 718) * 124) calc(calc(100% / 718) * 140) calc(calc(100% / 718) * 80) calc(calc(100% / 718) * 140);
+  --data-list-min-width: 718px;
+}

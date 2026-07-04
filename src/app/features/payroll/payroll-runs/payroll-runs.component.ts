@@ -1,32 +1,21 @@
 import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
-import { DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { PayrollService } from '../../../core/services/payroll.service';
 import { PayrollFilterService } from '../../../core/services/payroll-filter.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PayrollRunListItem, PayrollRunStatus, PAYROLL_STATUS_LABELS } from '../../../core/models/payroll.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { ApiDatePipe } from '../../../shared/pipes/api-date.pipe';
+import { CursorPageParams } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-payroll-runs',
-  standalone: true,
-  imports: [
-    NgIf, NgFor, NgClass, DecimalPipe, RouterLink, ReactiveFormsModule,
-    MatButtonModule, MatIconModule, MatFormFieldModule, MatSelectModule,
-    MatTableModule, MatChipsModule, MatTooltipModule, SkeletonLoaderComponent, EmptyStateComponent, ApiDatePipe,
-  ],
   templateUrl: './payroll-runs.component.html',
   styleUrl: './payroll-runs.component.less',
 })
@@ -35,10 +24,12 @@ export class PayrollRunsComponent implements OnInit {
   private readonly payrollFilter = inject(PayrollFilterService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notification = inject(NotificationService);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly processing = signal(false);
   readonly runs = signal<PayrollRunListItem[]>([]);
+  readonly pager = new CursorPaginationState();
   readonly displayedColumns = ['period', 'employees', 'gross', 'net', 'status', 'processed'];
 
   readonly months = Array.from({ length: 12 }, (_, i) => ({
@@ -46,6 +37,14 @@ export class PayrollRunsComponent implements OnInit {
     label: new Date(2000, i, 1).toLocaleString('en', { month: 'long' }),
   }));
   readonly years = [2024, 2025, 2026, 2027];
+
+  readonly monthOptions = computed(() =>
+    this.months.map(m => ({ key: String(m.value), value: m.label })),
+  );
+
+  readonly yearOptions = computed(() =>
+    this.years.map(y => ({ key: String(y), value: String(y) })),
+  );
 
   readonly processForm = new FormGroup({
     month: new FormControl(this.payrollFilter.month(), { nonNullable: true, validators: Validators.required }),
@@ -65,14 +64,37 @@ export class PayrollRunsComponent implements OnInit {
     this.loadRuns();
   }
 
-  loadRuns() {
+  loadRuns(params?: CursorPageParams) {
     this.loading.set(true);
-    this.payrollService.listRuns().pipe(
+    const pageParams = params ?? this.pager.firstPageParams();
+    this.payrollService.listRuns(pageParams).pipe(
       finalize(() => this.loading.set(false)),
     ).subscribe({
-      next: items => this.runs.set(items),
-      error: () => this.notification.error('Failed to load payroll runs.'),
+      next: result => {
+        this.runs.set(result.items);
+        this.pager.apply(result.pagination);
+      },
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.loadRuns(this.pager.firstPageParams());
+          return;
+        }
+        this.runs.set([]);
+        this.pager.reset();
+        this.notification.error('Failed to load payroll runs.');
+      },
     });
+  }
+
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.loadRuns(p);
+      return;
+    }
+    const p = this.pager.prevPageParams();
+    if (p) this.loadRuns(p);
   }
 
   processPayroll() {
@@ -85,7 +107,8 @@ export class PayrollRunsComponent implements OnInit {
     ).subscribe({
       next: () => {
         this.notification.success(`Payroll for ${month}/${year} processed successfully.`);
-        this.loadRuns();
+        this.pager.reset();
+        this.loadRuns(this.pager.firstPageParams());
       },
       error: (err) => {
         this.notification.error(err?.error?.message ?? err?.error?.title ?? 'Payroll processing failed.');

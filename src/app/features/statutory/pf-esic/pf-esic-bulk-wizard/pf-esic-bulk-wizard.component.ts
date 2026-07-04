@@ -1,21 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
-import { NgClass } from '@angular/common';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatStepperModule } from '@angular/material/stepper';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 import { PfEsicService } from '../../../../core/services/pf-esic.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { PfEsicBulkUpdateItem, PfEsicStatus } from '../../../../core/models/pf-esic.models';
-
 export interface PfEsicBulkWizardData {
   mode: 'update' | 'import';
 }
@@ -31,22 +22,7 @@ const STATUS_VALUES: PfEsicStatus[] = ['Active', 'Inactive', 'Pending', 'Suspend
 
 @Component({
   selector: 'app-pf-esic-bulk-wizard',
-  standalone: true,
-  imports: [
-    NgClass,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatStepperModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTableModule,
-    MatDividerModule,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './pf-esic-bulk-wizard.component.html',
+    templateUrl: './pf-esic-bulk-wizard.component.html',
   styleUrl: './pf-esic-bulk-wizard.component.less',
 })
 export class PfEsicBulkWizardComponent {
@@ -61,7 +37,9 @@ export class PfEsicBulkWizardComponent {
   readonly parsedRows = signal<ParsedRow[]>([]);
   readonly selectedFile = signal<File | null>(null);
 
-  readonly statusOptions = STATUS_VALUES;
+  readonly statusOptions = computed(() =>
+    STATUS_VALUES.map(s => ({ key: s, value: s })),
+  );
   readonly previewColumns = ['employeeCode', 'uanNumber', 'pfNumber', 'esicNumber', 'status', 'errors'];
 
   readonly manualForm = this.fb.group({

@@ -1,19 +1,7 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
 import { NgClass, NgFor, NgIf, DatePipe, DecimalPipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
+import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -26,8 +14,13 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { PaginatedResult } from '../../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../../library/components/pagination/pagination.component';
 import { PayslipListItem, PayslipStatus } from '../../../../core/models/payslip.models';
 import { ClientListItem } from '../../../../core/models/client.models';
 import {
@@ -35,7 +28,6 @@ import {
   PAYSLIP_STATUS_OPTIONS,
   getPayslipStatusClass,
 } from '../payslip.mock';
-
 interface PayslipStatusAction {
   status: PayslipStatus;
   label: string;
@@ -44,31 +36,7 @@ interface PayslipStatusAction {
 
 @Component({
   selector: 'app-payslip-list',
-  standalone: true,
-  imports: [
-    NgIf,
-    NgFor,
-    NgClass,
-    DatePipe,
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatDividerModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatTooltipModule,
-    EmptyStateComponent,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './payslip-list.component.html',
+    templateUrl: './payslip-list.component.html',
   styleUrl: './payslip-list.component.less',
 })
 export class PayslipListComponent implements OnInit {
@@ -80,11 +48,12 @@ export class PayslipListComponent implements OnInit {
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly downloadingPdf = signal(false);
-  readonly data = signal<PaginatedResult<PayslipListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<PayslipListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly clients = signal<ClientListItem[]>([]);
   readonly selection = new SelectionModel<PayslipListItem>(true, []);
 
@@ -92,22 +61,33 @@ export class PayslipListComponent implements OnInit {
   readonly years = this.buildYearOptions();
   readonly statusOptions = PAYSLIP_STATUS_OPTIONS;
 
+  readonly monthOptions = computed(() =>
+    this.months.map(m => ({ key: String(m.value), value: m.label })),
+  );
+
+  readonly yearOptions = computed(() =>
+    this.years.map(y => ({ key: String(y), value: String(y) })),
+  );
+
+  readonly clientOptions = computed(() => [
+    { key: '', value: 'All Clients' },
+    ...this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  ]);
+
   readonly searchCtrl = new FormControl('');
   readonly monthCtrl = new FormControl<number | null>(this.payrollFilter.month());
   readonly yearCtrl = new FormControl<number | null>(this.payrollFilter.year());
   readonly clientCtrl = new FormControl<string | null>(this.payrollFilter.clientId());
   readonly statusCtrl = new FormControl<PayslipStatus | null>(null);
 
-  readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
+  readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'client', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
 
-  page = 1;
-  pageSize = 20;
 
   ngOnInit() {
     this.payrollFilter.bindControls(
       { month: this.monthCtrl, year: this.yearCtrl, clientId: this.clientCtrl },
       this.destroyRef,
-      () => { this.page = 1; this.loadData(); },
+      () => { this.pager.reset(); this.loadData(this.pager.firstPageParams()); },
     );
 
     this.loadData();
@@ -117,34 +97,46 @@ export class PayslipListComponent implements OnInit {
     });
 
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.loadData();
+      this.pager.reset();
+      this.loadData(this.pager.firstPageParams());
     });
 
-    this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
+    this.statusCtrl.valueChanges.subscribe(() => { this.pager.reset(); this.loadData(this.pager.firstPageParams()); });
   }
 
-  loadData() {
+  loadData(params?: CursorPageParams) {
     this.loading.set(true);
     this.selection.clear();
+    const pageParams = params ?? this.pager.firstPageParams();
 
-    this.payslipService.getAll(this.currentQuery()).subscribe({
+    this.payslipService.getAll({ ...this.currentQuery(), ...pageParams }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.loading.set(false);
       },
-      error: () => {
-        this.data.set({ items: [], page: 1, pageSize: this.pageSize, totalCount: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false });
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.loadData(this.pager.firstPageParams());
+          return;
+        }
+        this.data.set(emptyCursorPage(this.pager.pageSize));
+        this.pager.reset();
         this.loading.set(false);
         this.notification.error('Failed to load payslips.');
       },
     });
   }
 
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.loadData();
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.loadData(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.loadData(p);
+    }
   }
 
   setStatusFilter(status: PayslipStatus | null) {
@@ -164,7 +156,29 @@ export class PayslipListComponent implements OnInit {
     }
   }
 
+  onRowSelect(row: PayslipListItem, event: { checked: boolean }) {
+    if (event.checked) {
+      this.selection.select(row);
+    } else {
+      this.selection.deselect(row);
+    }
+  }
+
   getStatusClass = getPayslipStatusClass;
+
+  clientLabel(row: PayslipListItem): string {
+    if (row.clientName?.trim()) return row.clientName.trim();
+    if (row.clientId) {
+      const match = this.clients().find(c => String(c.id) === String(row.clientId));
+      if (match?.companyName) return match.companyName;
+    }
+    const filterClientId = this.clientCtrl.value;
+    if (filterClientId) {
+      const match = this.clients().find(c => String(c.id) === String(filterClientId));
+      if (match?.companyName) return match.companyName;
+    }
+    return '—';
+  }
 
   viewPayslip(id: string) {
     this.router.navigate(['/payroll/payslips', id]);
@@ -355,7 +369,7 @@ export class PayslipListComponent implements OnInit {
       search: this.searchCtrl.value || undefined,
       month: this.monthCtrl.value ?? undefined,
       year: this.yearCtrl.value ?? undefined,
-      clientId: this.clientCtrl.value ?? undefined,
+      clientId: this.clientCtrl.value || undefined,
       status: this.statusCtrl.value ?? undefined,
     };
   }

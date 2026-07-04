@@ -1,62 +1,36 @@
-import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PfEsicService } from '../../../../core/services/pf-esic.service';
 import { ClientsService } from '../../../../core/services/clients.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { PaginatedResult } from '../../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../../library/components/pagination/pagination.component';
 import { ClientListItem } from '../../../../core/models/client.models';
 import { PfEsicEmployee, PfEsicQueryParams, PfEsicStatus } from '../../../../core/models/pf-esic.models';
 import { EmployeeStatus, EMPLOYEE_STATUS_LABELS } from '../../../../core/models/employee.models';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { PfEsicDrawerComponent } from '../pf-esic-drawer/pf-esic-drawer.component';
 import { PfEsicBulkWizardComponent, PfEsicBulkWizardData } from '../pf-esic-bulk-wizard/pf-esic-bulk-wizard.component';
 import { featureDialogConfig } from '../../../../core/utils/dialog.util';
+import { paginateMock } from '../../../../core/utils/mock-pagination.util';
 
 type TriStateFilter = 'all' | 'yes' | 'no';
 
 @Component({
   selector: 'app-pf-esic-list',
-  standalone: true,
-  imports: [
-    NgClass,
-    DatePipe,
-    DecimalPipe,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSidenavModule,
-    MatTooltipModule,
-    EmptyStateComponent,
-    SkeletonLoaderComponent,
-    PfEsicDrawerComponent,
-  ],
-  templateUrl: './pf-esic-list.component.html',
+    templateUrl: './pf-esic-list.component.html',
   styleUrl: './pf-esic-list.component.less',
 })
 export class PfEsicListComponent implements OnInit {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
   private readonly pfEsicService = inject(PfEsicService);
   private readonly clientsService = inject(ClientsService);
@@ -66,7 +40,8 @@ export class PfEsicListComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal(false);
   readonly usingMockData = signal(false);
-  readonly data = signal<PaginatedResult<PfEsicEmployee> | null>(null);
+  readonly data = signal<CursorPaginatedResult<PfEsicEmployee> | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly drawerOpen = signal(false);
   readonly selectedEmployeeId = signal<string | null>(null);
 
@@ -87,15 +62,34 @@ export class PfEsicListComponent implements OnInit {
     'pfNumber',
     'esicNumber',
     'status',
-    'effectiveDate',
+    'effectiveDate'
   ];
 
   readonly statusOptions: PfEsicStatus[] = ['Active', 'Inactive', 'Pending', 'Suspended'];
-  readonly employeeStatusOptions = Object.entries(EMPLOYEE_STATUS_LABELS).map(([k, v]) => ({
-    value: +k as EmployeeStatus,
-    label: v,
-  }));
-  readonly triStateOptions: { value: TriStateFilter; label: string }[] = [
+
+  readonly clientOptions = computed(() => [
+    { key: '', value: 'All Clients' },
+    ...this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  ]);
+
+  readonly employeeStatusOptions = computed(() => [
+    { key: 'all', value: 'All Statuses' },
+    ...Object.entries(EMPLOYEE_STATUS_LABELS).map(([k, v]) => ({
+      key: String(k),
+      value: v,
+    })),
+  ]);
+
+  readonly pfEsicStatusOptions = computed(() => [
+    { key: '', value: 'All PF/ESIC Statuses' },
+    ...this.statusOptions.map(s => ({ key: s, value: s })),
+  ]);
+
+  readonly triStateOptions = computed(() =>
+    this.triStateFilterOptions.map(opt => ({ key: opt.value, value: opt.label })),
+  );
+
+  private readonly triStateFilterOptions: { value: TriStateFilter; label: string }[] = [
     { value: 'all', label: 'All' },
     { value: 'yes', label: 'Yes' },
     { value: 'no', label: 'No' },
@@ -103,8 +97,6 @@ export class PfEsicListComponent implements OnInit {
 
   readonly clients = signal<ClientListItem[]>([]);
 
-  page = 1;
-  pageSize = 20;
   sortBy = 'fullName';
   sortDir: 'asc' | 'desc' = 'asc';
 
@@ -114,37 +106,44 @@ export class PfEsicListComponent implements OnInit {
     this.loadData();
 
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.loadData();
+      this.pager.reset();
+      this.loadData(this.pager.firstPageParams());
     });
 
     this.employeeStatusCtrl.valueChanges.subscribe(() => {
-      this.page = 1;
-      this.loadData();
+      this.pager.reset();
+      this.loadData(this.pager.firstPageParams());
     });
 
     [this.statusCtrl, this.clientCtrl, this.hasUanCtrl, this.hasPfCtrl, this.hasEsicCtrl].forEach(ctrl => {
       ctrl.valueChanges.subscribe(() => {
-        this.page = 1;
-        this.loadData();
+        this.pager.reset();
+        this.loadData(this.pager.firstPageParams());
       });
     });
   }
 
-  loadData(): void {
+  loadData(pageParams?: CursorPageParams): void {
     this.loading.set(true);
     this.error.set(false);
 
-    const params = this.buildQueryParams();
+    const params = this.buildQueryParams(pageParams ?? this.pager.firstPageParams());
     this.pfEsicService.getAll(params).subscribe({
       next: result => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.usingMockData.set(false);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.loadData(this.pager.firstPageParams());
+          return;
+        }
         const mock = this.getMockData(params);
         this.data.set(mock);
+        this.pager.apply(mock.pagination);
         this.usingMockData.set(true);
         this.error.set(true);
         this.loading.set(false);
@@ -153,18 +152,29 @@ export class PfEsicListComponent implements OnInit {
     });
   }
 
-  onPageChange(event: PageEvent): void {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.loadData(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.loadData(p);
+    }
+  }
+
+  toggleSort(active: string): void {
+    if (this.sortBy === active) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = active;
+      this.sortDir = 'asc';
+    }
     this.loadData();
   }
 
-  onSortChange(sort: { active: string; direction: 'asc' | 'desc' | '' }): void {
-    if (sort.direction) {
-      this.sortBy = sort.active;
-      this.sortDir = sort.direction;
-    }
-    this.loadData();
+  sortIcon(active: string): string {
+    if (this.sortBy !== active) return 'unfold_more';
+    return this.sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward';
   }
 
   openDrawer(employee: PfEsicEmployee): void {
@@ -247,16 +257,15 @@ export class PfEsicListComponent implements OnInit {
     });
   }
 
-  private buildQueryParams(): PfEsicQueryParams {
+  private buildQueryParams(pageParams: CursorPageParams = this.pager.firstPageParams()): PfEsicQueryParams {
     return {
-      page: this.page,
-      pageSize: this.pageSize,
+      ...pageParams,
       search: this.searchCtrl.value || undefined,
       employeeStatus: this.employeeStatusCtrl.value === 'all'
         ? 'all'
         : (this.employeeStatusCtrl.value ?? EmployeeStatus.Active),
-      status: this.statusCtrl.value ?? undefined,
-      clientId: this.clientCtrl.value ?? undefined,
+      status: (this.statusCtrl.value as PfEsicStatus | '' | null) || undefined,
+      clientId: this.clientCtrl.value || undefined,
       hasUan: this.triToBool(this.hasUanCtrl.value),
       hasPf: this.triToBool(this.hasPfCtrl.value),
       hasEsic: this.triToBool(this.hasEsicCtrl.value),
@@ -278,7 +287,7 @@ export class PfEsicListComponent implements OnInit {
     return undefined;
   }
 
-  private getMockData(params: PfEsicQueryParams): PaginatedResult<PfEsicEmployee> {
+  private getMockData(params: PfEsicQueryParams): CursorPaginatedResult<PfEsicEmployee> {
     let items = this.getAllMockEmployees();
 
     if (params.search) {
@@ -323,22 +332,11 @@ export class PfEsicListComponent implements OnInit {
       return av.localeCompare(bv) * dir;
     });
 
-    const page = params.page ?? 1;
-    const pageSize = params.pageSize ?? 20;
-    const start = (page - 1) * pageSize;
-    const paged = items.slice(start, start + pageSize);
-    const totalCount = items.length;
-    const totalPages = Math.ceil(totalCount / pageSize) || 1;
-
-    return {
-      items: paged,
-      page,
-      pageSize,
-      totalCount,
-      totalPages,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages,
-    };
+    return paginateMock(items, {
+      pageSize: params.pageSize ?? this.pager.pageSize,
+      cursor: params.cursor,
+      direction: params.direction,
+    }, ['fullName', 'employeeCode']);
   }
 
   private getAllMockEmployees(): PfEsicEmployee[] {
@@ -429,7 +427,7 @@ export class PfEsicListComponent implements OnInit {
         pfNumber: 'GJ/AHD/3333333/000/3333333',
         esicNumber: '33333333333333333',
         status: 'Suspended',
-      },
-    ];
+      }
+  ];
   }
 }

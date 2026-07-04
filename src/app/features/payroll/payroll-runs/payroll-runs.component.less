@@ -25,9 +25,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: flex-start;
+  align-items: flex-end;
 
-  mat-form-field { min-width: 140px; }
+  signet-search-select-dropdown { min-width: 140px; }
 }
 
 .status-pill {
@@ -37,9 +37,9 @@
   font-size: 12px;
   font-weight: 600;
 
-  &.status--success { background: #e8f5e9; color: #2e7d32; }
-  &.status--warn { background: #fff3e0; color: #e65100; }
-  &.status--muted { background: #f5f5f5; color: #616161; }
+  &.status--success { background: var(--badge-success-bg); color: var(--badge-success-fg); }
+  &.status--warn { background: var(--badge-warning-bg); color: var(--badge-warning-fg); }
+  &.status--muted { background: var(--badge-neutral-bg); color: var(--badge-neutral-fg); }
 }
 
 .billing-ready {
@@ -48,7 +48,7 @@
   height: 16px;
   vertical-align: middle;
   margin-left: 4px;
-  color: #2e7d32;
+  color: var(--badge-success-fg);
 }
 
 .muted { color: var(--color-text-muted); }
@@ -57,3 +57,8 @@
   .kpi-grid { grid-template-columns: 1fr; }
   .process-form button { width: 100%; }
 });
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 678) * 160) calc(calc(100% / 678) * 80) calc(calc(100% / 678) * 104) calc(calc(100% / 678) * 104) calc(calc(100% / 678) * 130) calc(calc(100% / 678) * 100);
+  --data-list-min-width: 678px;
+}

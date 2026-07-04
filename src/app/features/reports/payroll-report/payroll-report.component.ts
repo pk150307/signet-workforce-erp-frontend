@@ -1,17 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { KeyValuePipe, NgFor, NgIf } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { ReportsService } from '../../../core/services/reports.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PayrollReportData } from '../../../core/models/reports.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-payroll-report',
-  standalone: true,
-  imports: [NgIf, NgFor, KeyValuePipe, MatButtonModule, MatIconModule, SkeletonLoaderComponent, EmptyStateComponent],
   templateUrl: './payroll-report.component.html',
   styleUrl: './payroll-report.component.less',
 })
@@ -29,7 +22,31 @@ export class PayrollReportComponent implements OnInit {
     this.loading.set(true);
     this.reportsService.getPayrollReport().subscribe({
       next: (data) => { this.report.set(data); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.notification.info('Showing sample report data.'); },
+      error: () => {
+        this.report.set(null);
+        this.loading.set(false);
+        this.notification.error('Failed to load payroll report.');
+      },
     });
+  }
+
+  formatSummaryLabel(key: string): string {
+    const labels: Record<string, string> = {
+      grossPay: 'Gross Pay',
+      deductions: 'Deductions',
+      netPay: 'Net Pay',
+      employeeCount: 'Employees',
+    };
+    return labels[key] ?? key;
+  }
+
+  formatSummaryValue(key: string, value: unknown): string {
+    if (key === 'employeeCount') return String(value ?? 0);
+    const amount = Number(value ?? 0);
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(Number.isFinite(amount) ? amount : 0);
   }
 }

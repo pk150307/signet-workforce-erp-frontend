@@ -3,7 +3,7 @@
 @import '../../../shared/styles/module-layout.less';
 
 .code-chip {
-  font-family: monospace;
+  font-family: ProximaNova-Medium, sans-serif;
   background: var(--color-divider);
   padding: 2px 8px;
   border-radius: 4px;
@@ -37,4 +37,9 @@
     max-width: none !important;
     flex: 1 1 100% !important;
   });
+}
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 768) * 110) calc(calc(100% / 768) * 130) calc(calc(100% / 768) * 150) calc(calc(100% / 768) * 72) calc(calc(100% / 768) * 90) calc(calc(100% / 768) * 72) calc(calc(100% / 768) * 100) calc(calc(100% / 768) * 44);
+  --data-list-min-width: 768px;
 }

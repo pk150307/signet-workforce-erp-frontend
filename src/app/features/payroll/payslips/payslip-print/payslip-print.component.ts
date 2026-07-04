@@ -1,29 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
 import { PayslipPdfService } from '../../../../core/services/payslip-pdf.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { PayslipDetail } from '../../../../core/models/payslip.models';
-import { PayslipDocumentComponent } from '../payslip-document/payslip-document.component';
 
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-payslip-print',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    PayslipDocumentComponent,
-  ],
-  templateUrl: './payslip-print.component.html',
+    templateUrl: './payslip-print.component.html',
   styleUrl: './payslip-print.component.less',
 })
 export class PayslipPrintComponent implements OnInit {

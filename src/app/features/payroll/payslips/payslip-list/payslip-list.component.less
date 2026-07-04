@@ -2,9 +2,45 @@
 @import '../../../../shared/styles/breakpoints.less';
 @import '../../../../shared/styles/module-layout.less';
 
+.payslip-list__filters {
+  width: 100%;
+  box-sizing: border-box;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: 16px;
+  margin-bottom: 0;
+
+  .payslip-list__filter-field,
+  signet-search-select-dropdown,
+  signet-search-input {
+    flex: 1 1 0;
+    min-width: 0;
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+
+  .payslip-list__filter-clear {
+    flex: 0 0 auto;
+    align-self: flex-end;
+    min-width: 120px;
+  }
+
+  .mobile-down({
+    flex-direction: column;
+    align-items: stretch;
+
+    .payslip-list__filter-field,
+    signet-search-select-dropdown,
+    signet-search-input {
+      flex: 1 1 100%;
+    }
+  });
+}
+
 .emp-code {
   font-size: 12px;
-  font-family: 'Courier New', monospace;
+  font-family: ProximaNova-Medium, sans-serif;
   background: var(--color-divider);
   padding: 2px 8px;
   border-radius: 4px;
@@ -52,3 +88,8 @@
 }
 
 .list-page-responsive(880px);
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 900) * 44) calc(calc(100% / 900) * 76) calc(calc(100% / 900) * 140) calc(calc(100% / 900) * 140) calc(calc(100% / 900) * 100) calc(calc(100% / 900) * 100) calc(calc(100% / 900) * 100) calc(calc(100% / 900) * 100) calc(calc(100% / 900) * 100);
+  --data-list-min-width: 900px;
+}

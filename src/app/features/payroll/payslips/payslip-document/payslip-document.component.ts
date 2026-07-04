@@ -8,9 +8,7 @@ import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
 
 @Component({
   selector: 'app-payslip-document',
-  standalone: true,
-  imports: [NgIf, NgFor, DecimalPipe, ApiDatePipe],
-  templateUrl: './payslip-document.component.html',
+    templateUrl: './payslip-document.component.html',
   styleUrl: './payslip-document.component.less',
 })
 export class PayslipDocumentComponent implements OnInit {

@@ -2,9 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { NgClass, NgFor, NgIf, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
@@ -13,7 +11,6 @@ import { BreadcrumbService } from '../../../../core/services/breadcrumb.service'
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
 import { PayslipDetail, PayslipStatus } from '../../../../core/models/payslip.models';
 import { PAYSLIP_MONTHS, getPayslipStatusClass } from '../payslip.mock';
@@ -28,28 +25,13 @@ interface StatusAction {
 
 @Component({
   selector: 'app-payslip-detail',
-  standalone: true,
-  imports: [
-    NgIf,
-    NgFor,
-    NgClass,
-    DecimalPipe,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatMenuModule,
-    SkeletonLoaderComponent,
-    ApiDatePipe,
-    PayslipDocumentComponent,
-  ],
-  templateUrl: './payslip-detail.component.html',
+    templateUrl: './payslip-detail.component.html',
   styleUrl: './payslip-detail.component.less',
 })
 export class PayslipDetailComponent implements OnInit {
 
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly payslipService = inject(PayslipService);
   private readonly payslipPdfService = inject(PayslipPdfService);
   private readonly breadcrumbService = inject(BreadcrumbService);

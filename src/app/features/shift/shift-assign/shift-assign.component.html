@@ -4,9 +4,7 @@
       <h1 class="page-header__title">Bulk Shift Assignment</h1>
       <p class="page-header__subtitle">Assign a shift to multiple employees at once</p>
     </div>
-    <button mat-stroked-button routerLink="/shifts">
-      <mat-icon>arrow_back</mat-icon> Back to Shifts
-    </button>
+    <a routerLink="/shifts" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Shifts" /></a>
   </div>
 
   <app-skeleton-loader *ngIf="loading() || saving()" type="table" [rows]="6"></app-skeleton-loader>
@@ -15,79 +13,66 @@
     <div class="card assign-config">
       <form [formGroup]="form">
         <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Shift *</mat-label>
-            <mat-select formControlName="shiftId">
-              <mat-option *ngFor="let s of shifts()" [value]="s.id">
-                {{ s.shiftName }} ({{ s.startTime }} – {{ s.endTime }})
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Effective From *</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="effectiveFrom">
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
+          <signet-search-select-dropdown
+            formControlName="shiftId"
+            fieldTitle="Shift"
+            placeholder="Select shift"
+            [options]="shiftOptions()"
+            [width]="100"
+            widthUnit="%"
+            [searchFunctionality]="true"
+            [required]="true"
+          />
+          <signet-date-input-field
+            fieldTitle="Effective From"
+            placeholder="Select date"
+            [value]="effectiveFromValue"
+            (valueChange)="onEffectiveFromChange($event)"
+            [required]="true"
+            [width]="100"
+            widthUnit="%"
+          />
         </div>
       </form>
     </div>
 
     <div class="filter-bar">
-      <mat-form-field appearance="outline" class="filter-bar__search">
-        <mat-label>Search employees...</mat-label>
-        <mat-icon matPrefix>search</mat-icon>
-        <input matInput [formControl]="searchCtrl">
-      </mat-form-field>
+      <signet-custom-text-field class="filter-bar__search" fieldTitle="Search" [formControl]="searchCtrl" placeholder="Search employees..." [required]="false" />
       <div class="filter-bar__actions">
         <span class="selection-count">{{ selectedIds().size }} selected</span>
       </div>
     </div>
 
     <div class="card card--flush">
-      <div class="table-scroll">
-      <mat-table [dataSource]="filteredEmployees">
-        <ng-container matColumnDef="select">
-          <mat-header-cell *matHeaderCellDef>
-            <mat-checkbox
-              [checked]="allSelected()"
-              (change)="toggleAll($event.checked)">
-            </mat-checkbox>
-          </mat-header-cell>
-          <mat-cell *matCellDef="let e">
-            <mat-checkbox
-              [checked]="isSelected(e.id)"
-              (change)="toggleEmployee(e.id)">
-            </mat-checkbox>
-          </mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="employeeCode">
-          <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-          <mat-cell *matCellDef="let e"><span class="code-chip">{{ e.employeeCode }}</span></mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="fullName">
-          <mat-header-cell *matHeaderCellDef>Employee</mat-header-cell>
-          <mat-cell *matCellDef="let e"><strong>{{ e.fullName }}</strong></mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="department">
-          <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
-          <mat-cell *matCellDef="let e">{{ e.department }}</mat-cell>
-        </ng-container>
-        <ng-container matColumnDef="currentShift">
-          <mat-header-cell *matHeaderCellDef>Current Shift</mat-header-cell>
-          <mat-cell *matCellDef="let e">{{ e.currentShift || '—' }}</mat-cell>
-        </ng-container>
-        <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-      </mat-table>
+      <div class="data-list-scroll" *ngIf="filteredEmployees.length > 0">
+        <div class="data-list">
+          <div class="data-list__header">
+            <div class="data-list__cell data-list__cell--center">
+              <signet-custom-checkbox [checked]="allSelected()" (permissionToggled)="toggleAll($event.checked)" label="" permissionKey="all" groupName="shift" />
+            </div>
+            <div class="data-list__cell">Code</div>
+            <div class="data-list__cell">Employee</div>
+            <div class="data-list__cell">Department</div>
+            <div class="data-list__cell">Current Shift</div>
+          </div>
+          @for (e of filteredEmployees; track e.id) {
+            <div class="data-list__row">
+              <div class="data-list__cell data-list__cell--center">
+                <signet-custom-checkbox [checked]="isSelected(e.id)" (permissionToggled)="toggleEmployee(e.id)" label="" permissionKey="emp" groupName="shift" />
+              </div>
+              <div class="data-list__cell"><span class="code-chip">{{ e.employeeCode }}</span></div>
+              <div class="data-list__cell"><strong>{{ e.fullName }}</strong></div>
+              <div class="data-list__cell">{{ e.department }}</div>
+              <div class="data-list__cell">{{ e.currentShift || '—' }}</div>
+            </div>
+          }
+        </div>
       </div>
     </div>
 
     <div class="form-actions">
-      <button mat-stroked-button type="button" (click)="router.navigate(['/shifts'])">Cancel</button>
-      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
-        Assign Shift ({{ selectedIds().size }})
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="router.navigate(['/shifts'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Assign Shift ({{ selectedIds().size }})" [disabled]="saving()" (clicked)="onSubmit()" />
     </div>
   </div>
 </div>

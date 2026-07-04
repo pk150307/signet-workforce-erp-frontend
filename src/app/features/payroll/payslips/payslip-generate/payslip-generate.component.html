@@ -5,9 +5,7 @@
       <p class="page-header__subtitle">Select period and employees, then generate salary slips from payroll data</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button routerLink="/payroll/payslips">
-        <mat-icon>arrow_back</mat-icon> Back
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="router.navigate(['/payroll/payslips'])" />
     </div>
   </div>
 
@@ -15,33 +13,43 @@
     <mat-card class="filters-card">
       <form [formGroup]="form">
         <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Month</mat-label>
-            <mat-select formControlName="month">
-              <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <signet-search-select-dropdown
+            formControlName="month"
+            fieldTitle="Month"
+            placeholder="Select month"
+            [options]="monthOptions()"
+            [searchFunctionality]="false"
+            [width]="100"
+            widthUnit="%"
+          />
 
-          <mat-form-field appearance="outline">
-            <mat-label>Year</mat-label>
-            <mat-select formControlName="year">
-              <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <signet-search-select-dropdown
+            formControlName="year"
+            fieldTitle="Year"
+            placeholder="Select year"
+            [options]="yearOptions()"
+            [searchFunctionality]="false"
+            [width]="100"
+            widthUnit="%"
+          />
 
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Client</mat-label>
-            <mat-select formControlName="clientId">
-              <mat-option [value]="null">All Clients</mat-option>
-              <mat-option *ngFor="let c of clients()" [value]="c.id">{{ c.companyName }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <signet-search-select-dropdown
+            formControlName="clientId"
+            class="span-2"
+            fieldTitle="Client"
+            placeholder="All clients"
+            [options]="clientOptions()"
+            [required]="false"
+            [width]="100"
+            widthUnit="%"
+          />
 
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Search employee</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <input matInput [formControl]="searchCtrl" placeholder="Name or employee code">
-          </mat-form-field>
+          <signet-search-input
+            class="span-2"
+            [searchValue]="searchCtrl.value ?? ''"
+            (searchValueChange)="searchCtrl.setValue($event)"
+            placeholder="Name or employee code"
+          />
         </div>
       </form>
     </mat-card>
@@ -52,50 +60,54 @@
           <h3>Employees</h3>
           <p>{{ filteredEmployees().length }} active employee(s) · {{ selection.selected.length }} selected</p>
         </div>
-        <button mat-raised-button color="primary" (click)="generate()" [disabled]="generating() || loadingEmployees() || !filteredEmployees().length">
-          <mat-icon>play_arrow</mat-icon>
-          {{ generating() ? 'Generating…' : 'Generate Payslips' }}
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'"
+          type="primary"
+          [displayText]="generating() ? 'Generating…' : 'Generate Payslips'"
+          [disabled]="generating() || loadingEmployees() || !filteredEmployees().length"
+          (clicked)="generate()"
+        />
       </div>
 
       <app-skeleton-loader *ngIf="loadingEmployees()" type="table" [rows]="6"></app-skeleton-loader>
 
-      <div class="table-scroll">
-      <mat-table [dataSource]="filteredEmployees()" *ngIf="!loadingEmployees() && filteredEmployees().length">
-        <ng-container matColumnDef="select">
-          <mat-header-cell *matHeaderCellDef>
-            <mat-checkbox [checked]="isAllSelected()" (change)="toggleAllRows()"></mat-checkbox>
-          </mat-header-cell>
-          <mat-cell *matCellDef="let row">
-            <mat-checkbox (click)="$event.stopPropagation()"
-                          [checked]="selection.isSelected(row)"
-                          (change)="selection.toggle(row)"></mat-checkbox>
-          </mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="employeeCode">
-          <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-          <mat-cell *matCellDef="let row"><span class="emp-code">{{ row.employeeCode }}</span></mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="employeeName">
-          <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-          <mat-cell *matCellDef="let row">{{ row.fullName }}</mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="department">
-          <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
-          <mat-cell *matCellDef="let row">{{ row.department }}</mat-cell>
-        </ng-container>
-
-        <ng-container matColumnDef="siteName">
-          <mat-header-cell *matHeaderCellDef>Site</mat-header-cell>
-          <mat-cell *matCellDef="let row">{{ row.siteName || '—' }}</mat-cell>
-        </ng-container>
-
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-      </mat-table>
+      <div class="data-list-scroll" *ngIf="!loadingEmployees() && filteredEmployees().length">
+        <div class="data-list">
+          <div class="data-list__header">
+            <div class="data-list__cell data-list__cell--center">
+              <signet-custom-checkbox
+                permissionKey="selectAll"
+                label=""
+                [checked]="isAllSelected()"
+                [required]="false"
+                groupName="employeeSelect"
+                (permissionToggled)="toggleAllRows()"
+              />
+            </div>
+            <div class="data-list__cell">Code</div>
+            <div class="data-list__cell">Name</div>
+            <div class="data-list__cell">Department</div>
+            <div class="data-list__cell">Site</div>
+          </div>
+          @for (row of filteredEmployees(); track row.id) {
+            <div class="data-list__row">
+              <div class="data-list__cell data-list__cell--center">
+                <signet-custom-checkbox
+                  [permissionKey]="row.id"
+                  label=""
+                  [checked]="selection.isSelected(row)"
+                  [required]="false"
+                  groupName="employeeSelect"
+                  (click)="$event.stopPropagation()"
+                  (permissionToggled)="onRowSelect(row, $event)"
+                />
+              </div>
+              <div class="data-list__cell"><span class="emp-code">{{ row.employeeCode }}</span></div>
+              <div class="data-list__cell">{{ row.fullName }}</div>
+              <div class="data-list__cell">{{ row.department }}</div>
+              <div class="data-list__cell">{{ row.siteName || '—' }}</div>
+            </div>
+          }
+        </div>
       </div>
 
       <div class="empty-hint" *ngIf="!loadingEmployees() && !filteredEmployees().length">

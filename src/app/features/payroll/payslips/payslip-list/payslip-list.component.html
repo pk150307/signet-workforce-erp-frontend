@@ -3,64 +3,67 @@
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Payslip List</h1>
-      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 | number }} payslips</p>
+      <p class="page-header__subtitle">{{ data()?.items?.length ?? 0 | number }} payslips</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button (click)="loadData()" matTooltip="Refresh">
-        <mat-icon>refresh</mat-icon>
-      </button>
-      <button mat-stroked-button [disabled]="downloadingPdf()" (click)="downloadAllFiltered()">
-        <mat-icon>folder_zip</mat-icon> Download All
-      </button>
-      <button mat-stroked-button [disabled]="!selection.hasValue() || downloadingPdf()" (click)="bulkDownloadSelected()">
-        <mat-icon>download</mat-icon> Download Selected
-      </button>
-      <button mat-stroked-button [disabled]="!selection.hasValue()" (click)="bulkEmail()">
-        <mat-icon>email</mat-icon> Email
-      </button>
-      <button mat-raised-button color="primary" routerLink="/payroll/payslips/generate">
-        <mat-icon>add</mat-icon> Generate Payslips
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadData()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Download All" [disabled]="downloadingPdf()" (clicked)="downloadAllFiltered()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Download Selected" [disabled]="!selection.hasValue() || downloadingPdf()" (clicked)="bulkDownloadSelected()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Email" [disabled]="!selection.hasValue()" (clicked)="bulkEmail()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Generate Payslips" (clicked)="router.navigate(['/payroll/payslips/generate'])" />
     </div>
   </div>
 
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-bar__search">
-      <mat-label>Search employees...</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl" autocomplete="off">
-    </mat-form-field>
+  <div class="filter-bar card payslip-list__filters">
+    <signet-search-input
+      class="payslip-list__filter-field"
+      [searchValue]="searchCtrl.value ?? ''"
+      (searchValueChange)="searchCtrl.setValue($event)"
+      placeholder="Search employees..."
+      width="100%"
+    />
 
-    <div class="filter-bar__filters">
-      <mat-form-field appearance="outline" class="filter-field--inline">
-        <mat-label>Month</mat-label>
-        <mat-select [formControl]="monthCtrl">
-          <mat-option *ngFor="let m of months" [value]="m.value">{{ m.label }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <signet-search-select-dropdown
+      class="payslip-list__filter-field"
+      [formControl]="monthCtrl"
+      fieldTitle="Month"
+      placeholder="Select month"
+      [options]="monthOptions()"
+      [searchFunctionality]="false"
+      [width]="100"
+      widthUnit="%"
+    />
 
-      <mat-form-field appearance="outline" class="filter-field--inline">
-        <mat-label>Year</mat-label>
-        <mat-select [formControl]="yearCtrl">
-          <mat-option *ngFor="let y of years" [value]="y">{{ y }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <signet-search-select-dropdown
+      class="payslip-list__filter-field"
+      [formControl]="yearCtrl"
+      fieldTitle="Year"
+      placeholder="Select year"
+      [options]="yearOptions()"
+      [searchFunctionality]="false"
+      [width]="100"
+      widthUnit="%"
+    />
 
-      <mat-form-field appearance="outline" class="filter-field--inline">
-        <mat-label>Client</mat-label>
-        <mat-select [formControl]="clientCtrl">
-          <mat-option [value]="null">All Clients</mat-option>
-          <mat-option *ngFor="let c of clients()" [value]="c.id">{{ c.companyName }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
+    <signet-search-select-dropdown
+      class="payslip-list__filter-field"
+      [formControl]="clientCtrl"
+      fieldTitle="Client"
+      placeholder="All clients"
+      [options]="clientOptions()"
+      [required]="false"
+      [width]="100"
+      widthUnit="%"
+    />
 
-    <div class="filter-bar__actions">
-      <button mat-icon-button matTooltip="Clear filters" aria-label="Clear filters" (click)="clearFilters()"
-              *ngIf="searchCtrl.value || clientCtrl.value || statusCtrl.value">
-        <mat-icon>filter_alt_off</mat-icon>
-      </button>
-    </div>
+    <signet-button
+      class="payslip-list__filter-clear"
+      [width]="100"
+      [widthUnit]="'%'"
+      type="stroke"
+      displayText="Clear filters"
+      (clicked)="clearFilters()"
+    />
   </div>
 
   <div class="status-chips">
@@ -77,99 +80,91 @@
                      icon="receipt_long"
                      title="No payslips found"
                      description="Generate salary slips for the selected period or adjust your filters.">
-      <button mat-stroked-button routerLink="/payroll/payslips/generate">Go to Generate</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Go to Generate" (clicked)="router.navigate(['/payroll/payslips/generate'])" />
     </app-empty-state>
 
-    <div class="table-scroll">
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
-      <ng-container matColumnDef="select">
-        <mat-header-cell *matHeaderCellDef>
-          <mat-checkbox [checked]="isAllSelected()" (change)="toggleAllRows()"></mat-checkbox>
-        </mat-header-cell>
-        <mat-cell *matCellDef="let row">
-          <mat-checkbox (click)="$event.stopPropagation()"
-                        [checked]="selection.isSelected(row)"
-                        (change)="selection.toggle(row)"></mat-checkbox>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="employeeCode">
-        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-        <mat-cell *matCellDef="let row"><span class="emp-code">{{ row.employeeCode }}</span></mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="employeeName">
-        <mat-header-cell *matHeaderCellDef>Employee</mat-header-cell>
-        <mat-cell *matCellDef="let row">
-          <div class="emp-name">{{ row.employeeName }}</div>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="department">
-        <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
-        <mat-cell *matCellDef="let row">{{ row.department }}</mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="netSalary">
-        <mat-header-cell *matHeaderCellDef>Net Salary</mat-header-cell>
-        <mat-cell *matCellDef="let row">₹{{ row.netSalary | number:'1.0-0' }}</mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="status">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let row">
-          <span class="badge" [ngClass]="'badge--' + getStatusClass(row.status)">{{ row.status }}</span>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="generatedAt">
-        <mat-header-cell *matHeaderCellDef>Generated</mat-header-cell>
-        <mat-cell *matCellDef="let row">{{ row.generatedAt | date:'dd MMM yyyy' }}</mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let row">
-          <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" aria-label="More actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu>
-            <button mat-menu-item (click)="viewPayslip(row.id)">
-              <mat-icon>visibility</mat-icon> View
-            </button>
-            <button mat-menu-item (click)="downloadPayslip(row)">
-              <mat-icon>picture_as_pdf</mat-icon> Download PDF
-            </button>
-            <button mat-menu-item (click)="emailPayslip(row)">
-              <mat-icon>email</mat-icon> Email
-            </button>
-            @for (action of availableActions(row); track action.status) {
-              <button mat-menu-item (click)="transitionStatus(row, action)">
-                <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
-              </button>
-            }
-            @if (canDelete(row)) {
-              <mat-divider></mat-divider>
-              <button mat-menu-item (click)="deletePayslip(row)">
-                <mat-icon color="warn">delete</mat-icon> Delete
-              </button>
-            }
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row" (click)="viewPayslip(row.id)"></mat-row>
-    </mat-table>
+    <div class="data-list-scroll" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+      <div class="data-list">
+        <div class="data-list__header">
+          <div class="data-list__cell data-list__cell--center">
+            <signet-custom-checkbox
+              permissionKey="selectAll"
+              label=""
+              [checked]="isAllSelected()"
+              [required]="false"
+              groupName="payslipSelect"
+              (permissionToggled)="toggleAllRows()"
+            />
+          </div>
+          <div class="data-list__cell">Code</div>
+          <div class="data-list__cell">Employee</div>
+          <div class="data-list__cell">Client</div>
+          <div class="data-list__cell">Department</div>
+          <div class="data-list__cell">Net Salary</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell">Generated</div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
+        @for (row of data()?.items ?? []; track row.id) {
+          <div class="data-list__row data-list__row--clickable" (click)="viewPayslip(row.id)">
+            <div class="data-list__cell data-list__cell--center" (click)="$event.stopPropagation()">
+              <signet-custom-checkbox
+                [permissionKey]="row.id"
+                label=""
+                [checked]="selection.isSelected(row)"
+                [required]="false"
+                groupName="payslipSelect"
+                (permissionToggled)="onRowSelect(row, $event)"
+              />
+            </div>
+            <div class="data-list__cell"><span class="emp-code">{{ row.employeeCode }}</span></div>
+            <div class="data-list__cell">
+              <div class="emp-name">{{ row.employeeName }}</div>
+            </div>
+            <div class="data-list__cell">{{ clientLabel(row) }}</div>
+            <div class="data-list__cell">{{ row.department }}</div>
+            <div class="data-list__cell">₹{{ row.netSalary | number:'1.0-0' }}</div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="row.status" [status]="row.status" />
+            </div>
+            <div class="data-list__cell">{{ row.generatedAt | date:'dd MMM yyyy' }}</div>
+            <div class="data-list__cell data-list__cell--center" (click)="$event.stopPropagation()">
+              <signet-action-menu ariaLabel="More actions">
+                <button type="button" actionMenuItem (click)="viewPayslip(row.id)">
+                  <mat-icon>visibility</mat-icon><span>View</span>
+                </button>
+                <button type="button" actionMenuItem (click)="downloadPayslip(row)">
+                  <mat-icon>picture_as_pdf</mat-icon><span>Download PDF</span>
+                </button>
+                <button type="button" actionMenuItem (click)="emailPayslip(row)">
+                  <mat-icon>email</mat-icon><span>Email</span>
+                </button>
+                @for (action of availableActions(row); track action.status) {
+                  <button type="button" actionMenuItem (click)="transitionStatus(row, action)">
+                    <mat-icon>{{ action.icon }}</mat-icon><span>{{ action.label }}</span>
+                  </button>
+                }
+                @if (canDelete(row)) {
+                  <div class="action-menu__divider" role="separator"></div>
+                  <button type="button" actionMenuItem class="action-delete" (click)="deletePayslip(row)">
+                    <mat-icon>delete</mat-icon><span>Delete</span>
+                  </button>
+                }
+              </signet-action-menu>
+            </div>
+          </div>
+        }
+      </div>
     </div>
 
-    <mat-paginator *ngIf="(data()?.totalCount ?? 0) > 0"
-                   [length]="data()?.totalCount ?? 0"
-                   [pageSize]="pageSize"
-                   [pageIndex]="page - 1"
-                   [pageSizeOptions]="[10, 20, 50]"
-                   (page)="onPageChange($event)"
-                   showFirstLastButtons>
-    </mat-paginator>
+<signet-pagination
+      *ngIf="data()"
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
   </div>
 </div>

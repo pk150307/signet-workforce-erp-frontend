@@ -1,17 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatTableModule } from '@angular/material/table';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 
 import { ShiftService } from '../../../core/services/shift.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -31,31 +20,12 @@ const MOCK_EMPLOYEES: MockEmployee[] = [
   { id: '3', employeeCode: 'EMP003', fullName: 'Rahul Mehta', department: 'Finance' },
   { id: '4', employeeCode: 'EMP004', fullName: 'Kavita Joshi', department: 'HR', currentShift: 'General Shift' },
   { id: '5', employeeCode: 'EMP005', fullName: 'Deepak Nair', department: 'IT', currentShift: 'Evening Shift' },
-  { id: '6', employeeCode: 'EMP006', fullName: 'Pooja Verma', department: 'Sales', currentShift: 'General Shift' },
-];
+  { id: '6', employeeCode: 'EMP006', fullName: 'Pooja Verma', department: 'Sales', currentShift: 'General Shift' }
+  ];
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-shift-assign',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    RouterLink,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatCheckboxModule,
-    MatTableModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-  ],
-  templateUrl: './shift-assign.component.html',
+    templateUrl: './shift-assign.component.html',
   styleUrl: './shift-assign.component.less',
 })
 export class ShiftAssignComponent implements OnInit {
@@ -74,9 +44,16 @@ export class ShiftAssignComponent implements OnInit {
   readonly searchCtrl = this.fb.control('');
   readonly cols = ['select', 'employeeCode', 'fullName', 'department', 'currentShift'];
 
+  readonly shiftOptions = computed(() =>
+    this.shifts().map(s => ({
+      key: String(s.id),
+      value: `${s.shiftName} (${s.startTime} – ${s.endTime})`,
+    })),
+  );
+
   readonly form = this.fb.group({
     shiftId: ['', Validators.required],
-    effectiveFrom: [new Date(), Validators.required],
+    effectiveFrom: [new Date().toISOString().split('T')[0], Validators.required],
   });
 
   ngOnInit() {
@@ -92,6 +69,17 @@ export class ShiftAssignComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  get effectiveFromValue(): { startDate?: string } {
+    const date = this.form.get('effectiveFrom')?.value;
+    return date ? { startDate: `${date}T00:00:00` } : {};
+  }
+
+  onEffectiveFromChange(value: { startDate?: string; endDate?: string }) {
+    const datePart = value.startDate?.split('T')[0] ?? '';
+    this.form.patchValue({ effectiveFrom: datePart });
+    this.form.get('effectiveFrom')?.markAsTouched();
   }
 
   get filteredEmployees(): MockEmployee[] {
@@ -144,9 +132,7 @@ export class ShiftAssignComponent implements OnInit {
     this.shiftService.bulkAssign({
       shiftId: shiftId!,
       employeeIds: ids,
-      effectiveFrom: effectiveFrom instanceof Date
-        ? effectiveFrom.toISOString().split('T')[0]
-        : String(effectiveFrom),
+      effectiveFrom: String(effectiveFrom),
     }).subscribe({
       next: (result) => {
         this.notification.success(`Shift assigned to ${result.assigned} employees.`);

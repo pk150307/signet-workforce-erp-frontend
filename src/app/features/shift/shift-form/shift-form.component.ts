@@ -1,13 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { ShiftService } from '../../../core/services/shift.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -18,26 +11,12 @@ const WEEKLY_OFF_OPTIONS = [
   'Monday',
   'Saturday',
   'Saturday, Sunday',
-  'Sunday, Monday',
-];
+  'Sunday, Monday'
+  ];
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-shift-form',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatSlideToggleModule,
-  ],
-  templateUrl: './shift-form.component.html',
+    templateUrl: './shift-form.component.html',
   styleUrl: './shift-form.component.less',
 })
 export class ShiftFormComponent implements OnInit {
@@ -51,7 +30,9 @@ export class ShiftFormComponent implements OnInit {
   readonly saving = signal(false);
   readonly loading = signal(false);
   readonly isEdit = signal(false);
-  readonly weeklyOffOptions = WEEKLY_OFF_OPTIONS;
+  readonly weeklyOffOptions = computed(() =>
+    WEEKLY_OFF_OPTIONS.map(opt => ({ key: opt, value: opt })),
+  );
   private shiftId: string | null = null;
 
   readonly form = this.fb.group({

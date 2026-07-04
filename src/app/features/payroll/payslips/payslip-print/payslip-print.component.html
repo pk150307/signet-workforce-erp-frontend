@@ -1,16 +1,21 @@
 <div class="print-toolbar no-print">
   <div class="print-toolbar__left">
     <strong>Payslip Preview</strong>
-    <span *ngIf="payslip() as ps">{{ ps.employeeName }} · {{ ps.month }}/{{ ps.year }}</span>
+    <span *ngIf="payslip() as ps">{{ ps.employeeName }}</span>
   </div>
   <div class="print-toolbar__actions">
-    <button mat-stroked-button (click)="downloadPdf()" [disabled]="!payslip() || downloading()">
-      <mat-icon>picture_as_pdf</mat-icon>
-      {{ downloading() ? 'Generating…' : 'Download PDF' }}
-    </button>
-    <button mat-raised-button color="primary" (click)="print()" [disabled]="!payslip()">
-      <mat-icon>print</mat-icon> Print
-    </button>
+    <signet-button [width]="100" [widthUnit]="'%'"
+      type="stroke"
+      [displayText]="downloading() ? 'Generating…' : 'Download PDF'"
+      [disabled]="!payslip() || downloading()"
+      (clicked)="downloadPdf()"
+    />
+    <signet-button [width]="100" [widthUnit]="'%'"
+      type="primary"
+      displayText="Print"
+      [disabled]="!payslip()"
+      (clicked)="print()"
+    />
   </div>
 </div>
 

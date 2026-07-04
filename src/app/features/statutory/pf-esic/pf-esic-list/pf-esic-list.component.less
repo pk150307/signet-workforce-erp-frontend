@@ -8,6 +8,7 @@
 }
 
 .pf-esic-list__drawer {
+  width: 480px;
   border-left: 1px solid var(--color-border);
 }
 
@@ -19,7 +20,7 @@
   font-size: 11px;
   font-weight: 600;
   background: rgba(245, 127, 23, 0.12);
-  color: #f57f17;
+  color: var(--color-warning);
   vertical-align: middle;
 }
 
@@ -31,7 +32,7 @@
   margin-bottom: 16px;
   border-radius: var(--radius-md);
   background: rgba(245, 127, 23, 0.1);
-  color: #e65100;
+  color: var(--color-warning);
   font-size: 13px;
 
   mat-icon {
@@ -94,77 +95,15 @@
 .responsive-filters-card(~'.pf-esic-list__filters');
 
 .pf-esic-list__table {
-  width: 100%;
-
-  .mat-mdc-header-row,
-  .mat-mdc-row {
-    display: grid;
-    width: 100%;
-    grid-template-columns:
-      96px
-      minmax(180px, 1.6fr)
-      minmax(140px, 1.3fr)
-      minmax(120px, 1fr)
-      minmax(110px, 1fr)
-      minmax(130px, 1.2fr)
-      minmax(120px, 1.1fr)
-      100px
-      112px;
-    align-items: center;
-  }
-
-  .mat-mdc-header-cell,
-  .mat-mdc-cell {
-    flex: unset !important;
-    width: auto !important;
-    max-width: none !important;
-    min-width: 0;
-    align-items: center;
-    padding: 12px 10px;
-    border-bottom-color: var(--color-divider);
-    box-sizing: border-box;
-  }
-
-  .mat-mdc-header-cell:first-child,
-  .mat-mdc-cell:first-child {
-    padding-left: 16px;
-  }
-
-  .mat-mdc-header-cell:last-child,
-  .mat-mdc-cell:last-child {
-    padding-right: 16px;
-  }
-
-  .mat-column-employeeCode,
-  .mat-column-status,
-  .mat-column-effectiveDate {
-    white-space: nowrap;
-  }
-
-  .mat-column-fullName,
-  .mat-column-clientCompanyName,
-  .mat-column-aadhaarNumber,
-  .mat-column-uanNumber,
-  .mat-column-pfNumber,
-  .mat-column-esicNumber {
-    font-size: 13px;
-  }
-
-  .mat-column-aadhaarNumber {
-    font-family: ui-monospace, 'Courier New', monospace;
-  }
-
-  .mat-column-pfNumber,
-  .mat-column-esicNumber {
-    word-break: break-word;
-  }
+  --data-list-cols: calc(calc(100% / 1126) * 110) calc(calc(100% / 1126) * 200) calc(calc(100% / 1126) * 100) calc(calc(100% / 1126) * 124) calc(calc(100% / 1126) * 124) calc(calc(100% / 1126) * 140) calc(calc(100% / 1126) * 120) calc(calc(100% / 1126) * 100) calc(calc(100% / 1126) * 108);
+  --data-list-min-width: 1126px;
 }
 
 .pf-esic-list__code {
   display: inline-block;
   font-size: 12px;
-  font-family: ui-monospace, 'Courier New', monospace;
-  background: var(--color-bg-subtle, #f4f6f8);
+  font-family: ProximaNova-Medium, sans-serif;
+  background: var(--color-bg-subtle);
   padding: 3px 8px;
   border-radius: 6px;
   color: var(--color-text-secondary);
@@ -190,7 +129,7 @@
   height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark, #00695c));
-  color: #fff;
+  color: var(--color-on-primary, #fff);
   font-size: 12px;
   font-weight: 700;
   display: flex;

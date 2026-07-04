@@ -3,7 +3,7 @@
     <div>
       <h1 class="page-header__title">{{ isEdit() ? 'Edit Shift' : 'Add Shift' }}</h1>
     </div>
-    <button mat-stroked-button (click)="router.navigate(['/shifts'])">Cancel</button>
+    <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="router.navigate(['/shifts'])" />
   </div>
 
   <app-skeleton-loader *ngIf="loading() || saving()" type="card" [rows]="6"></app-skeleton-loader>
@@ -11,50 +11,34 @@
   <div class="card form-card" *ngIf="!loading() && !saving()">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Shift Code *</mat-label>
-          <input matInput formControlName="shiftCode">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Shift Name *</mat-label>
-          <input matInput formControlName="shiftName">
-        </mat-form-field>
+        <signet-custom-text-field fieldTitle="Shift Code" formControlName="shiftCode" [required]="true" />
+        <signet-custom-text-field fieldTitle="Shift Name" formControlName="shiftName" [required]="true" />
       </div>
       <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Start Time *</mat-label>
-          <input matInput type="time" formControlName="startTime">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>End Time *</mat-label>
-          <input matInput type="time" formControlName="endTime">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Break (minutes) *</mat-label>
-          <input matInput type="number" formControlName="breakMinutes">
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Grace (minutes)</mat-label>
-          <input matInput type="number" formControlName="graceMinutes">
-        </mat-form-field>
+        <signet-custom-text-field fieldTitle="Start Time *" formControlName="startTime" type="text" placeholder="HH:MM" [required]="true" />
+        <signet-custom-text-field fieldTitle="End Time *" formControlName="endTime" type="text" placeholder="HH:MM" [required]="true" />
+        <signet-custom-text-field fieldTitle="Break (minutes)" formControlName="breakMinutes" type="number" [required]="true" />
+        <signet-custom-text-field fieldTitle="Grace (minutes)" formControlName="graceMinutes" type="number" [required]="false" />
       </div>
       <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Weekly Off *</mat-label>
-          <mat-select formControlName="weeklyOff">
-            <mat-option *ngFor="let opt of weeklyOffOptions" [value]="opt">{{ opt }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <signet-search-select-dropdown
+          formControlName="weeklyOff"
+          fieldTitle="Weekly Off"
+          placeholder="Select weekly off"
+          [options]="weeklyOffOptions()"
+          [width]="100"
+          widthUnit="%"
+          [searchFunctionality]="false"
+          [required]="true"
+        />
       </div>
       <div class="toggle-row">
         <mat-slide-toggle formControlName="isNightShift">Night Shift</mat-slide-toggle>
         <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
       </div>
       <div class="form-actions">
-        <button mat-stroked-button type="button" (click)="router.navigate(['/shifts'])">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-          {{ isEdit() ? 'Save Changes' : 'Create Shift' }}
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="router.navigate(['/shifts'])" />
+        <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="{{ isEdit() ? 'Save Changes' : 'Create Shift' }}" [disabled]="saving()" (clicked)="onSubmit()" />
       </div>
     </form>
   </div>

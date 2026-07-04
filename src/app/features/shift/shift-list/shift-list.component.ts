@@ -1,15 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -18,28 +9,17 @@ import { confirmDialogConfig } from '../../../core/utils/dialog.util';
 import { ShiftService } from '../../../core/services/shift.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ShiftListItem } from '../../../core/models/shift.models';
-import { PaginatedResult } from '../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-shift-list',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    RouterLink,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-  ],
-  templateUrl: './shift-list.component.html',
+    templateUrl: './shift-list.component.html',
   styleUrl: './shift-list.component.less',
 })
 export class ShiftListComponent implements OnInit {
@@ -50,46 +30,56 @@ export class ShiftListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
-  readonly data = signal<PaginatedResult<ShiftListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<ShiftListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly searchCtrl = new FormControl('');
-  readonly statusCtrl = new FormControl<boolean | null>(null);
+  readonly statusCtrl = new FormControl<string>('');
   readonly cols = ['shiftCode', 'shiftName', 'timing', 'breakMinutes', 'weeklyOff', 'assignedCount', 'status', 'actions'];
 
-  page = 1;
-  pageSize = 20;
+  readonly statusOptions = computed(() => [
+    { key: '', value: 'All' },
+    { key: 'true', value: 'Active' },
+    { key: 'false', value: 'Inactive' },
+  ]);
+
 
   ngOnInit() {
     this.load();
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
     this.statusCtrl.valueChanges.subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
   }
 
-  load() {
+  load(params?: CursorPageParams) {
     this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
     this.shiftService.getAll({
-      page: this.page,
-      pageSize: this.pageSize,
+      ...pageParams,
       search: this.searchCtrl.value || undefined,
-      isActive: this.statusCtrl.value ?? undefined,
+      isActive: this.parseBoolFilter(this.statusCtrl.value),
     }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
     });
   }
 
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.load();
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.load(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.load(p);
+    }
   }
 
   editShift(id: string) {
@@ -120,7 +110,12 @@ export class ShiftListComponent implements OnInit {
 
   clearFilters() {
     this.searchCtrl.setValue('');
-    this.statusCtrl.setValue(null);
+    this.statusCtrl.setValue('');
+  }
+
+  private parseBoolFilter(value: string | null): boolean | undefined {
+    if (!value) return undefined;
+    return value === 'true';
   }
 
   formatTiming(shift: ShiftListItem): string {

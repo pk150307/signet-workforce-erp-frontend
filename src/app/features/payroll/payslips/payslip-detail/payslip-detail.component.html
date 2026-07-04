@@ -14,32 +14,28 @@
           <span *ngIf="ps.siteName"> · {{ ps.siteName }}</span>
         </p>
       </div>
-      <span class="status-badge" [ngClass]="'status-badge--' + getStatusClass(ps.status)">{{ ps.status }}</span>
+      <signet-status-button [label]="ps.status" [status]="ps.status" />
     </div>
     <div class="detail-hero__actions">
       @if (availableActions(ps).length) {
-        <button mat-stroked-button [matMenuTriggerFor]="statusMenu">
-          <mat-icon>swap_horiz</mat-icon> Update Status
-        </button>
-        <mat-menu #statusMenu="matMenu">
+        <signet-action-menu
+          triggerType="button"
+          triggerLabel="Update Status"
+          triggerIcon="expand_more"
+          ariaLabel="Update status"
+        >
           @for (action of availableActions(ps); track action.status) {
-            <button mat-menu-item (click)="transitionStatus(action)">
-              <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+            <button type="button" actionMenuItem (click)="transitionStatus(action)">
+              <mat-icon>{{ action.icon }}</mat-icon><span>{{ action.label }}</span>
             </button>
           }
-        </mat-menu>
+        </signet-action-menu>
       }
-      <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
-      <button mat-stroked-button (click)="downloadPdf()" [disabled]="downloadingPdf()">
-        <mat-icon>download</mat-icon> Download PDF
-      </button>
-      <button mat-raised-button color="primary" (click)="emailPayslip()">
-        <mat-icon>email</mat-icon> Email
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Print" (clicked)="openPrintPreview()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Download PDF" [disabled]="downloadingPdf()" (clicked)="downloadPdf()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Email" (clicked)="emailPayslip()" />
       @if (canDelete(ps)) {
-        <button mat-stroked-button color="warn" (click)="deletePayslip()">
-          <mat-icon>delete</mat-icon> Delete
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="error" displayText="Delete" (clicked)="deletePayslip()" />
       }
     </div>
   </section>
@@ -113,6 +109,12 @@
         <div class="panel">
           <div class="panel__header"><h3>Deductions</h3><span>{{ ps.deductions.length }} items</span></div>
           <table class="breakdown-table" *ngIf="ps.deductions.length; else noDeductions">
+            <thead>
+              <tr>
+                <th>Particulars</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
             <tbody>
               <tr *ngFor="let item of ps.deductions">
                 <td>
@@ -162,7 +164,7 @@
       <mat-icon>receipt_long</mat-icon>
       <h2>Payslip not found</h2>
       <p>The payslip may have been removed or the link is invalid.</p>
-      <a mat-stroked-button routerLink="/payroll/payslips">Back to Salary Slips</a>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Salary Slips" (clicked)="router.navigate(['/payroll/payslips'])" />
     </div>
   </div>
 </ng-template>

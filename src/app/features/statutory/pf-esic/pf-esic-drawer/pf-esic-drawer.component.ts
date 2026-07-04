@@ -5,20 +5,12 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  computed,
   inject,
   signal,
 } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 
 import { PfEsicService } from '../../../../core/services/pf-esic.service';
@@ -26,30 +18,12 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { PfEsicDetail, PfEsicStatus } from '../../../../core/models/pf-esic.models';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-
 const UAN_PATTERN = /^\d{12}$/;
 const ESIC_PATTERN = /^\d{17}$/;
 
 @Component({
   selector: 'app-pf-esic-drawer',
-  standalone: true,
-  imports: [
-    NgClass,
-    DatePipe,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './pf-esic-drawer.component.html',
+    templateUrl: './pf-esic-drawer.component.html',
   styleUrl: './pf-esic-drawer.component.less',
 })
 export class PfEsicDrawerComponent implements OnChanges {
@@ -67,7 +41,9 @@ export class PfEsicDrawerComponent implements OnChanges {
   readonly detail = signal<PfEsicDetail | null>(null);
   readonly editing = signal(false);
 
-  readonly statusOptions: PfEsicStatus[] = ['Active', 'Inactive', 'Pending', 'Suspended'];
+  readonly statusOptions = computed(() =>
+    (['Active', 'Inactive', 'Pending', 'Suspended'] as PfEsicStatus[]).map(s => ({ key: s, value: s })),
+  );
 
   readonly form = this.fb.nonNullable.group({
     uanNumber: ['', [Validators.pattern(UAN_PATTERN)]],
@@ -116,6 +92,22 @@ export class PfEsicDrawerComponent implements OnChanges {
       this.patchForm(detail);
     }
     this.editing.set(false);
+  }
+
+  effectiveDateValue(): { startDate?: string } {
+    const value = this.form.controls.effectiveDate.value;
+    if (!value) return {};
+    const iso = this.formatDate(value);
+    return { startDate: `${iso}T00:00:00` };
+  }
+
+  onEffectiveDateChange(event: { startDate?: string }): void {
+    if (!event.startDate) {
+      this.form.controls.effectiveDate.setValue(null);
+      return;
+    }
+    const [y, m, d] = event.startDate.split('T')[0].split('-').map(Number);
+    this.form.controls.effectiveDate.setValue(new Date(y, m - 1, d));
   }
 
   save(): void {
@@ -237,8 +229,8 @@ export class PfEsicDrawerComponent implements OnChanges {
           action: 'Created',
           changedBy: 'System',
           changedAt: '2020-01-10T09:00:00Z',
-        },
-      ],
+        }
+  ],
     };
   }
 }

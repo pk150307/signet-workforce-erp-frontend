@@ -1,16 +1,9 @@
 import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatTableModule } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
@@ -23,28 +16,9 @@ import { EmployeeListItem, EmployeeStatus } from '../../../../core/models/employ
 import { ClientListItem } from '../../../../core/models/client.models';
 import { PAYSLIP_MONTHS } from '../payslip.mock';
 
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-payslip-generate',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatTableModule,
-  ],
-  templateUrl: './payslip-generate.component.html',
+    templateUrl: './payslip-generate.component.html',
   styleUrl: './payslip-generate.component.less',
 })
 export class PayslipGenerateComponent implements OnInit {
@@ -55,7 +29,7 @@ export class PayslipGenerateComponent implements OnInit {
   private readonly employeeService = inject(EmployeeService);
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
 
   readonly generating = signal(false);
   readonly loadingEmployees = signal(false);
@@ -67,6 +41,19 @@ export class PayslipGenerateComponent implements OnInit {
   readonly months = PAYSLIP_MONTHS;
   readonly years = this.buildYearOptions();
   readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'department', 'siteName'];
+
+  readonly monthOptions = computed(() =>
+    this.months.map(m => ({ key: String(m.value), value: m.label })),
+  );
+
+  readonly yearOptions = computed(() =>
+    this.years.map(y => ({ key: String(y), value: String(y) })),
+  );
+
+  readonly clientOptions = computed(() => [
+    { key: '', value: 'All Clients' },
+    ...this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  ]);
 
   readonly searchCtrl = new FormControl('');
 
@@ -119,7 +106,7 @@ export class PayslipGenerateComponent implements OnInit {
 
     this.employeeService.getAllForSelect({
       status: EmployeeStatus.Active,
-      clientId: this.form.get('clientId')!.value ?? undefined,
+      clientId: this.form.get('clientId')!.value || undefined,
     }).subscribe({
       next: items => {
         this.employees.set(items);
@@ -146,6 +133,14 @@ export class PayslipGenerateComponent implements OnInit {
     }
   }
 
+  onRowSelect(row: EmployeeListItem, event: { checked: boolean }) {
+    if (event.checked) {
+      this.selection.select(row);
+    } else {
+      this.selection.deselect(row);
+    }
+  }
+
   generate() {
     if (this.form.invalid || this.generating()) return;
 
@@ -165,7 +160,7 @@ export class PayslipGenerateComponent implements OnInit {
     this.payslipService.generate({
       month,
       year,
-      clientId: clientId ?? undefined,
+      clientId: clientId || undefined,
       employeeIds,
     }).subscribe({
       next: result => {
