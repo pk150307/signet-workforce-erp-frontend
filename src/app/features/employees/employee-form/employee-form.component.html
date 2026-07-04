@@ -21,17 +21,13 @@
         </div>
         <div class="confirmation-panel__row">
           <span>Status</span>
-          <app-employee-status-badge [status]="result.status"></app-employee-status-badge>
+          <signet-status-button [label]="statusLabels[result.status]" [status]="statusLabels[result.status]" />
         </div>
       </div>
 
       <div class="confirmation-panel__actions">
-        <button mat-stroked-button (click)="addAnother()">
-          <mat-icon>person_add</mat-icon> Add Another Employee
-        </button>
-        <button mat-raised-button color="primary" [routerLink]="['/employees', result.id]">
-          <mat-icon>visibility</mat-icon> View Profile
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Another Employee" (clicked)="addAnother()" />
+        <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="View Profile" (clicked)="router.navigate(['/employees', result.id])" />
       </div>
     </div>
   } @else if (loading() || lookupsLoading() || saving() || savingDraft()) {
@@ -47,12 +43,9 @@
       </div>
       <div class="form-page-header__actions">
         @if (!isEdit()) {
-          <button mat-stroked-button type="button" (click)="saveDraft()" [disabled]="savingDraft()">
-            <mat-icon>draft</mat-icon>
-            Save Draft
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Save Draft" (clicked)="saveDraft()" [disabled]="savingDraft()" />
         }
-        <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
       </div>
     </header>
 
@@ -79,65 +72,59 @@
 
             <div class="step-panel__body">
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>First Name</mat-label>
-                <input matInput formControlName="firstName">
-                @if (personalForm.get('firstName')?.hasError('required') && personalForm.get('firstName')?.touched) {
-                  <mat-error>First name is required</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Last Name</mat-label>
-                <input matInput formControlName="lastName">
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="firstName"
+                fieldTitle="First Name"
+                [required]="true"
+                [showError]="!!(personalForm.get('firstName')?.hasError('required') && personalForm.get('firstName')?.touched)"
+                errorMessage="First name is required"
+              />
+              <signet-custom-text-field
+                formControlName="lastName"
+                fieldTitle="Last Name"
+                [required]="false"
+              />
             </div>
 
             <div class="form-row form-row--dob">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Date of Birth</mat-label>
-                <input
-                  matInput
-                  [matDatepicker]="dobPicker"
-                  formControlName="dateOfBirth"
-                  [max]="maxDateOfBirth"
-                  (click)="dobPicker.open()"
-                  readonly>
-                <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
-                <mat-datepicker #dobPicker startView="multi-year"></mat-datepicker>
-              </mat-form-field>
+              <signet-date-input-field
+                fieldTitle="Date of Birth"
+                placeholder="Select date of birth"
+                [value]="dateToSignetValue(personalForm.get('dateOfBirth')?.value)"
+                (valueChange)="onDateOfBirthChange($event)"
+                [config]="dobDatePickerConfig"
+                [required]="false"
+                [width]="100"
+                widthUnit="%"
+              />
 
               <div class="gender-field">
                 <span class="gender-field__label">Gender</span>
-                <mat-radio-group
-                  formControlName="gender"
-                  class="gender-field__group"
-                  aria-label="Gender">
-                  @for (opt of genderOptions; track opt.value) {
-                    <mat-radio-button [value]="opt.value">{{ opt.label }}</mat-radio-button>
-                  }
-                </mat-radio-group>
+                <signet-radio-input
+                  [value]="genderRadioValue()"
+                  [options]="genderRadioOptions()"
+                  [alignHorizontal]="true"
+                  fontSize="14px"
+                  (valueChange)="onGenderChange($event)"
+                />
               </div>
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Mobile</mat-label>
-                <mat-icon matPrefix>phone</mat-icon>
-                <input matInput formControlName="phone" maxlength="10">
-                @if (personalForm.get('phone')?.hasError('required') && personalForm.get('phone')?.touched) {
-                  <mat-error>Mobile number is required</mat-error>
-                } @else if (personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched) {
-                  <mat-error>Enter a valid 10-digit mobile number</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Email</mat-label>
-                <mat-icon matPrefix>email</mat-icon>
-                <input matInput type="email" formControlName="email">
-                @if (personalForm.get('email')?.hasError('email') && personalForm.get('email')?.touched) {
-                  <mat-error>Enter a valid email address</mat-error>
-                }
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="phone"
+                fieldTitle="Mobile"
+                [required]="true" [maxLength]="10"
+                [showError]="!!(personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched)"
+                errorMessage="Enter a valid 10-digit mobile number"
+              />
+              <signet-custom-text-field
+                formControlName="email"
+                fieldTitle="Email"
+                [required]="false" type="email"
+                [showError]="!!(personalForm.get('email')?.invalid && personalForm.get('email')?.touched)"
+                errorMessage="Enter a valid email address"
+              />
             </div>
 
             <div class="step-subsection">
@@ -146,37 +133,31 @@
                 <h3 class="section-label">Address</h3>
               </div>
 
-            <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
-              <mat-label>Present Address</mat-label>
-              <textarea matInput formControlName="presentAddress" rows="2"></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field formControlName="presentAddress" fieldTitle="Present Address" [required]="false" [width]="100" widthUnit="%" />
 
             <div class="copy-address-row">
-              <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
-                <mat-label>Permanent Address</mat-label>
-                <textarea matInput formControlName="permanentAddress" rows="2"></textarea>
-              </mat-form-field>
-              <button mat-stroked-button type="button" (click)="copyPresentToPermanent()">
-                <mat-icon>content_copy</mat-icon> Same as present
-              </button>
+              <signet-custom-text-area-field formControlName="permanentAddress" fieldTitle="Permanent Address" [required]="false" [width]="100" widthUnit="%" />
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Same as present" (clicked)="copyPresentToPermanent()" />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>City</mat-label>
-                <input matInput formControlName="city">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>State</mat-label>
-                <input matInput formControlName="state">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>PIN Code</mat-label>
-                <input matInput formControlName="pinCode" maxlength="6">
-                @if (personalForm.get('pinCode')?.invalid && personalForm.get('pinCode')?.touched) {
-                  <mat-error>Enter a valid 6-digit PIN</mat-error>
-                }
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="city"
+                fieldTitle="City"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="state"
+                fieldTitle="State"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="pinCode"
+                fieldTitle="PIN Code"
+                [required]="false" [maxLength]="6"
+                [showError]="!!(personalForm.get('pinCode')?.invalid && personalForm.get('pinCode')?.touched)"
+                errorMessage="Enter a valid 6-digit PIN"
+              />
             </div>
             </div>
 
@@ -187,35 +168,33 @@
               </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Contact Name</mat-label>
-                <input matInput formControlName="emergencyContactName">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Relationship</mat-label>
-                <input matInput formControlName="emergencyContactRelationship">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Contact Phone</mat-label>
-                <input matInput formControlName="emergencyContactPhone" maxlength="10">
-                @if (personalForm.get('emergencyContactPhone')?.invalid && personalForm.get('emergencyContactPhone')?.touched) {
-                  <mat-error>Enter a valid 10-digit mobile number</mat-error>
-                }
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="emergencyContactName"
+                fieldTitle="Contact Name"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="emergencyContactRelationship"
+                fieldTitle="Relationship"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="emergencyContactPhone"
+                fieldTitle="Contact Phone"
+                [required]="false" [maxLength]="10"
+                [showError]="!!(personalForm.get('emergencyContactPhone')?.invalid && personalForm.get('emergencyContactPhone')?.touched)"
+                errorMessage="Enter a valid 10-digit mobile number"
+              />
             </div>
             </div>
             </div>
 
             <div class="step-footer">
               @if (!isEdit()) {
-                <button mat-stroked-button type="button" (click)="saveDraft()" [disabled]="savingDraft()">
-                  <mat-icon>draft</mat-icon> Save Draft
-                </button>
+                <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Save Draft" (clicked)="saveDraft()" [disabled]="savingDraft()" />
               }
               <span class="step-actions__spacer"></span>
-              <button mat-raised-button color="primary" matStepperNext [disabled]="!isMinimumValid()">
-                Next <mat-icon>arrow_forward</mat-icon>
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" [disabled]="!isMinimumValid()" />
             </div>
           </form>
           </ng-template>
@@ -235,133 +214,119 @@
 
             <div class="step-panel__body">
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Employee ID</mat-label>
-                <mat-icon matPrefix>badge</mat-icon>
-                <input matInput formControlName="employeeCode" readonly>
-                <mat-hint>Auto-assigned sequentially (SS-00001, SS-00002, …)</mat-hint>
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Joining Date</mat-label>
-                <input
-                  matInput
-                  [matDatepicker]="joinPicker"
-                  formControlName="joiningDate"
-                  (click)="joinPicker.open()"
-                  (focus)="joinPicker.open()"
-                  readonly>
-                <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
-                <mat-datepicker #joinPicker startView="month"></mat-datepicker>
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="employeeCode"
+                fieldTitle="Employee ID"
+                [required]="false" [readOnly]="true"
+              />
+              <signet-date-input-field
+                fieldTitle="Joining Date"
+                placeholder="Select joining date"
+                [value]="dateToSignetValue(employmentForm.get('joiningDate')?.value)"
+                (valueChange)="onJoiningDateChange($event)"
+                [required]="false"
+                [width]="100"
+                widthUnit="%"
+              />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Client *</mat-label>
-                <mat-select formControlName="clientId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue">
-                  @for (c of clients(); track c.id) {
-                    <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
-                  }
-                </mat-select>
-                @if (employmentForm.get('clientId')?.hasError('required') && employmentForm.get('clientId')?.touched) {
-                  <mat-error>Client is required</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Site *</mat-label>
-                <mat-select formControlName="siteId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue" [disabled]="!employmentForm.value.clientId">
-                  @for (s of filteredSites(); track s.id) {
-                    <mat-option [value]="s.id">{{ s.siteName }} — {{ s.city }}</mat-option>
-                  }
-                </mat-select>
-                @if (employmentForm.get('siteId')?.hasError('required') && employmentForm.get('siteId')?.touched) {
-                  <mat-error>Site is required</mat-error>
-                }
-              </mat-form-field>
+              <signet-search-select-dropdown
+                formControlName="clientId"
+                fieldTitle="Client"
+                placeholder="Select client"
+                [options]="clientOptions()"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+              />
+              <signet-search-select-dropdown
+                formControlName="siteId"
+                fieldTitle="Site"
+                placeholder="Select site"
+                [options]="siteOptions()"
+                [disabled]="!employmentForm.value.clientId"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+              />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Department</mat-label>
-                <mat-select formControlName="departmentId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue" [disabled]="!employmentForm.value.clientId">
-                  <mat-option value="">{{ employmentForm.value.clientId ? 'Select department' : 'Select client first' }}</mat-option>
-                  @for (d of departments(); track d.id) {
-                    <mat-option [value]="d.id">{{ d.departmentName }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
+              <signet-search-select-dropdown
+                formControlName="departmentId"
+                fieldTitle="Department"
+                placeholder="Select department"
+                [options]="departmentOptions()"
+                [disabled]="!employmentForm.value.clientId"
+                [required]="false"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+              />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Designation</mat-label>
-                <mat-select
-                  formControlName="designationId"
-                  panelClass="employee-form-select-panel"
-                  [compareWith]="compareSelectValue"
-                  [disabled]="!employmentForm.value.departmentId || designationsLoading()"
-                >
-                  <mat-option value="">
-                    {{ designationsLoading() ? 'Loading…' : (employmentForm.value.departmentId ? 'Select designation' : 'Select department first') }}
-                  </mat-option>
-                  @for (d of designations(); track d.id) {
-                    <mat-option [value]="d.id">{{ d.designationName }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Pay Grade</mat-label>
-                <mat-select
+              <signet-search-select-dropdown
+                formControlName="designationId"
+                fieldTitle="Designation"
+                placeholder="Select designation"
+                [options]="designationOptions()"
+                [disabled]="!employmentForm.value.departmentId || designationsLoading()"
+                [required]="false"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+              />
+              <div class="grade-field">
+                <signet-search-select-dropdown
                   formControlName="designationGradeId"
-                  panelClass="employee-form-select-panel"
-                  [compareWith]="compareSelectValue"
+                  fieldTitle="Pay Grade"
+                  placeholder="Select pay grade (optional)"
+                  [options]="designationGradeOptions()"
                   [disabled]="!employmentForm.value.designationId || gradesLoading()"
-                >
-                  <mat-option value="">
-                    {{ gradesLoading() ? 'Loading…' : (employmentForm.value.designationId ? 'Select pay grade (optional)' : 'Select designation first') }}
-                  </mat-option>
-                  @for (g of designationGrades(); track g.id) {
-                    <mat-option [value]="g.id">{{ g.gradeCode }} — {{ g.gradeName }}</mat-option>
-                  }
-                </mat-select>
+                  [required]="false"
+                  [width]="100"
+                  widthUnit="%"
+                  [searchFunctionality]="true"
+                />
                 @if (selectedGradeGross() != null) {
-                  <mat-hint>Gross from grade: ₹{{ selectedGradeGross() | number:'1.0-0' }}</mat-hint>
+                  <p class="field-hint">Gross from grade: ₹{{ selectedGradeGross() | number:'1.0-0' }}</p>
                 }
-              </mat-form-field>
+              </div>
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Reporting Manager</mat-label>
-                <mat-select formControlName="reportingManagerId" panelClass="employee-form-select-panel" [compareWith]="compareSelectValue">
-                  <mat-option value="">None</mat-option>
-                  @for (m of managers(); track m.id) {
-                    <mat-option [value]="m.id">{{ m.fullName }} ({{ m.employeeCode }})</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
+              <signet-search-select-dropdown
+                formControlName="reportingManagerId"
+                fieldTitle="Reporting Manager"
+                placeholder="None"
+                [options]="managerOptions()"
+                [required]="false"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+              />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Employment Type</mat-label>
-                <mat-select formControlName="employmentType" panelClass="employee-form-select-panel" canSelectNullableOptions [compareWith]="compareSelectValue">
-                  @for (opt of employmentTypeOptions; track opt.value) {
-                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
+              <signet-search-select-dropdown
+                formControlName="employmentType"
+                fieldTitle="Employment Type"
+                placeholder="Select employment type"
+                [options]="employmentTypeSelectOptions()"
+                [required]="false"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="false"
+              />
             </div>
             </div>
 
             <div class="step-footer">
-              <button mat-stroked-button matStepperPrevious>
-                <mat-icon>arrow_back</mat-icon> Back
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
               <span class="step-actions__spacer"></span>
-              <button mat-raised-button color="primary" matStepperNext>
-                Next <mat-icon>arrow_forward</mat-icon>
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" />
             </div>
           </form>
           </ng-template>
@@ -386,35 +351,38 @@
                 <h3 class="section-label">Statutory Details</h3>
               </div>
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Aadhaar Number</mat-label>
-                <input matInput formControlName="aadhaarNumber" maxlength="12">
-                @if (statutoryForm.get('aadhaarNumber')?.invalid && statutoryForm.get('aadhaarNumber')?.touched) {
-                  <mat-error>Enter a valid 12-digit Aadhaar number</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>PAN Number</mat-label>
-                <input matInput formControlName="panNumber" maxlength="10" style="text-transform:uppercase">
-                @if (statutoryForm.get('panNumber')?.invalid && statutoryForm.get('panNumber')?.touched) {
-                  <mat-error>Enter a valid PAN (e.g. ABCDE1234F)</mat-error>
-                }
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="aadhaarNumber"
+                fieldTitle="Aadhaar Number"
+                [required]="false" [maxLength]="12"
+                [showError]="!!(statutoryForm.get('aadhaarNumber')?.invalid && statutoryForm.get('aadhaarNumber')?.touched)"
+                errorMessage="Enter a valid 12-digit Aadhaar number"
+              />
+              <signet-custom-text-field
+                formControlName="panNumber"
+                fieldTitle="PAN Number"
+                [required]="false" [maxLength]="10"
+                [showError]="!!(statutoryForm.get('panNumber')?.invalid && statutoryForm.get('panNumber')?.touched)"
+                errorMessage="Enter a valid PAN (e.g. ABCDE1234F)"
+              />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>UAN Number</mat-label>
-                <input matInput formControlName="uanNumber" maxlength="12">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>PF Number</mat-label>
-                <input matInput formControlName="pfNumber">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>ESIC Number</mat-label>
-                <input matInput formControlName="esicNumber">
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="uanNumber"
+                fieldTitle="UAN Number"
+                [required]="false" [maxLength]="12"
+              />
+              <signet-custom-text-field
+                formControlName="pfNumber"
+                fieldTitle="PF Number"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="esicNumber"
+                fieldTitle="ESIC Number"
+                [required]="false"
+              />
             </div>
             </div>
 
@@ -425,31 +393,33 @@
               </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Bank Name</mat-label>
-                <input matInput formControlName="bankName">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Account Holder Name</mat-label>
-                <input matInput formControlName="accountHolderName">
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="bankName"
+                fieldTitle="Bank Name"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="accountHolderName"
+                fieldTitle="Account Holder Name"
+                [required]="false"
+              />
             </div>
 
             <div class="form-row">
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>Account Number</mat-label>
-                <input matInput formControlName="accountNumber">
-                @if (statutoryForm.get('accountNumber')?.invalid && statutoryForm.get('accountNumber')?.touched) {
-                  <mat-error>Enter a valid account number</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label>IFSC Code</mat-label>
-                <input matInput formControlName="ifscCode" maxlength="11" style="text-transform:uppercase">
-                @if (statutoryForm.get('ifscCode')?.invalid && statutoryForm.get('ifscCode')?.touched) {
-                  <mat-error>Enter a valid IFSC code</mat-error>
-                }
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="accountNumber"
+                fieldTitle="Account Number"
+                [required]="false"
+                [showError]="!!(statutoryForm.get('accountNumber')?.invalid && statutoryForm.get('accountNumber')?.touched)"
+                errorMessage="Enter a valid account number"
+              />
+              <signet-custom-text-field
+                formControlName="ifscCode"
+                fieldTitle="IFSC Code"
+                [required]="false" [maxLength]="11"
+                [showError]="!!(statutoryForm.get('ifscCode')?.invalid && statutoryForm.get('ifscCode')?.touched)"
+                errorMessage="Enter a valid IFSC code"
+              />
             </div>
             </div>
 
@@ -460,13 +430,9 @@
             </div>
 
             <div class="step-footer">
-              <button mat-stroked-button matStepperPrevious>
-                <mat-icon>arrow_back</mat-icon> Back
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
               <span class="step-actions__spacer"></span>
-              <button mat-raised-button color="primary" matStepperNext>
-                Next <mat-icon>arrow_forward</mat-icon>
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" />
             </div>
           </form>
           </ng-template>
@@ -521,19 +487,13 @@
               </div>
             }
 
-            <button mat-stroked-button type="button" class="add-doc-btn" (click)="addAdditionalDocument()">
-              <mat-icon>add</mat-icon> Add Another Document
-            </button>
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Another Document" (clicked)="addAdditionalDocument()" />
             </div>
 
             <div class="step-footer">
-              <button mat-stroked-button matStepperPrevious>
-                <mat-icon>arrow_back</mat-icon> Back
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
               <span class="step-actions__spacer"></span>
-              <button mat-raised-button color="primary" matStepperNext>
-                Next <mat-icon>arrow_forward</mat-icon>
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" />
             </div>
           </div>
           </ng-template>
@@ -561,9 +521,7 @@
             <div class="review-section" [class.review-section--invalid]="!isStepValid(0)">
               <div class="review-section__header">
                 <h3>Personal Details</h3>
-                <button mat-button type="button" (click)="goToStep(0)">
-                  <mat-icon>edit</mat-icon> Edit
-                </button>
+                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(0)" />
               </div>
               <div class="review-grid">
                 <div><span>Name</span><strong>{{ personalForm.value.firstName }} {{ personalForm.value.lastName }}</strong></div>
@@ -581,9 +539,7 @@
             <div class="review-section">
               <div class="review-section__header">
                 <h3>Employment Details</h3>
-                <button mat-button type="button" (click)="goToStep(1)">
-                  <mat-icon>edit</mat-icon> Edit
-                </button>
+                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(1)" />
               </div>
               <div class="review-grid">
                 <div><span>Employee ID</span><strong>{{ employmentForm.value.employeeCode }}</strong></div>
@@ -602,9 +558,7 @@
             <div class="review-section">
               <div class="review-section__header">
                 <h3>Statutory & Bank Details</h3>
-                <button mat-button type="button" (click)="goToStep(2)">
-                  <mat-icon>edit</mat-icon> Edit
-                </button>
+                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(2)" />
               </div>
               <div class="review-grid">
                 <div><span>Aadhaar</span><strong>{{ statutoryForm.value.aadhaarNumber }}</strong></div>
@@ -622,9 +576,7 @@
             <div class="review-section">
               <div class="review-section__header">
                 <h3>Documents</h3>
-                <button mat-button type="button" (click)="goToStep(3)">
-                  <mat-icon>edit</mat-icon> Edit
-                </button>
+                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(3)" />
               </div>
               <div class="review-docs">
                 @for (doc of uploadedDocuments; track doc.key) {
@@ -644,14 +596,9 @@
             </div>
 
             <div class="step-footer">
-              <button mat-stroked-button matStepperPrevious>
-                <mat-icon>arrow_back</mat-icon> Back
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
               <span class="step-actions__spacer"></span>
-              <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving()">
-                <mat-icon>check</mat-icon>
-                {{ isEdit() ? 'Save Changes' : 'Submit Employee' }}
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="primary" [displayText]="isEdit() ? 'Save Changes' : 'Submit Employee'" (clicked)="onSubmit()" [disabled]="saving()" />
             </div>
           </div>
           </ng-template>

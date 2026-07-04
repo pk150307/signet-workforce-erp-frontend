@@ -1,18 +1,6 @@
-import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { NgClass, NgFor, NgIf, DecimalPipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
@@ -24,67 +12,59 @@ import {
   EmployeeListItem, EmployeeStatus, EmploymentType,
   EMPLOYEE_STATUS_LABELS, EMPLOYMENT_TYPE_LABELS
 } from '../../../core/models/employee.models';
-import { PaginatedResult } from '../../../core/models/api.models';
-import { SafeDatePipe } from '../../../shared/pipes/safe-date.pipe';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
+import { CursorPageParams, CursorPaginatedResult } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { featureDialogConfig } from '../../../core/utils/dialog.util';
 import { EmployeeMarkLeftDialogComponent } from '../components/employee-mark-left-dialog/employee-mark-left-dialog.component';
 import { EmployeeRejoinDialogComponent } from '../components/employee-rejoin-dialog/employee-rejoin-dialog.component';
+
 @Component({
   selector: 'app-employee-list',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    NgClass,
-    SafeDatePipe,
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-  ],
   templateUrl: './employee-list.component.html',
   styleUrl: './employee-list.component.less',
 })
 export class EmployeeListComponent implements OnInit {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
-
   private readonly employeeService = inject(EmployeeService);
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
   readonly apiUnavailable = signal(false);
-  readonly data = signal<PaginatedResult<EmployeeListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<EmployeeListItem> | null>(null);
   readonly clients = signal<ClientListItem[]>([]);
+  readonly pager = new CursorPaginationState();
 
   readonly searchCtrl = new FormControl('');
-  readonly clientCtrl = new FormControl<string | null>(null);
+  readonly clientCtrl = new FormControl<string>('');
   readonly statusCtrl = new FormControl<EmployeeStatus | 'all'>(EmployeeStatus.Active);
-  readonly employmentTypeCtrl = new FormControl<EmploymentType | null>(null);
+  readonly employmentTypeCtrl = new FormControl<string>('');
 
   readonly displayedColumns = ['employeeCode', 'fullName', 'department', 'designation', 'site', 'status', 'joiningDate', 'actions'];
 
-  readonly statusOptions = Object.entries(EMPLOYEE_STATUS_LABELS).map(([k, v]) => ({ value: +k, label: v }));
-  readonly employmentTypeOptions = Object.entries(EMPLOYMENT_TYPE_LABELS).map(([k, v]) => ({ value: +k, label: v }));
+  readonly clientOptions = computed(() => [
+    { key: '', value: 'All clients' },
+    ...this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  ]);
+
+  readonly statusFilterOptions = computed(() => [
+    { key: 'all', value: 'All Statuses' },
+    ...Object.entries(EMPLOYEE_STATUS_LABELS).map(([k, v]) => ({ key: k, value: v })),
+  ]);
+
+  readonly employmentTypeFilterOptions = computed(() => [
+    { key: '', value: 'All Types' },
+    ...Object.entries(EMPLOYMENT_TYPE_LABELS).map(([k, v]) => ({ key: k, value: v })),
+  ]);
+
   readonly statusLabels: Record<number, string> = EMPLOYEE_STATUS_LABELS as Record<number, string>;
 
-  page = 1;
-  pageSize = 20;
   sortBy = 'CreatedAt';
   sortDir: 'asc' | 'desc' = 'desc';
 
@@ -99,51 +79,78 @@ export class EmployeeListComponent implements OnInit {
     this.searchCtrl.valueChanges.pipe(
       debounceTime(350),
       distinctUntilChanged()
-    ).subscribe(() => { this.page = 1; this.loadData(); });
+    ).subscribe(() => this.reloadFirstPage());
 
-    this.clientCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
-    this.employmentTypeCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
+    this.clientCtrl.valueChanges.subscribe(() => this.reloadFirstPage());
+    this.statusCtrl.valueChanges.subscribe(() => this.reloadFirstPage());
+    this.employmentTypeCtrl.valueChanges.subscribe(() => this.reloadFirstPage());
   }
 
-  loadData() {
+  loadData(params?: CursorPageParams) {
     this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
+
     this.employeeService.getAll({
-      page: this.page,
-      pageSize: this.pageSize,
+      ...pageParams,
       search: this.searchCtrl.value || undefined,
       clientId: this.clientCtrl.value || undefined,
       status: this.statusCtrl.value === 'all'
         ? 'all'
         : (this.statusCtrl.value ?? EmployeeStatus.Active),
-      employmentType: this.employmentTypeCtrl.value ?? undefined,
+      employmentType: this.employmentTypeCtrl.value
+        ? (Number(this.employmentTypeCtrl.value) as EmploymentType)
+        : undefined,
       sortBy: this.sortBy,
       sortDir: this.sortDir,
     }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
+        this.apiUnavailable.set(false);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.loadData(this.pager.firstPageParams());
+          return;
+        }
         this.apiUnavailable.set(true);
-        this.data.set({ items: [], totalCount: 0, page: 1, pageSize: this.pageSize, totalPages: 0, hasPreviousPage: false, hasNextPage: false });
+        this.data.set(emptyCursorPage(this.pager.pageSize));
+        this.pager.reset();
         this.loading.set(false);
       },
     });
   }
 
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.loadData();
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const params = this.pager.nextPageParams();
+      if (params) this.loadData(params);
+      return;
+    }
+    const params = this.pager.prevPageParams();
+    if (params) this.loadData(params);
   }
 
-  onSortChange(sort: { active: string; direction: 'asc' | 'desc' | '' }) {
-    if (sort.direction) {
-      this.sortBy = sort.active;
-      this.sortDir = sort.direction;
+  private reloadFirstPage() {
+    this.pager.reset();
+    this.loadData(this.pager.firstPageParams());
+  }
+
+  toggleSort(active: string) {
+    if (this.sortBy === active) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = active;
+      this.sortDir = 'asc';
     }
-    this.loadData();
+    this.reloadFirstPage();
+  }
+
+  sortIcon(active: string): string {
+    if (this.sortBy !== active) return 'unfold_more';
+    return this.sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward';
   }
 
   viewEmployee(id: string) {
@@ -167,7 +174,7 @@ export class EmployeeListComponent implements OnInit {
       width: '480px',
       data: { employee: emp },
     })).afterClosed().subscribe(changed => {
-      if (changed) this.loadData();
+      if (changed) this.loadData(this.pager.currentPageParams());
     });
   }
 
@@ -176,7 +183,7 @@ export class EmployeeListComponent implements OnInit {
       width: '480px',
       data: { employee: emp },
     })).afterClosed().subscribe(changed => {
-      if (changed) this.loadData();
+      if (changed) this.loadData(this.pager.currentPageParams());
     });
   }
 
@@ -192,9 +199,9 @@ export class EmployeeListComponent implements OnInit {
 
   clearFilters() {
     this.searchCtrl.setValue('');
-    this.clientCtrl.setValue(null);
+    this.clientCtrl.setValue('');
     this.statusCtrl.setValue(EmployeeStatus.Active);
-    this.employmentTypeCtrl.setValue(null);
+    this.employmentTypeCtrl.setValue('');
   }
 
   hasNonDefaultFilters(): boolean {

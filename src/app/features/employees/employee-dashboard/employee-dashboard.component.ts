@@ -1,9 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { SafeDatePipe } from '../../../shared/pipes/safe-date.pipe';
 import { Router, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HighchartsChartModule } from 'highcharts-angular';
 import * as Highcharts from 'highcharts';
 import { forkJoin, of } from 'rxjs';
@@ -18,26 +15,14 @@ import {
 } from '../../../core/models/employee.models';
 import { EmployeeCardComponent } from '../components/employee-card/employee-card.component';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-employee-dashboard',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    SafeDatePipe,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    HighchartsChartModule,
-    EmployeeCardComponent,
-  ],
-  templateUrl: './employee-dashboard.component.html',
+    templateUrl: './employee-dashboard.component.html',
   styleUrl: './employee-dashboard.component.less',
 })
 export class EmployeeDashboardComponent implements OnInit {
   private readonly employeeService = inject(EmployeeService);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
 
   readonly Highcharts = Highcharts;
   readonly loading = signal(true);
@@ -112,7 +97,7 @@ export class EmployeeDashboardComponent implements OnInit {
       chart: {
         type: 'pie',
         backgroundColor: 'transparent',
-        style: { fontFamily: 'Inter, sans-serif' },
+        style: { fontFamily: 'ProximaNova-Regular, sans-serif' },
         height: 260,
       },
       title: { text: undefined },
@@ -141,7 +126,7 @@ export class EmployeeDashboardComponent implements OnInit {
       chart: {
         type: 'column',
         backgroundColor: 'transparent',
-        style: { fontFamily: 'Inter, sans-serif' },
+        style: { fontFamily: 'ProximaNova-Regular, sans-serif' },
         height: 260,
       },
       title: { text: undefined },

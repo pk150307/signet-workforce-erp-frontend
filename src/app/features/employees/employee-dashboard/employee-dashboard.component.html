@@ -5,15 +5,9 @@
       <p class="page-header__subtitle">Workforce overview — headcount, joiners, exits, and recent activity</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button (click)="loadDashboard()">
-        <mat-icon>refresh</mat-icon>
-      </button>
-      <button mat-stroked-button routerLink="/employees/list">
-        <mat-icon>list</mat-icon> View All
-      </button>
-      <button mat-raised-button color="primary" routerLink="/employees/new">
-        <mat-icon>person_add</mat-icon> Add Employee
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadDashboard()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="View All" (clicked)="router.navigate(['/employees/list'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Employee" (clicked)="router.navigate(['/employees/new'])" />
     </div>
   </div>
 

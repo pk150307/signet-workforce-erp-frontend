@@ -9,51 +9,58 @@
     <app-skeleton-loader type="card" [rows]="5"></app-skeleton-loader>
   } @else {
     <form [formGroup]="form" class="dialog-form">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Rejoin Date</mat-label>
-        <input matInput [matDatepicker]="joinPicker" formControlName="joiningDate">
-        <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
-        <mat-datepicker #joinPicker></mat-datepicker>
-      </mat-form-field>
+      <signet-date-input-field
+        fieldTitle="Rejoin Date"
+        placeholder="Select rejoin date"
+        [value]="dateToSignetValue(form.get('joiningDate')?.value)"
+        (valueChange)="onJoiningDateChange($event)"
+        [required]="true"
+        [width]="100"
+        widthUnit="%"
+      />
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Department</mat-label>
-        <mat-select formControlName="departmentId">
-          @for (dept of departments(); track dept.id) {
-            <mat-option [value]="dept.id">{{ dept.departmentName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <signet-search-select-dropdown
+        formControlName="departmentId"
+        fieldTitle="Department"
+        placeholder="Select department"
+        [options]="departmentOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+      />
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Designation</mat-label>
-        <mat-select formControlName="designationId" [disabled]="!form.value.departmentId">
-          @for (des of designations(); track des.id) {
-            <mat-option [value]="des.id">{{ des.designationName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <signet-search-select-dropdown
+        formControlName="designationId"
+        fieldTitle="Designation"
+        placeholder="Select designation"
+        [options]="designationOptions()"
+        [disabled]="!form.value.departmentId"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+      />
 
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Site (optional)</mat-label>
-        <mat-select formControlName="siteId">
-          <mat-option value="">None</mat-option>
-          @for (site of sites(); track site.id) {
-            <mat-option [value]="site.id">{{ site.siteName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <signet-search-select-dropdown
+        formControlName="siteId"
+        fieldTitle="Site (optional)"
+        placeholder="None"
+        [options]="siteOptions()"
+        [required]="false"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+      />
 
-      <mat-checkbox formControlName="reuseEmployeeCode">
-        Reuse existing employee code ({{ data.employee.employeeCode }})
-      </mat-checkbox>
+      <signet-custom-checkbox
+        formControlName="reuseEmployeeCode"
+        permissionKey="reuseEmployeeCode"
+        [label]="'Reuse existing employee code (' + data.employee.employeeCode + ')'"
+      />
     </form>
   }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
-  <button mat-raised-button color="primary" type="button" (click)="submit()" [disabled]="saving() || loading()">
-    Rejoin Employee
-  </button>
+  <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
+  <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Rejoin Employee" (clicked)="submit()" [disabled]="saving() || loading()" />
 </mat-dialog-actions>

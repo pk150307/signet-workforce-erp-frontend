@@ -1,21 +1,10 @@
-import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { NgFor, NgIf, DecimalPipe, UpperCasePipe } from '@angular/common';
+import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { DecimalPipe, UpperCasePipe } from '@angular/common';
 import { SafeDatePipe } from '../../../shared/pipes/safe-date.pipe';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { MatStepper, MatStepperModule } from '@angular/material/stepper';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatRadioModule } from '@angular/material/radio';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatStepper } from '@angular/material/stepper';
 import { forkJoin, of, Observable } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 
@@ -51,7 +40,8 @@ import {
   DocumentUploadComponent,
   DocumentUploadEvent,
 } from '../components/document-upload/document-upload.component';
-import { EmployeeStatusBadgeComponent } from '../components/employee-status-badge/employee-status-badge.component';
+import dayjs from 'dayjs';
+import { DatePickerPayload } from '../../../library/data/date-picker-payload';
 
 interface StoredDocument {
   key: string;
@@ -63,35 +53,9 @@ interface StoredDocument {
   documentId?: string;
 }
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-employee-form',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    SafeDatePipe,
-    DecimalPipe,
-    UpperCasePipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatStepperModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatDividerModule,
-    MatRadioModule,
-    MatTooltipModule,
-    DocumentUploadComponent,
-    EmployeeStatusBadgeComponent,
-  ],
-  templateUrl: './employee-form.component.html',
+    templateUrl: './employee-form.component.html',
   styleUrl: './employee-form.component.less',
 })
 export class EmployeeFormComponent implements OnInit {
@@ -99,7 +63,7 @@ export class EmployeeFormComponent implements OnInit {
 
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly employeeService = inject(EmployeeService);
   private readonly documentService = inject(EmployeeDocumentService);
   private readonly notification = inject(NotificationService);
@@ -131,6 +95,9 @@ export class EmployeeFormComponent implements OnInit {
   readonly clients = signal<ClientListItem[]>([]);
   readonly filteredSites = signal<SiteListItem[]>([]);
   readonly managers = signal<EmployeeListItem[]>([]);
+  readonly employmentClientId = signal('');
+  readonly employmentDepartmentId = signal('');
+  readonly employmentDesignationId = signal('');
 
   readonly genderOptions = [
     { value: Gender.Male, label: GENDER_LABELS[Gender.Male] },
@@ -138,15 +105,71 @@ export class EmployeeFormComponent implements OnInit {
     { value: Gender.Other, label: GENDER_LABELS[Gender.Other] },
     { value: Gender.PreferNotToSay, label: GENDER_LABELS[Gender.PreferNotToSay] },
   ];
-  readonly employmentTypeOptions = [
+  readonly genderRadioOptions = computed(() =>
+    this.genderOptions.map(opt => ({ key: String(opt.value), value: opt.label })),
+  );
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+  readonly siteOptions = computed(() =>
+    this.filteredSites().map(s => ({
+      key: String(s.id),
+      value: `${s.siteName} — ${s.city}`,
+    })),
+  );
+  readonly departmentOptions = computed(() => {
+    const clientId = this.employmentClientId();
+    const placeholder = clientId
+      ? { key: '', value: 'Select department' }
+      : { key: '', value: 'Select client first' };
+    return [
+      placeholder,
+      ...this.departments().map(d => ({ key: String(d.id), value: d.departmentName })),
+    ];
+  });
+  readonly designationOptions = computed(() => {
+    const departmentId = this.employmentDepartmentId();
+    const placeholder = this.designationsLoading()
+      ? { key: '', value: 'Loading…' }
+      : departmentId
+        ? { key: '', value: 'Select designation' }
+        : { key: '', value: 'Select department first' };
+    return [
+      placeholder,
+      ...this.designations().map(d => ({ key: String(d.id), value: d.designationName })),
+    ];
+  });
+  readonly designationGradeOptions = computed(() => {
+    const designationId = this.employmentDesignationId();
+    const placeholder = this.gradesLoading()
+      ? { key: '', value: 'Loading…' }
+      : designationId
+        ? { key: '', value: 'Select pay grade (optional)' }
+        : { key: '', value: 'Select designation first' };
+    return [
+      placeholder,
+      ...this.designationGrades().map(g => ({
+        key: String(g.id),
+        value: `${g.gradeCode} — ${g.gradeName}`,
+      })),
+    ];
+  });
+  readonly managerOptions = computed(() => [
+    { key: '', value: 'None' },
+    ...this.managers().map(m => ({
+      key: String(m.id),
+      value: `${m.fullName} (${m.employeeCode})`,
+    })),
+  ]);
+  readonly employmentTypeSelectOptions = computed(() => [
     { value: EmploymentType.FullTime, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.FullTime] },
     { value: EmploymentType.PartTime, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.PartTime] },
     { value: EmploymentType.Contract, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Contract] },
     { value: EmploymentType.Freelance, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Freelance] },
     { value: EmploymentType.Internship, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Internship] },
     { value: EmploymentType.Temporary, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Temporary] },
-  ];
-  readonly maxDateOfBirth = new Date();
+  ].map(opt => ({ key: String(opt.value), value: opt.label })));
+  readonly dobDatePickerConfig: Partial<DatePickerPayload> = { maxDate: dayjs() };
   readonly statusLabels = EMPLOYEE_STATUS_LABELS;
   readonly genderLabels = GENDER_LABELS;
   readonly employmentLabels = EMPLOYMENT_TYPE_LABELS;
@@ -216,15 +239,22 @@ export class EmployeeFormComponent implements OnInit {
 
     this.loadLookups();
 
+    this.employmentClientId.set(this.employmentForm.get('clientId')?.value ?? '');
+    this.employmentDepartmentId.set(this.employmentForm.get('departmentId')?.value ?? '');
+    this.employmentDesignationId.set(this.employmentForm.get('designationId')?.value ?? '');
+
     this.employmentForm.get('clientId')?.valueChanges.subscribe(clientId => {
+      this.employmentClientId.set(clientId ?? '');
       this.onClientChange(clientId ?? '');
     });
 
     this.employmentForm.get('departmentId')?.valueChanges.subscribe(departmentId => {
+      this.employmentDepartmentId.set(departmentId ?? '');
       this.onDepartmentChange(departmentId ?? '');
     });
 
     this.employmentForm.get('designationId')?.valueChanges.subscribe(designationId => {
+      this.employmentDesignationId.set(designationId ?? '');
       this.onDesignationChange(designationId ?? '');
     });
 
@@ -461,6 +491,9 @@ export class EmployeeFormComponent implements OnInit {
           joiningDate: parseApiDate(emp.joiningDate),
           employmentType: emp.employmentType,
         }, { emitEvent: false });
+        this.employmentClientId.set(emp.clientId ?? '');
+        this.employmentDepartmentId.set(emp.departmentId ?? '');
+        this.employmentDesignationId.set(emp.designationId ?? '');
 
         if (emp.clientId && emp.departmentId) {
           forkJoin({
@@ -803,6 +836,42 @@ export class EmployeeFormComponent implements OnInit {
       ifscCode: s.ifscCode?.toUpperCase() ?? undefined,
       status,
     };
+  }
+
+  dateToSignetValue(date: Date | null | undefined): { startDate?: string } {
+    if (!date) return {};
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return {};
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return { startDate: `${y}-${m}-${day}T00:00:00` };
+  }
+
+  signetValueToDate(value: { startDate?: string } | null | undefined): Date | null {
+    if (!value?.startDate) return null;
+    const datePart = value.startDate.split('T')[0];
+    const [y, m, d] = datePart.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  onDateOfBirthChange(value: { startDate?: string }) {
+    this.personalForm.get('dateOfBirth')?.setValue(this.signetValueToDate(value));
+  }
+
+  onJoiningDateChange(value: { startDate?: string }) {
+    this.employmentForm.get('joiningDate')?.setValue(this.signetValueToDate(value));
+  }
+
+  onGenderChange(value: string | number) {
+    const parsed = typeof value === 'number' ? value : Number(value);
+    this.personalForm.get('gender')?.setValue(Number.isFinite(parsed) ? parsed as Gender : null);
+  }
+
+  genderRadioValue(): string {
+    const gender = this.personalForm.get('gender')?.value;
+    return gender != null ? String(gender) : '';
   }
 
   compareSelectValue = (a: unknown, b: unknown): boolean => {

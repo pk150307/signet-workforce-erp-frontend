@@ -1,8 +1,5 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 import { EmployeeDocumentType } from '../../../../core/models/employee.models';
 
 export interface DocumentUploadEvent {
@@ -13,12 +10,16 @@ export interface DocumentUploadEvent {
 
 @Component({
   selector: 'app-document-upload',
-  standalone: true,
-  imports: [NgIf, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
-  templateUrl: './document-upload.component.html',
+    templateUrl: './document-upload.component.html',
   styleUrl: './document-upload.component.less',
 })
 export class DocumentUploadComponent {
+  private static nextId = 0;
+  private readonly uid = ++DocumentUploadComponent.nextId;
+
+  readonly inputId = `document-upload-${this.uid}`;
+  readonly hintId = `document-upload-hint-${this.uid}`;
+
   @Input({ required: true }) label = '';
   @Input({ required: true }) documentType!: EmployeeDocumentType;
   @Input() accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';

@@ -1,13 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 import { EmployeeService } from '../../../../core/services/employee.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -19,18 +12,6 @@ export interface EmployeeMarkLeftDialogData {
 
 @Component({
   selector: 'app-employee-mark-left-dialog',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
-  ],
   templateUrl: './employee-mark-left-dialog.component.html',
   styleUrl: './employee-mark-left-dialog.component.less',
 })
@@ -42,13 +23,39 @@ export class EmployeeMarkLeftDialogComponent {
   readonly data = inject<EmployeeMarkLeftDialogData>(MAT_DIALOG_DATA);
 
   readonly saving = signal(false);
-  readonly reasons = EMPLOYEE_LEFT_REASONS;
+  readonly reasonOptions = computed(() =>
+    EMPLOYEE_LEFT_REASONS.map(reason => ({ key: reason, value: reason })),
+  );
 
   readonly form = this.fb.group({
     lastWorkingDate: [new Date(), Validators.required],
     reason: ['', Validators.required],
     remarks: [''],
   });
+
+  dateToSignetValue(date: Date | null | undefined): { startDate?: string } {
+    if (!date) return {};
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return {};
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return { startDate: `${y}-${m}-${day}T00:00:00` };
+  }
+
+  signetValueToDate(value: { startDate?: string } | null | undefined): Date | null {
+    if (!value?.startDate) return null;
+    const datePart = value.startDate.split('T')[0];
+    const [y, m, d] = datePart.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  onLastWorkingDateChange(value: { startDate?: string }) {
+    const date = this.signetValueToDate(value);
+    this.form.controls.lastWorkingDate.setValue(date ?? new Date());
+    this.form.controls.lastWorkingDate.markAsTouched();
+  }
 
   submit() {
     if (this.form.invalid) {

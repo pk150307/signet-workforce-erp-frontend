@@ -7,6 +7,14 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+
+  &__meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
 }
 
 .responsive-detail-grid();
@@ -32,18 +40,17 @@
     }
   }
 
-  .detail-tabs {
-    ::ng-deep .mat-mdc-tab-header {
-      overflow-x: auto;
-    }
+  .detail-sections__nav {
+    min-width: 360px;
   }
 });
+
 
 .emp-header__avatar {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), #1e88e5);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
   color: #fff;
   font-size: 22px;
   font-weight: 700;
@@ -56,12 +63,18 @@
 .sep { color: var(--color-text-muted); }
 .text-muted { color: var(--color-text-muted); font-size: 13px; }
 
-.detail-tabs {
-  background: transparent;
-  .mat-mdc-tab-body-wrapper { background: transparent; }
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__nav {
+    display: block;
+    width: 100%;
+  }
 }
 
-.tab-content { padding: 20px 0 0; }
+.tab-content { padding: 4px 0 0; }
 
 .detail-section {
   font-size: 13px;
@@ -97,7 +110,7 @@
   color: var(--color-text-primary);
   font-weight: 500;
   text-align: right;
-  &.mono { font-family: 'Courier New', monospace; font-size: 12px; }
+  &.mono { font-family: ProximaNova-Medium, sans-serif; font-size: 12px; }
   &.salary { font-size: 16px; font-weight: 700; color: var(--color-primary); }
 }
 
@@ -163,7 +176,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--color-surface-alt, #f4f6f8);
+  background: var(--color-bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;

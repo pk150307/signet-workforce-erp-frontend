@@ -1,13 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
@@ -20,7 +13,6 @@ import { EmployeeListItem } from '../../../../core/models/employee.models';
 import { DepartmentListItem } from '../../../../core/models/department.models';
 import { DesignationListItem } from '../../../../core/models/designation.models';
 import { SiteListItem } from '../../../../core/models/sites.models';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 export interface EmployeeRejoinDialogData {
   employee: EmployeeListItem;
@@ -28,19 +20,6 @@ export interface EmployeeRejoinDialogData {
 
 @Component({
   selector: 'app-employee-rejoin-dialog',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatCheckboxModule,
-    SkeletonLoaderComponent,
-  ],
   templateUrl: './employee-rejoin-dialog.component.html',
   styleUrl: './employee-rejoin-dialog.component.less',
 })
@@ -59,7 +38,28 @@ export class EmployeeRejoinDialogComponent implements OnInit {
   readonly departments = signal<DepartmentListItem[]>([]);
   readonly designations = signal<DesignationListItem[]>([]);
   readonly sites = signal<SiteListItem[]>([]);
+  readonly selectedDepartmentId = signal('');
   private clientId = '';
+
+  readonly departmentOptions = computed(() =>
+    this.departments().map(d => ({ key: String(d.id), value: d.departmentName })),
+  );
+
+  readonly designationOptions = computed(() => {
+    const departmentId = this.selectedDepartmentId();
+    const placeholder = departmentId
+      ? { key: '', value: 'Select designation' }
+      : { key: '', value: 'Select department first' };
+    return [
+      placeholder,
+      ...this.designations().map(d => ({ key: String(d.id), value: d.designationName })),
+    ];
+  });
+
+  readonly siteOptions = computed(() => [
+    { key: '', value: 'None' },
+    ...this.sites().map(s => ({ key: String(s.id), value: s.siteName })),
+  ]);
 
   readonly form = this.fb.group({
     joiningDate: [new Date(), Validators.required],
@@ -70,7 +70,10 @@ export class EmployeeRejoinDialogComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.selectedDepartmentId.set(this.form.controls.departmentId.value ?? '');
+
     this.form.controls.departmentId.valueChanges.subscribe(departmentId => {
+      this.selectedDepartmentId.set(departmentId ?? '');
       this.form.patchValue({ designationId: '' }, { emitEvent: false });
       this.loadDesignations(departmentId ?? '');
     });
@@ -88,6 +91,7 @@ export class EmployeeRejoinDialogComponent implements OnInit {
           departmentId: employee.departmentId ?? '',
           siteId: employee.siteId ?? '',
         }, { emitEvent: false });
+        this.selectedDepartmentId.set(employee.departmentId ?? '');
 
         if (employee.departmentId) {
           this.loadDesignations(employee.departmentId, employee.designationId ?? undefined);
@@ -116,6 +120,30 @@ export class EmployeeRejoinDialogComponent implements OnInit {
       },
       error: () => this.designations.set([]),
     });
+  }
+
+  dateToSignetValue(date: Date | null | undefined): { startDate?: string } {
+    if (!date) return {};
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return {};
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return { startDate: `${y}-${m}-${day}T00:00:00` };
+  }
+
+  signetValueToDate(value: { startDate?: string } | null | undefined): Date | null {
+    if (!value?.startDate) return null;
+    const datePart = value.startDate.split('T')[0];
+    const [y, m, d] = datePart.split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  onJoiningDateChange(value: { startDate?: string }) {
+    const date = this.signetValueToDate(value);
+    this.form.controls.joiningDate.setValue(date ?? new Date());
+    this.form.controls.joiningDate.markAsTouched();
   }
 
   submit() {

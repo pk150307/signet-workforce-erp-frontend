@@ -8,7 +8,7 @@
     <div class="empty-state">
       <mat-icon>person_off</mat-icon>
       <p>Employee not found or could not be loaded.</p>
-      <button mat-stroked-button routerLink="/employees/list">Back to list</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to list" (clicked)="router.navigate(['employees','list'])" />
     </div>
   }
 
@@ -20,10 +20,8 @@
         <div class="emp-header__avatar">{{ emp.firstName.charAt(0) }}</div>
         <div>
           <h1 class="page-header__title">{{ emp.firstName }} {{ emp.lastName }}</h1>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
-            <span class="badge" [ngClass]="'badge--' + getStatusClass(emp.status)">
-              {{ statusLabels[emp.status] }}
-            </span>
+          <div class="emp-header__meta">
+            <signet-status-button [label]="statusLabels[emp.status]" [status]="statusLabels[emp.status]" />
             <span class="text-muted">{{ emp.employeeCode }}</span>
             <span class="sep">·</span>
             <span class="text-muted">{{ emp.designationName }}</span>
@@ -33,17 +31,23 @@
         </div>
       </div>
       <div class="page-header__actions">
-        <button mat-stroked-button [routerLink]="['/employees', emp.id, 'edit']">
-          <mat-icon>edit</mat-icon> Edit
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Edit" (clicked)="router.navigate(['/employees', emp.id, 'edit'])" />
       </div>
     </div>
 
-    <!-- Tabs -->
-    <mat-tab-group [(selectedIndex)]="activeTab" class="detail-tabs">
+    <div class="detail-sections">
+      <signet-sections-navigator
+        class="detail-sections__nav"
+        [navigationItems]="sectionItems"
+        [selectedItem]="activeSection()"
+        [activeBackgroundColour]="'var(--color-primary)'"
+        [borderColor]="'var(--color-border)'"
+        [backgroundColor]="'var(--color-surface)'"
+        height="48px"
+        (selectedItemChange)="activeSection.set($event)"
+      />
 
-      <!-- Overview -->
-      <mat-tab label="Overview">
+      @if (activeSection() === 'overview') {
         <div class="tab-content">
           <div class="detail-grid">
             <div class="card">
@@ -139,10 +143,9 @@
             </div>
           </div>
         </div>
-      </mat-tab>
+      }
 
-      <!-- Statutory -->
-      <mat-tab label="Statutory & Bank">
+      @if (activeSection() === 'statutory') {
         <div class="tab-content">
           <div class="detail-grid">
             <div class="card">
@@ -163,10 +166,9 @@
             </div>
           </div>
         </div>
-      </mat-tab>
+      }
 
-      <!-- Documents -->
-      <mat-tab label="Documents">
+      @if (activeSection() === 'documents') {
         <div class="tab-content">
           @if (documentsLoading()) {
             <div class="documents-loading">
@@ -177,9 +179,7 @@
             <div class="documents-empty card">
               <mat-icon>folder_open</mat-icon>
               <p>No documents uploaded for this employee yet.</p>
-              <button mat-stroked-button [routerLink]="['/employees', emp.id, 'edit']">
-                <mat-icon>upload_file</mat-icon> Upload Documents
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Upload Documents" (clicked)="router.navigate(['/employees', emp.id, 'edit'])" />
             </div>
           } @else {
             <div class="documents-list card">
@@ -247,8 +247,7 @@
             </div>
           }
         </div>
-      </mat-tab>
-
-    </mat-tab-group>
+      }
+    </div>
   </ng-container>
 </div>

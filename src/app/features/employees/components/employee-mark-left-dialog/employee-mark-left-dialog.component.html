@@ -6,38 +6,39 @@
   </p>
 
   <form [formGroup]="form" class="dialog-form">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Last Working Date</mat-label>
-      <input matInput [matDatepicker]="lwdPicker" formControlName="lastWorkingDate">
-      <mat-datepicker-toggle matSuffix [for]="lwdPicker"></mat-datepicker-toggle>
-      <mat-datepicker #lwdPicker></mat-datepicker>
-      @if (form.controls.lastWorkingDate.hasError('required') && form.controls.lastWorkingDate.touched) {
-        <mat-error>Required</mat-error>
-      }
-    </mat-form-field>
+    <signet-date-input-field
+      fieldTitle="Last Working Date"
+      placeholder="Select last working date"
+      [value]="dateToSignetValue(form.get('lastWorkingDate')?.value)"
+      (valueChange)="onLastWorkingDateChange($event)"
+      [required]="true"
+      [showError]="!!(form.controls.lastWorkingDate.hasError('required') && form.controls.lastWorkingDate.touched)"
+      errorMessage="Required"
+      [width]="100"
+      widthUnit="%"
+    />
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Reason</mat-label>
-      <mat-select formControlName="reason">
-        @for (reason of reasons; track reason) {
-          <mat-option [value]="reason">{{ reason }}</mat-option>
-        }
-      </mat-select>
-      @if (form.controls.reason.hasError('required') && form.controls.reason.touched) {
-        <mat-error>Required</mat-error>
-      }
-    </mat-form-field>
+    <signet-search-select-dropdown
+      formControlName="reason"
+      fieldTitle="Reason"
+      placeholder="Select reason"
+      [options]="reasonOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Remarks (optional)</mat-label>
-      <textarea matInput rows="3" formControlName="remarks"></textarea>
-    </mat-form-field>
+    <signet-custom-text-area-field
+      formControlName="remarks"
+      fieldTitle="Remarks (optional)"
+      [required]="false"
+      [width]="100"
+      widthUnit="%"
+    />
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
-  <button mat-raised-button color="warn" type="button" (click)="submit()" [disabled]="saving()">
-    {{ saving() ? 'Saving…' : 'Mark as Left' }}
-  </button>
+  <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
+  <signet-button [width]="100" [widthUnit]="'%'" type="error" [displayText]="saving() ? 'Saving…' : 'Mark as Left'" (clicked)="submit()" [disabled]="saving()" />
 </mat-dialog-actions>

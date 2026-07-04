@@ -9,15 +9,27 @@
   (click)="fileInput.click()">
 
   <input
+    [id]="inputId"
     #fileInput
     type="file"
     hidden
     [accept]="accept"
+    [attr.aria-describedby]="hintId"
     (change)="onFileInput($event)" />
 
   @if (uploading) {
+    <label [for]="inputId" class="document-upload__text document-upload__text--sr-only">
+      <strong>{{ label }}</strong>
+      @if (required) { <span class="document-upload__req">*</span> }
+      <span [id]="hintId">{{ hint }}</span>
+    </label>
     <mat-spinner diameter="28"></mat-spinner>
   } @else if (fileName) {
+    <label [for]="inputId" class="document-upload__text document-upload__text--sr-only">
+      <strong>{{ label }}</strong>
+      @if (required) { <span class="document-upload__req">*</span> }
+      <span [id]="hintId">{{ hint }}</span>
+    </label>
     <div class="document-upload__preview">
       @if (previewUrl && (previewUrl.startsWith('data:image') || previewUrl.startsWith('blob:'))) {
         <img [src]="previewUrl" [alt]="fileName" class="document-upload__thumb">
@@ -34,10 +46,10 @@
     </div>
   } @else {
     <mat-icon class="document-upload__icon">cloud_upload</mat-icon>
-    <div class="document-upload__text">
+    <label [for]="inputId" class="document-upload__text">
       <strong>{{ label }}</strong>
       @if (required) { <span class="document-upload__req">*</span> }
-      <span>{{ hint }}</span>
-    </div>
+      <span [id]="hintId">{{ hint }}</span>
+    </label>
   }
 </div>

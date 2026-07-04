@@ -1,10 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgClass, NgIf, DecimalPipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DecimalPipe } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -24,29 +20,15 @@ import {
 } from '../../../core/models/employee.models';
 import { SafeDatePipe } from '../../../shared/pipes/safe-date.pipe';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-employee-detail',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgClass,
-    SafeDatePipe,
-    DecimalPipe,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-  ],
-  templateUrl: './employee-detail.component.html',
+    templateUrl: './employee-detail.component.html',
   styleUrl: './employee-detail.component.less',
 })
 export class EmployeeDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly employeeService = inject(EmployeeService);
   private readonly documentService = inject(EmployeeDocumentService);
@@ -66,7 +48,12 @@ export class EmployeeDetailComponent implements OnInit {
   readonly employmentTypeLabels = EMPLOYMENT_TYPE_LABELS;
   readonly docLabels = EMPLOYEE_DOCUMENT_LABELS;
 
-  activeTab = 0;
+  readonly sectionItems = [
+    { label: 'Overview', value: 'overview' },
+    { label: 'Statutory & Bank', value: 'statutory' },
+    { label: 'Documents', value: 'documents' },
+  ];
+  readonly activeSection = signal('overview');
   private employeeId = '';
 
   ngOnInit() {

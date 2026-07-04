@@ -5,14 +5,12 @@
     <div>
       <h1 class="page-header__title">Employees</h1>
       <p class="page-header__subtitle">
-        {{ data()?.totalCount ?? 0 | number }} total employees
+        {{ data()?.items?.length ?? 0 | number }} employees shown
       </p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button (click)="loadData()" matTooltip="Refresh" aria-label="Refresh"><mat-icon>refresh</mat-icon></button>
-      <button mat-raised-button color="primary" routerLink="/employees/new">
-        <mat-icon>person_add</mat-icon> Add Employee
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadData()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Employee" (clicked)="router.navigate(['/employees/new'])" />
     </div>
   </div>
 
@@ -24,47 +22,64 @@
     </div>
   }
 
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-bar__search">
-      <mat-label>Search employees...</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl" autocomplete="off">
-      <button matSuffix mat-icon-button *ngIf="searchCtrl.value" (click)="searchCtrl.setValue('')">
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
+  <div class="filter-bar card employee-list__filters">
+    <signet-custom-text-field
+      class="employee-list__filter-field"
+      [formControl]="searchCtrl"
+      fieldTitle="Search employees"
+      placeholder="Search employees..."
+      autocomplete="off"
+      [width]="100"
+      widthUnit="%"
+      [required]="false"
+    />
 
-    <div class="filter-bar__filters">
-      <mat-form-field appearance="outline" class="filter-field--inline">
-        <mat-label>Client</mat-label>
-        <mat-select [formControl]="clientCtrl">
-          <mat-option [value]="null">All clients</mat-option>
-          <mat-option *ngFor="let c of clients()" [value]="c.id">{{ c.companyName }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <signet-search-select-dropdown
+      class="employee-list__filter-field"
+      [formControl]="clientCtrl"
+      fieldTitle="Client"
+      placeholder="All clients"
+      [options]="clientOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="true"
+      [required]="false"
+    />
 
-      <mat-form-field appearance="outline" class="filter-field--inline">
-        <mat-label>Status</mat-label>
-        <mat-select [formControl]="statusCtrl">
-          <mat-option [value]="'all'">All Statuses</mat-option>
-          <mat-option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <signet-search-select-dropdown
+      class="employee-list__filter-field"
+      [formControl]="statusCtrl"
+      fieldTitle="Status"
+      placeholder="All statuses"
+      [options]="statusFilterOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+      [required]="false"
+    />
 
-      <mat-form-field appearance="outline" class="filter-field--inline">
-        <mat-label>Employment Type</mat-label>
-        <mat-select [formControl]="employmentTypeCtrl">
-          <mat-option [value]="null">All Types</mat-option>
-          <mat-option *ngFor="let opt of employmentTypeOptions" [value]="opt.value">{{ opt.label }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
+    <signet-search-select-dropdown
+      class="employee-list__filter-field"
+      [formControl]="employmentTypeCtrl"
+      fieldTitle="Employment Type"
+      placeholder="All types"
+      [options]="employmentTypeFilterOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+      [required]="false"
+    />
 
-    <div class="filter-bar__actions">
-      <button mat-icon-button matTooltip="Clear filters" aria-label="Clear filters" (click)="clearFilters()" *ngIf="hasNonDefaultFilters()">
-        <mat-icon>filter_alt_off</mat-icon>
-      </button>
-    </div>
+    @if (hasNonDefaultFilters()) {
+      <signet-button
+        class="employee-list__filter-clear"
+        [width]="100"
+        [widthUnit]="'%'"
+        type="stroke"
+        displayText="Clear filters"
+        (clicked)="clearFilters()"
+      />
+    }
   </div>
 
   <!-- Table Card -->
@@ -79,117 +94,96 @@
       <mat-icon>people_outline</mat-icon>
       <h3>No employees found</h3>
       <p>Try adjusting your search or filters, or add a new employee.</p>
-      <button mat-raised-button color="primary" routerLink="/employees/new">
-        <mat-icon>person_add</mat-icon> Add First Employee
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add First Employee" (clicked)="router.navigate(['/employees/new'])" />
     </div>
 
-    <!-- Table -->
-    <div class="employee-list__table-wrap">
-    <mat-table [dataSource]="data()?.items ?? []" matSort class="employee-list__table"
-               (matSortChange)="onSortChange($event)"
-               *ngIf="(data()?.items?.length ?? 0) > 0">
+    <div class="data-list-scroll employee-list__table-wrap" *ngIf="(data()?.items?.length ?? 0) > 0">
+      <div class="data-list employee-list__table">
+        <div class="data-list__header">
+          <div class="data-list__cell">
+            <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'code'" (click)="toggleSort('code')">
+              Code
+              <mat-icon>{{ sortIcon('code') }}</mat-icon>
+            </button>
+          </div>
+          <div class="data-list__cell">
+            <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'name'" (click)="toggleSort('name')">
+              Employee
+              <mat-icon>{{ sortIcon('name') }}</mat-icon>
+            </button>
+          </div>
+          <div class="data-list__cell">Department</div>
+          <div class="data-list__cell">Designation</div>
+          <div class="data-list__cell">Site</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell">
+            <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'joiningDate'" (click)="toggleSort('joiningDate')">
+              Joined
+              <mat-icon>{{ sortIcon('joiningDate') }}</mat-icon>
+            </button>
+          </div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
 
-      <ng-container matColumnDef="employeeCode">
-        <mat-header-cell *matHeaderCellDef mat-sort-header="code">Code</mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <span class="emp-code">{{ emp.employeeCode }}</span>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="fullName">
-        <mat-header-cell *matHeaderCellDef mat-sort-header="name">Employee</mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <div class="emp-info">
-            <div class="emp-avatar">{{ emp.fullName.charAt(0) }}</div>
-            <div class="emp-info__text">
-              <div class="emp-name" [matTooltip]="emp.fullName">{{ emp.fullName }}</div>
-              <div class="emp-email" [matTooltip]="emp.email">{{ emp.email }}</div>
+        @for (emp of data()?.items ?? []; track emp.id) {
+          <div class="data-list__row data-list__row--clickable" (click)="viewEmployee(emp.id)">
+            <div class="data-list__cell"><span class="emp-code">{{ emp.employeeCode }}</span></div>
+            <div class="data-list__cell">
+              <div class="emp-info">
+                <div class="emp-avatar">{{ emp.fullName.charAt(0) }}</div>
+                <div class="emp-info__text">
+                  <div class="emp-name" [matTooltip]="emp.fullName">{{ emp.fullName }}</div>
+                  <div class="emp-email" [matTooltip]="emp.email">{{ emp.email }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.department">{{ emp.department }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.designation">{{ emp.designation }}</span></div>
+            <div class="data-list__cell">
+              @if (emp.siteName) {
+                <span class="cell-text" [matTooltip]="emp.siteName">{{ emp.siteName }}</span>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="statusLabels[emp.status]" [status]="statusLabels[emp.status]" />
+            </div>
+            <div class="data-list__cell">{{ emp.joiningDate | safeDate:'dd MMM yyyy' }}</div>
+            <div class="data-list__cell data-list__cell--center" (click)="$event.stopPropagation()">
+              <signet-action-menu ariaLabel="More actions">
+                <button type="button" actionMenuItem (click)="viewEmployee(emp.id)">
+                  <mat-icon>visibility</mat-icon><span>View Details</span>
+                </button>
+                <button type="button" actionMenuItem (click)="editEmployee(emp.id)">
+                  <mat-icon>edit</mat-icon><span>Edit</span>
+                </button>
+                @if (canMarkLeft(emp.status)) {
+                  <button type="button" actionMenuItem (click)="openMarkLeftDialog(emp)">
+                    <mat-icon>logout</mat-icon><span>Mark as Left</span>
+                  </button>
+                }
+                @if (canRejoin(emp.status)) {
+                  <button type="button" actionMenuItem (click)="openRejoinDialog(emp)">
+                    <mat-icon>login</mat-icon><span>Rejoin Employee</span>
+                  </button>
+                }
+              </signet-action-menu>
             </div>
           </div>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="department">
-        <mat-header-cell *matHeaderCellDef>Department</mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <span class="cell-text" [matTooltip]="emp.department">{{ emp.department }}</span>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="designation">
-        <mat-header-cell *matHeaderCellDef>Designation</mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <span class="cell-text" [matTooltip]="emp.designation">{{ emp.designation }}</span>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="site">
-        <mat-header-cell *matHeaderCellDef>Site</mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <span *ngIf="emp.siteName" class="cell-text" [matTooltip]="emp.siteName">{{ emp.siteName }}</span>
-          <span *ngIf="!emp.siteName" class="text-muted">—</span>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="status">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <span class="badge" [ngClass]="'badge--' + getStatusClass(emp.status)">
-            {{ statusLabels[emp.status] }}
-          </span>
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="joiningDate">
-        <mat-header-cell *matHeaderCellDef mat-sort-header="joiningDate">Joined</mat-header-cell>
-        <mat-cell *matCellDef="let emp">{{ emp.joiningDate | safeDate:'dd MMM yyyy' }}</mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let emp">
-          <button mat-icon-button [matMenuTriggerFor]="actionMenu" (click)="$event.stopPropagation()" aria-label="More actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #actionMenu>
-            <button mat-menu-item (click)="viewEmployee(emp.id)">
-              <mat-icon>visibility</mat-icon> View Details
-            </button>
-            <button mat-menu-item (click)="editEmployee(emp.id)">
-              <mat-icon>edit</mat-icon> Edit
-            </button>
-            @if (canMarkLeft(emp.status)) {
-              <button mat-menu-item (click)="openMarkLeftDialog(emp)">
-                <mat-icon>logout</mat-icon> Mark as Left
-              </button>
-            }
-            @if (canRejoin(emp.status)) {
-              <button mat-menu-item (click)="openRejoinDialog(emp)">
-                <mat-icon>login</mat-icon> Rejoin Employee
-              </button>
-            }
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;"
-               class="table-row"
-               (click)="viewEmployee(row.id)">
-      </mat-row>
-    </mat-table>
+        }
+      </div>
     </div>
 
-    <!-- Paginator -->
-    <mat-paginator
-      *ngIf="(data()?.totalCount ?? 0) > 0"
-      [length]="data()?.totalCount ?? 0"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[10, 20, 50, 100]"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
-    </mat-paginator>
+    <signet-pagination
+      *ngIf="data()"
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
   </div>
   }
 

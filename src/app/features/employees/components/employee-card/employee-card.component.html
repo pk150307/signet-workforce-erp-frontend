@@ -2,14 +2,13 @@
   <app-employee-avatar
     [name]="employee.fullName"
     [photoUrl]="employee.profilePhotoUrl"
-    [employeeId]="employee.id"
     size="md">
   </app-employee-avatar>
 
   <div class="employee-card__body">
     <div class="employee-card__header">
       <span class="employee-card__name">{{ employee.fullName }}</span>
-      <app-employee-status-badge [status]="employee.status"></app-employee-status-badge>
+      <signet-status-button [label]="statusLabels[employee.status]" [status]="statusLabels[employee.status]" />
     </div>
 
     <div class="employee-card__code">{{ employee.employeeCode }}</div>
