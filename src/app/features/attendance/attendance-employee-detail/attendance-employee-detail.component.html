@@ -6,26 +6,28 @@
         <p class="page-header__subtitle">{{ c.employeeCode }} · {{ c.clientName }} · {{ c.siteName }}</p>
       }
     </div>
-    <button mat-stroked-button routerLink="/attendance"><mat-icon>arrow_back</mat-icon> Back</button>
+    <a routerLink="/attendance" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" /></a>
   </div>
 
   <div class="card filter-row">
-    <mat-form-field appearance="outline">
-      <mat-label>Month</mat-label>
-      <mat-select [formControl]="monthCtrl">
-        @for (m of monthNames; track m; let i = $index) {
-          <mat-option [value]="i + 1">{{ m }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field appearance="outline">
-      <mat-label>Year</mat-label>
-      <mat-select [formControl]="yearCtrl">
-        @for (y of years; track y) {
-          <mat-option [value]="y">{{ y }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    <signet-search-select-dropdown
+      [formControl]="monthCtrl"
+      fieldTitle="Month"
+      placeholder="Select month"
+      [options]="monthOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
+    <signet-search-select-dropdown
+      [formControl]="yearCtrl"
+      fieldTitle="Year"
+      placeholder="Select year"
+      [options]="yearOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
   </div>
 
   @if (loading()) {

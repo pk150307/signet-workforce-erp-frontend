@@ -5,38 +5,39 @@
       <p class="page-header__subtitle">Client-wise monthly attendance for field staff</p>
     </div>
     <div class="page-header__actions">
-      <button mat-raised-button color="primary" (click)="openRegister()" [disabled]="!filters.value.clientId">
-        <mat-icon>grid_on</mat-icon> Open Register
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Open Register" [disabled]="!filters.value.clientId" (clicked)="openRegister()" />
     </div>
   </div>
 
   <div class="card filter-card">
     <form [formGroup]="filters" class="filter-row">
-      <mat-form-field appearance="outline">
-        <mat-label>Client</mat-label>
-        <mat-select formControlName="clientId">
-          @for (c of clients(); track c.id) {
-            <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Month</mat-label>
-        <mat-select formControlName="month">
-          @for (m of monthNames; track m; let i = $index) {
-            <mat-option [value]="i + 1">{{ m }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Year</mat-label>
-        <mat-select formControlName="year">
-          @for (y of years; track y) {
-            <mat-option [value]="y">{{ y }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <signet-search-select-dropdown
+        formControlName="clientId"
+        fieldTitle="Client"
+        placeholder="Select client"
+        [options]="clientOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+      />
+      <signet-search-select-dropdown
+        formControlName="month"
+        fieldTitle="Month"
+        placeholder="Select month"
+        [options]="monthOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="false"
+      />
+      <signet-search-select-dropdown
+        formControlName="year"
+        fieldTitle="Year"
+        placeholder="Select year"
+        [options]="yearOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="false"
+      />
     </form>
 
     @if (register(); as reg) {
@@ -49,9 +50,10 @@
             <span>Locked by {{ reg.lockedBy }} on {{ reg.lockedAt | date:'medium' }}</span>
           }
         </div>
-        <span class="badge" [class.badge--active]="reg.status === 'draft'" [class.badge--inactive]="reg.status === 'locked'">
-          {{ reg.status === 'locked' ? 'Locked' : 'Draft' }}
-        </span>
+        <signet-status-button
+          [label]="reg.status === 'locked' ? 'Locked' : 'Draft'"
+          [status]="reg.status === 'locked' ? 'locked' : 'draft'"
+        />
       </div>
     }
   </div>
@@ -72,68 +74,56 @@
     }
 
     @if (items().length) {
-    <div class="table-scroll">
-    <table mat-table [dataSource]="items()">
-      <ng-container matColumnDef="employee">
-        <th mat-header-cell *matHeaderCellDef>Employee</th>
-        <td mat-cell *matCellDef="let e">
-          <strong>{{ e.employeeName }}</strong><br>
-          <small>{{ e.employeeCode }}</small>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="department">
-        <th mat-header-cell *matHeaderCellDef>Department</th>
-        <td mat-cell *matCellDef="let e">{{ e.departmentName }}</td>
-      </ng-container>
-      <ng-container matColumnDef="site">
-        <th mat-header-cell *matHeaderCellDef>Site</th>
-        <td mat-cell *matCellDef="let e">{{ e.siteName }}</td>
-      </ng-container>
-      <ng-container matColumnDef="present">
-        <th mat-header-cell *matHeaderCellDef>P</th>
-        <td mat-cell *matCellDef="let e">{{ e.presentCount }}</td>
-      </ng-container>
-      <ng-container matColumnDef="absent">
-        <th mat-header-cell *matHeaderCellDef>A</th>
-        <td mat-cell *matCellDef="let e">{{ e.absentCount }}</td>
-      </ng-container>
-      <ng-container matColumnDef="leave">
-        <th mat-header-cell *matHeaderCellDef>L</th>
-        <td mat-cell *matCellDef="let e">{{ e.leaveCount + e.halfDayCount }}</td>
-      </ng-container>
-      <ng-container matColumnDef="overtime">
-        <th mat-header-cell *matHeaderCellDef>OT (₹)</th>
-        <td mat-cell *matCellDef="let e">{{ e.overtimeHours != null ? (e.overtimeHours | number:'1.0-0') : '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="night">
-        <th mat-header-cell *matHeaderCellDef>Night</th>
-        <td mat-cell *matCellDef="let e">{{ e.nightAllowance || '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="punctuality">
-        <th mat-header-cell *matHeaderCellDef>PA</th>
-        <td mat-cell *matCellDef="let e">{{ e.punctualityAward || '—' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="unmarked">
-        <th mat-header-cell *matHeaderCellDef>Unmarked</th>
-        <td mat-cell *matCellDef="let e">{{ e.unmarkedCount }}</td>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let e">
-          <span class="status-chip status-chip--{{ e.rowStatus }}">{{ rowStatusLabel(e.rowStatus) }}</span>
-        </td>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let e">
-          <button mat-button [routerLink]="['/attendance/employees', e.employeeId]"
-            [queryParams]="{ month: filters.value.month, year: filters.value.year }">View</button>
-        </td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="cols"></tr>
-      <tr mat-row *matRowDef="let row; columns: cols"></tr>
-    </table>
+    <div class="data-list-scroll">
+      <div class="data-list">
+        <div class="data-list__header">
+          <div class="data-list__cell">Employee</div>
+          <div class="data-list__cell">Department</div>
+          <div class="data-list__cell">Site</div>
+          <div class="data-list__cell">P</div>
+          <div class="data-list__cell">A</div>
+          <div class="data-list__cell">L</div>
+          <div class="data-list__cell">OT (₹)</div>
+          <div class="data-list__cell">Night</div>
+          <div class="data-list__cell">PA</div>
+          <div class="data-list__cell">Unmarked</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
+        @for (e of items(); track e.employeeId) {
+          <div class="data-list__row">
+            <div class="data-list__cell">
+              <strong>{{ e.employeeName }}</strong><br>
+              <small>{{ e.employeeCode }}</small>
+            </div>
+            <div class="data-list__cell">{{ e.departmentName }}</div>
+            <div class="data-list__cell">{{ e.siteName }}</div>
+            <div class="data-list__cell">{{ e.presentCount }}</div>
+            <div class="data-list__cell">{{ e.absentCount }}</div>
+            <div class="data-list__cell">{{ e.leaveCount + e.halfDayCount }}</div>
+            <div class="data-list__cell">{{ e.overtimeHours != null ? (e.overtimeHours | number:'1.0-0') : '—' }}</div>
+            <div class="data-list__cell">{{ e.nightAllowance || '—' }}</div>
+            <div class="data-list__cell">{{ e.punctualityAward || '—' }}</div>
+            <div class="data-list__cell">{{ e.unmarkedCount }}</div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="rowStatusLabel(e.rowStatus)" [status]="e.rowStatus" />
+            </div>
+            <div class="data-list__cell data-list__cell--center">
+              <signet-button [widthUnit]="'px'" type="primary" displayText="View" [width]="100" [height]="35" heightUnit="px" (clicked)="viewEmployee(e)" />
+            </div>
+          </div>
+        }
+      </div>
     </div>
+
+    <signet-pagination
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
     }
   </div>
   }

@@ -1,17 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthLayoutComponent } from '../shared/auth-layout/auth-layout.component';
 import { PasswordStrengthComponent } from '../shared/password-strength/password-strength.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { evaluatePasswordPolicy } from '../../../core/utils/password-policy.util';
-
 function passwordPolicyValidator(control: AbstractControl): ValidationErrors | null {
   const value = String(control.value ?? '');
   if (!value) return null;
@@ -20,18 +15,7 @@ function passwordPolicyValidator(control: AbstractControl): ValidationErrors | n
 
 @Component({
   selector: 'app-reset-password',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    AuthLayoutComponent,
-    PasswordStrengthComponent,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-  ],
-  templateUrl: './reset-password.component.html',
+    templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.less',
 })
 export class ResetPasswordComponent implements OnInit {
@@ -39,6 +23,7 @@ export class ResetPasswordComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
+  readonly router = inject(Router);
 
   readonly loading = signal(false);
   readonly submitted = signal(false);
@@ -59,6 +44,10 @@ export class ResetPasswordComponent implements OnInit {
   ngOnInit() {
     const token = this.route.snapshot.queryParamMap.get('token') ?? '';
     this.token.set(token);
+  }
+
+  togglePasswordVisibility() {
+    this.hidePassword.set(!this.hidePassword());
   }
 
   onSubmit() {

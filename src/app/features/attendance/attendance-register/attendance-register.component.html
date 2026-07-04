@@ -5,42 +5,47 @@
       @if (grid(); as g) {
         <p class="page-header__subtitle">{{ g.register.clientName }} — {{ monthNames[g.register.month - 1] }} {{ g.register.year }}</p>
       } @else {
+        @let f = filters.getRawValue();
         <p class="page-header__subtitle">
-          {{ clientLabel(filters.value.clientId) }} — {{ monthNames[filters.value.month - 1] }} {{ filters.value.year }}
+          {{ clientLabel(f.clientId) }} — {{ monthNames[f.month - 1] }} {{ f.year }}
         </p>
       }
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button routerLink="/attendance"><mat-icon>arrow_back</mat-icon> Back</button>
+      <a routerLink="/attendance" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" /></a>
     </div>
   </div>
 
   <div class="card filter-card">
     <form [formGroup]="filters" class="filter-row">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Client</mat-label>
-        <mat-select formControlName="clientId" [disabled]="clientsLoading()">
-          @for (c of clients(); track c.id) {
-            <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Month</mat-label>
-        <mat-select formControlName="month">
-          @for (m of monthNames; track m; let i = $index) {
-            <mat-option [value]="i + 1">{{ m }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Year</mat-label>
-        <mat-select formControlName="year">
-          @for (y of years; track y) {
-            <mat-option [value]="y">{{ y }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <signet-search-select-dropdown
+        formControlName="clientId"
+        fieldTitle="Client"
+        placeholder="Select client"
+        [options]="clientOptions()"
+        [disabled]="clientsLoading()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+      />
+      <signet-search-select-dropdown
+        formControlName="month"
+        fieldTitle="Month"
+        placeholder="Select month"
+        [options]="monthOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="false"
+      />
+      <signet-search-select-dropdown
+        formControlName="year"
+        fieldTitle="Year"
+        placeholder="Select year"
+        [options]="yearOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="false"
+      />
     </form>
   </div>
 
@@ -56,7 +61,7 @@
           <strong>This register is locked</strong>
           <span>Submitted by {{ g.register.submittedBy }} on {{ g.register.submittedAt | date:'medium' }}</span>
         </div>
-        <button mat-stroked-button (click)="showUnlockDialog.set(true)">Unlock to Edit</button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Unlock to Edit" (clicked)="showUnlockDialog.set(true)" />
       </div>
     }
 
@@ -82,23 +87,16 @@
       </div>
       @if (!isLocked()) {
         <div class="toolbar-actions">
-          <button mat-stroked-button (click)="bulk('mark_sundays')">Mark Sundays</button>
-          <button mat-stroked-button (click)="bulk('mark_all_present')">All Present</button>
-          <button mat-stroked-button (click)="bulk('clear_unmarked')">Clear All</button>
-          <button mat-stroked-button (click)="downloadTemplate()"><mat-icon>download</mat-icon> Template</button>
-          <button mat-stroked-button (click)="exportRegister()"><mat-icon>table_view</mat-icon> Export</button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Mark Sundays" (clicked)="bulk('mark_sundays')" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="All Present" (clicked)="bulk('mark_all_present')" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Clear All" (clicked)="bulk('clear_unmarked')" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Template" (clicked)="downloadTemplate()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export" (clicked)="exportRegister()" />
           <label class="upload-btn">
             <mat-icon>upload_file</mat-icon> Import
             <input type="file" accept=".xlsx,.xlsm,.csv" hidden (change)="onFileSelected($event)">
           </label>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="openLockDialog()"
-            [disabled]="!canLockRegister()"
-            [title]="lockBlockReason()">
-            <mat-icon>lock</mat-icon> Submit & Lock
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Submit & Lock" (clicked)="openLockDialog()" [disabled]="!canLockRegister()" />
         </div>
       }
     </div>
@@ -118,8 +116,8 @@
         <strong>Import preview:</strong> {{ prev.valid }} employees, {{ prev.cells }} cells, {{ prev.errors }} errors.
         <span class="import-hint">Format: Emp ID | Emp Name | 01-Apr-26 … | OT Hours | Night Allowance | Punctuality Award</span>
         <div class="import-actions">
-          <button mat-stroked-button (click)="showImportPanel.set(false)">Cancel</button>
-          <button mat-raised-button color="primary" (click)="applyImport()" [disabled]="prev.valid === 0">Apply to Register</button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showImportPanel.set(false)" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Apply to Register" [disabled]="prev.valid === 0" (clicked)="applyImport()" />
         </div>
       </div>
     }
@@ -194,61 +192,69 @@
           @for (emp of g.employees; track emp.employeeId) {
             <div class="register-cell register-cell--tail" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
               <div class="register-ot">
-                @if (isLocked()) {
-                  <span class="ot-readonly">{{ getExtras(emp.employeeId).overtimeHours || '—' }}</span>
-                } @else {
-                  <input
-                    type="number"
-                    class="ot-input"
-                    min="0"
-                    step="0.5"
-                    [ngModel]="getExtras(emp.employeeId).overtimeHours"
-                    (ngModelChange)="onExtraChange(emp.employeeId, 'overtimeHours', $event)"
-                    [disabled]="isLocked()">
-                }
+                <signet-custom-text-field
+                  class="register-ot-field"
+                  type="number"
+                  [width]="100"
+                  widthUnit="%"
+                  [required]="false"
+                  [hideTitle]="true"
+                  [isCentreAlign]="true"
+                  [allowNegative]="false"
+                  placeholder="0"
+                  [ngModel]="getExtras(emp.employeeId).overtimeHours"
+                  (ngModelChange)="onExtraChange(emp.employeeId, 'overtimeHours', $event)"
+                  [readOnly]="isLocked()"
+                  [disableEdit]="isLocked()"
+                />
               </div>
               <div class="register-ot">
-                @if (isLocked()) {
-                  <span class="ot-readonly">{{ getExtras(emp.employeeId).nightAllowance || '—' }}</span>
-                } @else {
-                  <input
-                    type="number"
-                    class="ot-input"
-                    min="0"
-                    step="1"
-                    [ngModel]="getExtras(emp.employeeId).nightAllowance"
-                    (ngModelChange)="onExtraChange(emp.employeeId, 'nightAllowance', $event)"
-                    [disabled]="isLocked()">
-                }
+                <signet-custom-text-field
+                  class="register-ot-field"
+                  type="number"
+                  [width]="100"
+                  widthUnit="%"
+                  [required]="false"
+                  [hideTitle]="true"
+                  [isCentreAlign]="true"
+                  [allowNegative]="false"
+                  placeholder="0"
+                  [ngModel]="getExtras(emp.employeeId).nightAllowance"
+                  (ngModelChange)="onExtraChange(emp.employeeId, 'nightAllowance', $event)"
+                  [readOnly]="isLocked()"
+                  [disableEdit]="isLocked()"
+                />
               </div>
               <div class="register-ot">
-                @if (isLocked()) {
-                  <span class="ot-readonly">{{ getExtras(emp.employeeId).punctualityAward || '—' }}</span>
-                } @else {
-                  <input
-                    type="number"
-                    class="ot-input"
-                    min="0"
-                    step="1"
-                    [ngModel]="getExtras(emp.employeeId).punctualityAward"
-                    (ngModelChange)="onExtraChange(emp.employeeId, 'punctualityAward', $event)"
-                    [disabled]="isLocked()">
-                }
+                <signet-custom-text-field
+                  class="register-ot-field"
+                  type="number"
+                  [width]="100"
+                  widthUnit="%"
+                  [required]="false"
+                  [hideTitle]="true"
+                  [isCentreAlign]="true"
+                  [allowNegative]="false"
+                  placeholder="0"
+                  [ngModel]="getExtras(emp.employeeId).punctualityAward"
+                  (ngModelChange)="onExtraChange(emp.employeeId, 'punctualityAward', $event)"
+                  [readOnly]="isLocked()"
+                  [disableEdit]="isLocked()"
+                />
               </div>
               <div class="register-action">
                 @if (!isLocked()) {
-                  <button
-                    mat-stroked-button
-                    color="primary"
+                  <signet-button
                     class="submit-row-btn"
+                    type="stroke"
+                    [width]="100"
+                    [widthUnit]="'%'"
+                    [height]="32"
+                    [fontSize]="12"
+                    [displayText]="submittingEmployeeId() === emp.employeeId ? 'Saving…' : 'Submit'"
                     [disabled]="!pendingChanges()[emp.employeeId] || submittingEmployeeId() === emp.employeeId"
-                    (click)="submitEmployee(emp.employeeId)">
-                    @if (submittingEmployeeId() === emp.employeeId) {
-                      <mat-spinner diameter="16"></mat-spinner>
-                    } @else {
-                      Submit
-                    }
-                  </button>
+                    (clicked)="submitEmployee(emp.employeeId)"
+                  />
                 }
               </div>
             </div>
@@ -265,10 +271,10 @@
           @if (g.register.unmarkedCells > 0) {
             <p class="dialog-warn">{{ g.register.unmarkedCells }} cell(s) still unmarked.</p>
           }
-          <mat-checkbox [formControl]="verified">I have verified this register against the client sheet</mat-checkbox>
+          <signet-custom-checkbox [formControl]="verified" label="I have verified this register against the client sheet" permissionKey="verified" groupName="form" />
           <div class="dialog-actions">
-            <button mat-stroked-button (click)="showLockDialog.set(false)">Cancel</button>
-            <button mat-raised-button color="primary" (click)="confirmLock()" [disabled]="saving() || !canLockRegister()">Lock Register</button>
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showLockDialog.set(false)" />
+            <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Lock Register" [disabled]="saving() || !canLockRegister()" (clicked)="confirmLock()" />
           </div>
         </div>
       </div>
@@ -279,13 +285,10 @@
         <div class="dialog card">
           <h3>Unlock Register</h3>
           <p>A reason is required to unlock this register. This will be logged for audit.</p>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Reason for unlock</mat-label>
-            <textarea matInput rows="3" [formControl]="unlockReason"></textarea>
-          </mat-form-field>
+          <signet-custom-text-area-field class="full-width" fieldTitle="Reason for unlock" [formControl]="unlockReason" [height]="80" [required]="false" />
           <div class="dialog-actions">
-            <button mat-stroked-button (click)="showUnlockDialog.set(false)">Cancel</button>
-            <button mat-raised-button color="warn" (click)="confirmUnlock()" [disabled]="saving()">Unlock</button>
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showUnlockDialog.set(false)" />
+            <signet-button [width]="100" [widthUnit]="'%'" type="error" displayText="Unlock" [disabled]="saving()" (clicked)="confirmUnlock()" />
           </div>
         </div>
       </div>

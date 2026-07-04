@@ -21,8 +21,8 @@
   margin-top: 12px;
   padding: 12px 16px;
   border-radius: 8px;
-  background: rgba(21, 101, 192, 0.1);
-  border: 1px solid rgba(21, 101, 192, 0.25);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-border-strong);
   color: var(--color-text-primary);
 
   div {
@@ -47,9 +47,33 @@
   font-weight: 600;
 
   &--not_started { background: var(--color-divider); color: var(--color-text-muted); }
-  &--draft { background: rgba(21, 101, 192, 0.14); color: var(--color-primary); }
+  &--draft { background: var(--badge-gold-bg); color: var(--badge-gold-fg); }
   &--entered { background: var(--att-present-bg); color: var(--att-present-fg); }
   &--locked { background: var(--att-leave-bg); color: var(--att-leave-fg); }
 }
 
 .list-page-responsive(900px);
+
+.data-list-scroll {
+  overflow-x: hidden;
+}
+
+.data-list {
+  /* Proportional widths that always fill the row — no horizontal scroll */
+  --data-list-cols: 16% 11% 11% 5% 5% 5% 7% 6% 5% 8% 12% 9%;
+  --data-list-min-width: 100%;
+
+  &__cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    strong,
+    small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

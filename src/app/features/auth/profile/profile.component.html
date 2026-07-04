@@ -5,9 +5,12 @@
       <p class="page-header__subtitle">View and manage your account information</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button color="primary" routerLink="/auth/change-password">
-        <mat-icon>lock</mat-icon> Change Password
-      </button>
+      <signet-button [widthUnit]="'px'" type="stroke"
+        displayText="Change Password"
+        [width]="180"
+        [height]="40"
+        (clicked)="router.navigate(['/auth/change-password'])"
+      />
     </div>
   </div>
 
@@ -24,7 +27,7 @@
 
     <mat-divider />
 
-    <div class="profile__grid" style="margin-top: 20px;">
+    <div class="profile__grid profile__grid--spaced">
       <div class="profile__field">
         <label>Role</label>
         <span>{{ authService.userRoles().join(', ') || 'User' }}</span>
@@ -35,22 +38,33 @@
       </div>
     </div>
 
-    <mat-divider style="margin: 24px 0;" />
+    <mat-divider class="profile__divider" />
 
     <div class="profile__history">
       <div class="profile__history-header">
         <h3>Recent Sign-ins</h3>
-        <button mat-button color="primary" routerLink="/settings/login-history">View all</button>
+        <signet-button [widthUnit]="'px'" type="plane"
+          displayText="View all"
+          [width]="90"
+          [height]="36"
+          (clicked)="router.navigate(['/settings/login-history'])"
+        />
       </div>
-      <p *ngIf="loadingHistory()">Loading login history...</p>
-      <p *ngIf="!loadingHistory() && loginHistory().length === 0">No recent sign-in activity.</p>
-      <ul *ngIf="!loadingHistory() && loginHistory().length > 0" class="profile__history-list">
-        <li *ngFor="let item of loginHistory()">
-          <span>{{ item.loggedInAt | date:'medium' }}</span>
-          <span>{{ item.loginStatus }}</span>
-          <span>{{ item.ipAddress || '—' }}</span>
-        </li>
-      </ul>
+      @if (loadingHistory()) {
+        <p>Loading login history...</p>
+      } @else if (loginHistory().length === 0) {
+        <p>No recent sign-in activity.</p>
+      } @else {
+        <ul class="profile__history-list">
+          @for (item of loginHistory(); track item.loggedInAt) {
+            <li>
+              <span>{{ item.loggedInAt | date:'medium' }}</span>
+              <span>{{ item.loginStatus }}</span>
+              <span>{{ item.ipAddress || '—' }}</span>
+            </li>
+          }
+        </ul>
+      }
     </div>
   </div>
 </div>

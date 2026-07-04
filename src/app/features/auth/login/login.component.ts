@@ -1,32 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { DEFAULT_COMPANY_LOGO } from '../../../core/constants/company.constants';
 import { environment } from '@env/environment';
-
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    RouterLink,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatCheckboxModule,
-  ],
-  templateUrl: './login.component.html',
+    templateUrl: './login.component.html',
   styleUrl: './login.component.less',
 })
 export class LoginComponent implements OnInit {
@@ -66,6 +48,10 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+  }
+
+  togglePasswordVisibility() {
+    this.hidePassword.set(!this.hidePassword());
   }
 
   onSubmit() {

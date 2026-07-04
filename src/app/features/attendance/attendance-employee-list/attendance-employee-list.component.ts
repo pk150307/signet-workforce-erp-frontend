@@ -1,13 +1,6 @@
-import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
-import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { AttendanceFilterService } from '../../../core/services/attendance-filter.service';
 import { ClientsService } from '../../../core/services/clients.service';
@@ -18,17 +11,15 @@ import {
   rowStatusLabel,
 } from '../../../core/models/attendance.models';
 import { ClientListItem } from '../../../core/models/client.models';
+import { CursorPageParams } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-attendance-employee-list',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf, NgFor, DatePipe, DecimalPipe, RouterLink, ReactiveFormsModule,
-    MatFormFieldModule, MatSelectModule, MatButtonModule, MatIconModule,
-    MatTableModule, MatProgressSpinnerModule,
-  ],
   templateUrl: './attendance-employee-list.component.html',
   styleUrl: './attendance-employee-list.component.less',
 })
@@ -44,6 +35,7 @@ export class AttendanceEmployeeListComponent implements OnInit {
   readonly clients = signal<ClientListItem[]>([]);
   readonly items = signal<AttendanceEmployeeListItem[]>([]);
   readonly register = signal<AttendanceRegisterMeta | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly monthNames = MONTH_NAMES;
   readonly rowStatusLabel = rowStatusLabel;
   readonly cols = ['employee', 'department', 'site', 'present', 'absent', 'leave', 'overtime', 'night', 'punctuality', 'unmarked', 'status', 'actions'];
@@ -56,6 +48,18 @@ export class AttendanceEmployeeListComponent implements OnInit {
 
   readonly years = [2024, 2025, 2026, 2027];
 
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+
+  readonly monthOptions = computed(() =>
+    this.monthNames.map((name, i) => ({ key: String(i + 1), value: name })),
+  );
+
+  readonly yearOptions = computed(() =>
+    this.years.map(y => ({ key: String(y), value: String(y) })),
+  );
+
   ngOnInit() {
     this.attendanceFilter.bindControls(
       {
@@ -64,7 +68,7 @@ export class AttendanceEmployeeListComponent implements OnInit {
         clientId: this.filters.controls.clientId,
       },
       this.destroyRef,
-      () => this.load(),
+      () => this.reloadFirstPage(),
     );
 
     this.clientsLoading.set(true);
@@ -82,24 +86,58 @@ export class AttendanceEmployeeListComponent implements OnInit {
     this.load();
   }
 
-  load() {
+  load(params?: CursorPageParams) {
     const v = this.filters.getRawValue();
     if (!v.clientId) return;
     this.loading.set(true);
-    this.attendanceService.getEmployeeList(v).subscribe({
+    const pageParams = params ?? this.pager.firstPageParams();
+    this.attendanceService.getEmployeeList({ ...v, ...pageParams }).subscribe({
       next: res => {
         this.register.set(res.register);
         this.items.set(res.items);
+        this.pager.apply(res.pagination);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.load(this.pager.firstPageParams());
+          return;
+        }
+        this.items.set([]);
+        this.register.set(null);
+        this.pager.reset();
+        this.loading.set(false);
+      },
     });
+  }
+
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.load(p);
+      return;
+    }
+    const p = this.pager.prevPageParams();
+    if (p) this.load(p);
+  }
+
+  private reloadFirstPage() {
+    this.pager.reset();
+    this.load(this.pager.firstPageParams());
   }
 
   openRegister() {
     const v = this.filters.getRawValue();
     this.router.navigate(['/attendance/register'], {
       queryParams: { clientId: v.clientId, month: v.month, year: v.year },
+    });
+  }
+
+  viewEmployee(employee: AttendanceEmployeeListItem) {
+    const v = this.filters.getRawValue();
+    this.router.navigate(['/attendance/employees', employee.employeeId], {
+      queryParams: { month: v.month, year: v.year, clientId: v.clientId },
     });
   }
 }

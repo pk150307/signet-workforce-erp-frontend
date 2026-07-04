@@ -4,9 +4,7 @@ import { evaluatePasswordPolicy } from '../../../../core/utils/password-policy.u
 
 @Component({
   selector: 'app-password-strength',
-  standalone: true,
-  imports: [MatIconModule],
-  templateUrl: './password-strength.component.html',
+    templateUrl: './password-strength.component.html',
   styleUrl: './password-strength.component.less',
 })
 export class PasswordStrengthComponent {

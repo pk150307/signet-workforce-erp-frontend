@@ -1,12 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgClass, NgFor, NgIf, DecimalPipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { NgClass, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FormControl } from '@angular/forms';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import {
@@ -16,16 +11,9 @@ import {
   cellShort,
 } from '../../../core/models/attendance.models';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-attendance-employee-detail',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf, NgFor, NgClass, DecimalPipe, RouterLink, ReactiveFormsModule,
-    MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule,
-  ],
-  templateUrl: './attendance-employee-detail.component.html',
+    templateUrl: './attendance-employee-detail.component.html',
   styleUrl: './attendance-employee-detail.component.less',
 })
 export class AttendanceEmployeeDetailComponent implements OnInit {
@@ -39,6 +27,14 @@ export class AttendanceEmployeeDetailComponent implements OnInit {
   readonly cellClass = cellClass;
   readonly cellShort = cellShort;
   readonly years = [2024, 2025, 2026, 2027];
+
+  readonly monthOptions = computed(() =>
+    this.monthNames.map((name, i) => ({ key: String(i + 1), value: name })),
+  );
+
+  readonly yearOptions = computed(() =>
+    this.years.map(y => ({ key: String(y), value: String(y) })),
+  );
 
   readonly monthCtrl = new FormControl(new Date().getMonth() + 1);
   readonly yearCtrl = new FormControl(new Date().getFullYear());

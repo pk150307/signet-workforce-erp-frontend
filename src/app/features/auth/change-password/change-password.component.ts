@@ -1,17 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 
 import { PasswordStrengthComponent } from '../shared/password-strength/password-strength.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { evaluatePasswordPolicy } from '../../../core/utils/password-policy.util';
-
 function passwordPolicyValidator(control: AbstractControl): ValidationErrors | null {
   const value = String(control.value ?? '');
   if (!value) return null;
@@ -20,17 +14,7 @@ function passwordPolicyValidator(control: AbstractControl): ValidationErrors | n
 
 @Component({
   selector: 'app-change-password',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    PasswordStrengthComponent,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-  ],
-  templateUrl: './change-password.component.html',
+    templateUrl: './change-password.component.html',
   styleUrl: './change-password.component.less',
 })
 export class ChangePasswordComponent {
@@ -53,6 +37,10 @@ export class ChangePasswordComponent {
         g.get('newPassword')?.value === g.get('confirmPassword')?.value ? null : { mismatch: true },
     },
   );
+
+  toggleNewPasswordVisibility() {
+    this.hideNewPassword.set(!this.hideNewPassword());
+  }
 
   onSubmit() {
     if (this.form.invalid) {

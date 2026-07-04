@@ -1,14 +1,6 @@
 import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AttendanceService } from '../../../core/services/attendance.service';
 import { AttendanceFilterService } from '../../../core/services/attendance-filter.service';
@@ -55,17 +47,9 @@ function extrasEqual(a: RegisterExtras, b: RegisterExtras): boolean {
     && a.punctualityAward === b.punctualityAward;
 }
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-attendance-register',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgClass, DatePipe, RouterLink, FormsModule, ReactiveFormsModule,
-    MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule,
-  ],
-  templateUrl: './attendance-register.component.html',
+    templateUrl: './attendance-register.component.html',
   styleUrl: './attendance-register.component.less',
 })
 export class AttendanceRegisterComponent implements OnInit {
@@ -103,6 +87,18 @@ export class AttendanceRegisterComponent implements OnInit {
   readonly statusOptions = ATTENDANCE_STATUS_OPTIONS;
   readonly cellClass = cellClass;
   readonly cellShort = cellShort;
+
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+
+  readonly monthOptions = computed(() =>
+    this.monthNames.map((name, i) => ({ key: String(i + 1), value: name })),
+  );
+
+  readonly yearOptions = computed(() =>
+    this.years.map(y => ({ key: String(y), value: String(y) })),
+  );
 
   readonly filters = new FormGroup({
     clientId: new FormControl(this.attendanceFilter.clientIdOrEmpty(), { nonNullable: true, validators: Validators.required }),
@@ -207,7 +203,8 @@ export class AttendanceRegisterComponent implements OnInit {
     this.load();
   }
 
-  clientLabel(clientId: string): string {
+  clientLabel(clientId: string | undefined): string {
+    if (!clientId) return 'Client';
     return this.clients().find(c => c.id === clientId)?.companyName ?? 'Client';
   }
 

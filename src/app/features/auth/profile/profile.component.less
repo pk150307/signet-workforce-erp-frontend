@@ -13,7 +13,7 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), #1e88e5);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
     color: #fff;
     font-size: 28px;
     font-weight: 700;
@@ -39,9 +39,17 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 
+    &--spaced {
+      margin-top: 20px;
+    }
+
     .mobile-down({
       grid-template-columns: 1fr;
     });
+  }
+
+  &__divider {
+    margin: 24px 0;
   }
 
   &__field {

@@ -5,9 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-auth-layout',
-  standalone: true,
-  imports: [RouterLink, MatButtonModule, MatIconModule],
-  templateUrl: './auth-layout.component.html',
+    templateUrl: './auth-layout.component.html',
   styleUrl: './auth-layout.component.less',
 })
 export class AuthLayoutComponent {

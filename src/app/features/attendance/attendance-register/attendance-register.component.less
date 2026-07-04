@@ -148,7 +148,7 @@
   }
 
   &--tail {
-    width: 248px;
+    width: 280px;
     border-left: 1px solid var(--color-border);
     background: var(--color-surface);
   }
@@ -181,7 +181,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--color-border-subtle);
     line-height: 1.3;
     overflow: hidden;
 
@@ -207,17 +207,17 @@
     display: flex;
     align-items: center;
     padding: 6px 4px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
   &--tail:not(&--head) {
     height: 52px;
     display: grid;
-    grid-template-columns: 52px 52px 52px 1fr;
+    grid-template-columns: 56px 56px 56px minmax(76px, 1fr);
     align-items: center;
     gap: 4px;
     padding: 6px 8px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
 
   &--pending {
@@ -226,7 +226,7 @@
 
   &--head.register-cell--tail {
     display: grid;
-    grid-template-columns: 52px 52px 52px 1fr;
+    grid-template-columns: 56px 56px 56px minmax(76px, 1fr);
     align-items: flex-end;
     padding: 0 8px 8px;
     gap: 4px;
@@ -273,6 +273,52 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
+}
+
+.register-ot {
+  width: 100%;
+
+  signet-custom-text-field,
+  .register-ot-field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  ::ng-deep .signet-text-field {
+    width: 100%;
+
+    &__input {
+      height: 32px;
+      min-height: 32px;
+      box-shadow: none;
+    }
+
+    &__input-field {
+      padding: 0 4px !important;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: text !important;
+    }
+
+    &__input--readonly .signet-text-field__input-field {
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
+.register-action {
+  width: 100%;
+
+  signet-button,
+  .submit-row-btn {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 .day-num {
@@ -326,7 +372,7 @@
   &.cell--half {
     background: var(--att-half-bg);
     color: var(--att-half-fg);
-    border-color: rgba(21, 101, 192, 0.2);
+    border-color: var(--color-border-strong);
   }
 
   &.cell--holiday {
@@ -384,11 +430,17 @@
 
 .submit-row-btn {
   width: 100%;
-  height: 32px;
-  line-height: 30px;
-  padding: 0 6px;
-  font-size: 0.6875rem;
-  border-radius: 6px;
+
+  ::ng-deep .signet-btn {
+    width: 100% !important;
+    min-width: 0;
+    height: 32px !important;
+    padding: 0 6px;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
 }
 
 .unsaved-badge {
@@ -408,8 +460,8 @@
   gap: 8px;
   padding: 10px 16px;
   margin-bottom: 12px;
-  background: rgba(21, 101, 192, 0.08);
-  border: 1px solid rgba(21, 101, 192, 0.2);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-border-strong);
   font-size: 0.8125rem;
   color: var(--color-text-primary);
   line-height: 1.45;
@@ -439,40 +491,6 @@
   width: 100%;
   font-size: 0.8125rem;
   color: var(--color-text-muted);
-}
-
-.ot-input,
-.ot-readonly {
-  display: block;
-  width: 52px;
-  height: 32px;
-  line-height: 32px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  text-align: center;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  box-sizing: border-box;
-}
-
-.ot-input:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-  border-color: transparent;
-}
-
-.ot-input:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  background: var(--color-divider);
-}
-
-.ot-readonly {
-  border: 1px dashed var(--color-border);
-  background: var(--att-empty-bg);
-  color: var(--color-text-secondary);
 }
 
 .dialog-warn {
@@ -515,7 +533,7 @@
   }
 
   .register-panel--tail {
-    width: 180px;
+    width: 252px;
     flex-shrink: 0;
   }
 
