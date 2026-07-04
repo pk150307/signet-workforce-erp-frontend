@@ -77,3 +77,9 @@ export interface PageState {
 
 /** Default page size for cursor-paginated lists. */
 export const DEFAULT_PAGE_SIZE = 10;
+/** Discrete page-size choices exposed in list UIs (plus All). */
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 150, 200] as const;
+/** Value used when the user selects "All". */
+export const ALL_PAGE_SIZE = 10_000;
+/** Maximum accepted pageSize (includes All). */
+export const MAX_PAGE_SIZE = ALL_PAGE_SIZE;

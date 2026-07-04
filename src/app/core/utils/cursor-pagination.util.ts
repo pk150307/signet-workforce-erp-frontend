@@ -1,13 +1,17 @@
 import { HttpParams } from '@angular/common/http';
 import {
+  ALL_PAGE_SIZE,
   CursorDirection,
   CursorPageParams,
   CursorPaginatedResult,
   CursorPaginationMeta,
   DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
   PaginatedResult,
 } from '../models/api.models';
 import { camelCaseKeys } from './api-response.util';
+
+export { ALL_PAGE_SIZE, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS };
 
 export const EMPTY_CURSOR_PAGINATION: CursorPaginationMeta = {
   pageSize: DEFAULT_PAGE_SIZE,
@@ -102,6 +106,13 @@ export class CursorPaginationState {
     this.hasPrev = false;
     this.activeCursor = null;
     this.activeDirection = 'next';
+  }
+
+  /** Change page size and return first-page params. */
+  setPageSize(pageSize: number): CursorPageParams {
+    this.pageSize = pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
+    this.reset();
+    return this.firstPageParams();
   }
 
   /** Apply metadata from an API response. */
@@ -352,4 +363,24 @@ export function isInvalidCursorError(err: unknown): boolean {
     return message.includes('cursor') || message.includes('invalid');
   }
   return false;
+}
+
+/**
+ * Resolve pagination UI events (prev/next or page-size change) into request params.
+ * Returns null when navigation is not possible.
+ */
+export function resolvePaginationNavigate(
+  pager: CursorPaginationState,
+  event: { pageSize?: number; direction?: CursorDirection | 'next' | 'prev' },
+): CursorPageParams | null {
+  if (event.pageSize != null) {
+    return pager.setPageSize(event.pageSize);
+  }
+  if (event.direction === 'next') {
+    return pager.nextPageParams();
+  }
+  if (event.direction === 'prev') {
+    return pager.prevPageParams();
+  }
+  return null;
 }
