@@ -1,12 +1,8 @@
 import { Component, Input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-empty-state',
-  standalone: true,
-  imports: [MatIconModule, MatButtonModule],
-  templateUrl: './empty-state.component.html',
+    templateUrl: './empty-state.component.html',
   styleUrl: './empty-state.component.less',
 })
 export class EmptyStateComponent {

@@ -1,5 +1,5 @@
 <nav class="breadcrumb" aria-label="Breadcrumb">
-  @for (item of breadcrumbService.items(); track item.label; let last = $last) {
+  @for (item of breadcrumbService.items(); track $index; let last = $last) {
     <span class="breadcrumb__item" [class.breadcrumb__item--active]="last">
       @if (!last && item.route) {
         <a [routerLink]="item.route">{{ item.label }}</a>

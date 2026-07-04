@@ -1,10 +1,11 @@
 <h2 mat-dialog-title class="confirm-dialog__title">
-  <span
-    class="confirm-dialog__icon"
-    [class.confirm-dialog__icon--warn]="data.confirmColor === 'warn'"
-    *ngIf="data.icon">
-    <mat-icon>{{ data.icon }}</mat-icon>
-  </span>
+  @if (data.icon) {
+    <span
+      class="confirm-dialog__icon"
+      [class.confirm-dialog__icon--warn]="data.confirmColor === 'warn'">
+      <mat-icon>{{ data.icon }}</mat-icon>
+    </span>
+  }
   {{ data.title }}
 </h2>
 
@@ -13,14 +14,16 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="confirm-dialog__actions">
-  <button mat-stroked-button type="button" (click)="onCancel()">
-    {{ data.cancelLabel || 'Cancel' }}
-  </button>
-  <button
-    mat-flat-button
-    type="button"
-    [color]="data.confirmColor || 'primary'"
-    (click)="onConfirm()">
-    {{ data.confirmLabel || 'Confirm' }}
-  </button>
+  <signet-button [widthUnit]="'%'" type="stroke"
+    [displayText]="data.cancelLabel || 'Cancel'"
+    [width]="100"
+    [height]="40"
+    (clicked)="onCancel()"
+  />
+  <signet-button [widthUnit]="'%'" [type]="confirmButtonType"
+    [displayText]="data.confirmLabel || 'Confirm'"
+    [width]="100"
+    [height]="40"
+    (clicked)="onConfirm()"
+  />
 </mat-dialog-actions>

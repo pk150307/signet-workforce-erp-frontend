@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { parseApiDate } from '../../core/utils/api-response.util';
 
-@Pipe({ name: 'safeDate', standalone: true })
+@Pipe({ name: 'safeDate' })
 export class SafeDatePipe implements PipeTransform {
   private readonly datePipe = new DatePipe('en-GB');
 

@@ -3,9 +3,7 @@ import { NgFor } from '@angular/common';
 
 @Component({
   selector: 'app-skeleton-loader',
-  standalone: true,
-  imports: [NgFor],
-  templateUrl: './skeleton-loader.component.html',
+    templateUrl: './skeleton-loader.component.html',
   styleUrl: './skeleton-loader.component.less',
 })
 export class SkeletonLoaderComponent {

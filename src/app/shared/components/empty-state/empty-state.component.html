@@ -3,9 +3,11 @@
   <h3 class="empty-state__title">{{ title }}</h3>
   <p class="empty-state__description">{{ description }}</p>
   @if (actionLabel) {
-    <button mat-raised-button color="primary">
-      {{ actionLabel }}
-    </button>
+    <signet-button [widthUnit]="'px'" type="primary"
+      [displayText]="actionLabel"
+      [width]="140"
+      [height]="40"
+    />
   }
   <ng-content />
 </div>

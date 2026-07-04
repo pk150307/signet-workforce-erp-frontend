@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+<mat-dialog-content>
+  @if (data.message) {
+    <p>{{ data.message }}</p>
+  } @else {
+    <p>
+      Deleting <strong>{{ data.entityLabel }}</strong> requires Super Admin approval.
+      Please provide a reason.
+    </p>
+  }
+  <form [formGroup]="form" class="full-width">
+    <signet-custom-text-area-field
+      fieldTitle="Delete reason"
+      formControlName="reason"
+      [width]="100"
+      widthUnit="%"
+      [height]="120"
+      heightUnit="px"
+      [required]="true"
+      [isErrorMsgRequired]="!!(form.get('reason')?.invalid && form.get('reason')?.touched)"
+      [errorMessage]="form.get('reason')?.hasError('required') ? 'Delete reason is required' : 'At least 3 characters required'"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [widthUnit]="'px'" type="stroke"
+    displayText="Cancel"
+    [width]="90"
+    [height]="40"
+    (clicked)="dialogRef.close()"
+  />
+  <signet-button [widthUnit]="'px'" type="error"
+    displayText="Submit Request"
+    [width]="140"
+    [height]="40"
+    [disabled]="form.invalid"
+    (clicked)="submit()"
+  />
+</mat-dialog-actions>

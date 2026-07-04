@@ -54,10 +54,12 @@
   @{root} {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-end;
     gap: 12px;
     padding: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .mobile-down({
@@ -66,11 +68,19 @@
       align-items: stretch;
       padding: 12px;
 
-      .mat-mdc-form-field {
+      .mat-mdc-form-field,
+      signet-search-select-dropdown,
+      signet-custom-text-field,
+      signet-date-input-field {
         width: 100% !important;
         max-width: none !important;
         min-width: 0 !important;
         flex: 1 1 100% !important;
+      }
+
+      signet-button {
+        width: 100%;
+        align-self: stretch;
       }
 
       &__clear,
@@ -96,6 +106,7 @@
 
     .mobile-down({
       button,
+      signet-button,
       a[mat-raised-button],
       a[mat-stroked-button],
       a[mat-button] {
@@ -105,6 +116,7 @@
       }
 
       button:only-child,
+      signet-button:only-child,
       a:only-child {
         flex: 1 1 100%;
       }
@@ -232,8 +244,12 @@
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
+    align-items: flex-start;
 
-    .mat-mdc-form-field {
+    .mat-mdc-form-field,
+    signet-search-select-dropdown,
+    signet-custom-text-field,
+    signet-date-input-field {
       flex: 1 1 160px;
       min-width: 0;
       max-width: 100%;
@@ -244,7 +260,10 @@
     .@{selector} {
       flex-direction: column;
 
-      .mat-mdc-form-field {
+      .mat-mdc-form-field,
+      signet-search-select-dropdown,
+      signet-custom-text-field,
+      signet-date-input-field {
         width: 100% !important;
         flex: 1 1 100% !important;
       }
