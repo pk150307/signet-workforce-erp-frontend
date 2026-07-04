@@ -1,25 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { DepartmentService } from '../../../core/services/department.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { DepartmentDetail } from '../../../core/models/department.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-
 @Component({
   selector: 'app-department-detail',
-  standalone: true,
-  imports: [
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    SkeletonLoaderComponent,
-    EmptyStateComponent,
-  ],
-  templateUrl: './department-detail.component.html',
+    templateUrl: './department-detail.component.html',
   styleUrl: './department-detail.component.less',
 })
 export class DepartmentDetailComponent implements OnInit {

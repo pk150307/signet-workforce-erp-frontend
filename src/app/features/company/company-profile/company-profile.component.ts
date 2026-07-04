@@ -1,37 +1,16 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+import { FormBuilder, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatTabsModule } from '@angular/material/tabs';
 
 import { CompanyService } from '../../../core/services/company.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CompanyProfile } from '../../../core/models/company.models';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-company-profile',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    RouterLink,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatDividerModule,
-    MatTabsModule,
-  ],
-  templateUrl: './company-profile.component.html',
+    templateUrl: './company-profile.component.html',
   styleUrl: './company-profile.component.less',
 })
 export class CompanyProfileComponent implements OnInit {
@@ -39,10 +18,17 @@ export class CompanyProfileComponent implements OnInit {
   private readonly companyService = inject(CompanyService);
   private readonly notification = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly logoPreview = signal<string | null>(null);
+  readonly sectionItems = [
+    { label: 'Company Info', value: 'info' },
+    { label: 'GST & Tax', value: 'gst' },
+    { label: 'Billing Address', value: 'billing' },
+  ];
+  readonly activeSection = signal('info');
 
   readonly form = this.fb.group({
     companyName: ['', Validators.required],

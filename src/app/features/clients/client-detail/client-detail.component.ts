@@ -1,8 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DecimalPipe, NgIf } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { DecimalPipe } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ClientsService } from '../../../core/services/clients.service';
@@ -15,22 +13,11 @@ import { DepartmentListItem } from '../../../core/models/department.models';
 import { DesignationListItem } from '../../../core/models/designation.models';
 import { DesignationGradeListItem } from '../../../core/models/designation-grade.models';
 import { SiteListItem } from '../../../core/models/sites.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-client-detail',
-  standalone: true,
-  imports: [
-    NgIf,
-    DecimalPipe,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    SkeletonLoaderComponent,
-    EmptyStateComponent,
-  ],
-  templateUrl: './client-detail.component.html',
+    templateUrl: './client-detail.component.html',
   styleUrl: './client-detail.component.less',
 })
 export class ClientDetailComponent implements OnInit {
@@ -40,6 +27,7 @@ export class ClientDetailComponent implements OnInit {
   private readonly gradeService = inject(DesignationGradeService);
   private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly client = signal<ClientDetail | null>(null);
@@ -65,7 +53,7 @@ export class ClientDetailComponent implements OnInit {
       designations: this.designationService.getAllForSelect({ clientId: id, isActive: true }).pipe(
         catchError(() => of([] as DesignationListItem[])),
       ),
-      grades: this.gradeService.getAll({ page: 1, pageSize: 500, clientId: id, isActive: true }).pipe(
+      grades: this.gradeService.getAll({ pageSize: 500, clientId: id, isActive: true }).pipe(
         catchError(() => of({ items: [] as DesignationGradeListItem[] })),
       ),
     }).subscribe({
@@ -92,11 +80,11 @@ export class ClientDetailComponent implements OnInit {
   }
 
   totalDeployed(): number {
-    return this.sites().reduce((sum, s) => sum + (s.deployedHeadcount ?? 0), 0);
+    return this.sites().reduce((sum, s) => sum + s.deployedHeadcount, 0);
   }
 
   totalRequired(): number {
-    return this.sites().reduce((sum, s) => sum + (s.requiredHeadcount ?? 0), 0);
+    return this.sites().reduce((sum, s) => sum + s.requiredHeadcount, 0);
   }
 
   staffingPercent(): number {

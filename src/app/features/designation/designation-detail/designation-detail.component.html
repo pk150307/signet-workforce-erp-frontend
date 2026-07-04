@@ -10,15 +10,13 @@
       title="Designation not found"
       description="The requested designation could not be loaded."
     >
-      <button mat-stroked-button routerLink="/designations">Back to Designations</button>
+      <a routerLink="/designations" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Designations" /></a>
     </app-empty-state>
   }
 
   @if (!loading() && designation(); as d) {
     <div class="detail-nav">
-      <button mat-stroked-button type="button" routerLink="/designations">
-        <mat-icon>arrow_back</mat-icon> Back
-      </button>
+      <a routerLink="/designations" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" /></a>
     </div>
 
     <section class="detail-profile">
@@ -29,9 +27,7 @@
           <div class="detail-profile__info">
             <div class="detail-profile__title-row">
               <h1 class="detail-profile__name">{{ d.designationName }}</h1>
-              <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
-                {{ d.isActive ? 'Active' : 'Inactive' }}
-              </span>
+              <signet-status-button [label]="d.isActive ? 'Active' : 'Inactive'" [status]="d.isActive" />
             </div>
             <div class="detail-profile__chips">
               <span class="meta-chip mono">{{ d.designationCode }}</span>
@@ -44,9 +40,8 @@
           </div>
         </div>
         <div class="detail-profile__actions">
-          <a mat-raised-button color="primary" [routerLink]="['/designations', d.id, 'edit']">
-            <mat-icon>edit</mat-icon> Edit
-          </a>
+          <a [routerLink]="['/designations', d.id, 'edit']" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="<mat-icon>edit</mat-icon> Edit
+          " /></a>
         </div>
       </div>
     </section>
@@ -62,7 +57,7 @@
       <div class="stat-card">
         <div class="stat-card__icon stat-card__icon--purple"><mat-icon>layers</mat-icon></div>
         <div>
-          <div class="stat-card__value">{{ d.gradeCount ?? grades().length }}</div>
+          <div class="stat-card__value">{{ d.gradeCount }}</div>
           <div class="stat-card__label">Pay Grades</div>
         </div>
       </div>
@@ -117,9 +112,7 @@
             Define compensation bands (e.g. HK1, HK2) with base salary and allowances used for payroll and client billing. Overtime is entered on the attendance register.
           </p>
         </div>
-        <button mat-raised-button color="primary" type="button" (click)="openAddGrade()">
-          <mat-icon>add</mat-icon> Add Grade
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Grade" (clicked)="openAddGrade()" />
       </div>
 
       @if (savingGrade()) {
@@ -128,35 +121,17 @@
         <form class="grade-form" [formGroup]="gradeForm" (ngSubmit)="saveGrade()">
           <div class="grade-form__head">
             <h4>{{ editingGradeId() ? 'Edit Grade' : 'New Grade' }}</h4>
-            <button mat-icon-button type="button" (click)="cancelGradeForm()"><mat-icon>close</mat-icon></button>
+            <button mat-icon-button (click)="cancelGradeForm()"><mat-icon>close</mat-icon></button>
           </div>
           <div class="grade-form__grid">
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>Grade Code *</mat-label>
-              <input matInput formControlName="gradeCode" placeholder="e.g. HK1">
-            </mat-form-field>
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>Grade Name *</mat-label>
-              <input matInput formControlName="gradeName" placeholder="e.g. Housekeeping Helper Level 1">
-            </mat-form-field>
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>Level</mat-label>
-              <input matInput type="number" formControlName="level" min="1">
-            </mat-form-field>
+            <signet-custom-text-field class="" fieldTitle="Grade Code" formControlName="gradeCode" placeholder="e.g. HK1" [required]="true" />
+            <signet-custom-text-field class="" fieldTitle="Grade Name" formControlName="gradeName" placeholder="e.g. Housekeeping Helper Level 1" [required]="true" />
+            <signet-custom-text-field fieldTitle="Level" formControlName="level" type="number" [required]="false" />
           </div>
           <div class="grade-form__grid grade-form__grid--wide">
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>Basic Salary</mat-label>
-              <input matInput type="number" formControlName="basicSalary" min="0">
-            </mat-form-field>
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>HRA</mat-label>
-              <input matInput type="number" formControlName="houseRentAllowance" min="0">
-            </mat-form-field>
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>Special Allowance</mat-label>
-              <input matInput type="number" formControlName="specialAllowance" min="0">
-            </mat-form-field>
+            <signet-custom-text-field fieldTitle="Basic Salary" formControlName="basicSalary" type="number" [required]="false" />
+            <signet-custom-text-field fieldTitle="HRA" formControlName="houseRentAllowance" type="number" [required]="false" />
+            <signet-custom-text-field fieldTitle="Special Allowance" formControlName="specialAllowance" type="number" [required]="false" />
           </div>
 
           <div class="grade-form__statutory">
@@ -169,33 +144,21 @@
               <div class="grade-form__statutory-row">
                 <mat-slide-toggle formControlName="isPfApplicable" color="primary">PF Applicable</mat-slide-toggle>
                 @if (gradeForm.value.isPfApplicable) {
-                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                    <mat-label>Employee PF %</mat-label>
-                    <input matInput type="number" formControlName="employeePfPercentage" min="0" max="100" step="0.01">
-                    <mat-hint>Default 12% of basic earned, max ₹1,800</mat-hint>
-                  </mat-form-field>
+                  <signet-custom-text-field fieldTitle="Employee PF %" formControlName="employeePfPercentage" type="number" [required]="false" />
                 }
               </div>
 
               <div class="grade-form__statutory-row">
                 <mat-slide-toggle formControlName="isEsiApplicable" color="primary">ESIC Applicable</mat-slide-toggle>
                 @if (gradeForm.value.isEsiApplicable) {
-                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                    <mat-label>Employee ESIC %</mat-label>
-                    <input matInput type="number" formControlName="employeeEsiPercentage" min="0" max="100" step="0.01">
-                    <mat-hint>Default 0.75% of gross (wage ceiling ₹21,000)</mat-hint>
-                  </mat-form-field>
+                  <signet-custom-text-field fieldTitle="Employee ESIC %" formControlName="employeeEsiPercentage" type="number" [required]="false" />
                 }
               </div>
 
               <div class="grade-form__statutory-row">
                 <mat-slide-toggle formControlName="isLwfApplicable" color="primary">LWF Applicable</mat-slide-toggle>
                 @if (gradeForm.value.isLwfApplicable) {
-                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                    <mat-label>Employee LWF %</mat-label>
-                    <input matInput type="number" formControlName="employeeLwfPercentage" min="0" max="100" step="0.01">
-                    <mat-hint>Default 0.2% of gross earned, max ₹35</mat-hint>
-                  </mat-form-field>
+                  <signet-custom-text-field fieldTitle="Employee LWF %" formControlName="employeeLwfPercentage" type="number" [required]="false" />
                 }
               </div>
             </div>
@@ -206,10 +169,8 @@
             </div>
             <mat-slide-toggle formControlName="isActive" color="primary">Active</mat-slide-toggle>
             <div class="grade-form__actions">
-              <button mat-stroked-button type="button" (click)="cancelGradeForm()">Cancel</button>
-              <button mat-raised-button color="primary" type="submit" [disabled]="savingGrade()">
-                {{ editingGradeId() ? 'Save Grade' : 'Create Grade' }}
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancelGradeForm()" />
+              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="{{ editingGradeId() ? 'Save Grade' : 'Create Grade' }}" [disabled]="savingGrade()" (clicked)="saveGrade()" />
             </div>
           </div>
         </form>
@@ -223,7 +184,7 @@
           title="No pay grades yet"
           description="Add grades like HK1, HK2 for this designation to drive employee pay and client billing rates."
         >
-          <button mat-stroked-button type="button" (click)="openAddGrade()">Add first grade</button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add first grade" (clicked)="openAddGrade()" />
         </app-empty-state>
       } @else {
         <div class="grades-table">
@@ -272,10 +233,10 @@
               </span>
               <span>{{ g.employeeCount }}</span>
               <div class="grades-table__actions">
-                <button mat-icon-button type="button" matTooltip="Edit" (click)="openEditGrade(g)">
+                <button mat-icon-button matTooltip="Edit" (click)="openEditGrade(g)">
                   <mat-icon>edit</mat-icon>
                 </button>
-                <button mat-icon-button type="button" matTooltip="Delete" (click)="deleteGrade(g)">
+                <button mat-icon-button matTooltip="Delete" (click)="deleteGrade(g)">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>

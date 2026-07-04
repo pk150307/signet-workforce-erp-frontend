@@ -3,7 +3,7 @@
 @import '../../../shared/styles/module-layout.less';
 
 .code-chip {
-  font-family: monospace;
+  font-family: ProximaNova-Medium, sans-serif;
   background: var(--color-divider);
   padding: 2px 8px;
   border-radius: 4px;
@@ -11,3 +11,8 @@
 }
 
 .list-page-responsive(680px);
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 674) * 110) calc(calc(100% / 674) * 200) calc(calc(100% / 674) * 110) calc(calc(100% / 674) * 110) calc(calc(100% / 674) * 100) calc(calc(100% / 674) * 44);
+  --data-list-min-width: 674px;
+}

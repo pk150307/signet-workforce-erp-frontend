@@ -7,15 +7,13 @@
       icon="business_center"
       title="Client not found"
       description="The requested client could not be loaded.">
-      <button mat-stroked-button routerLink="/clients">Back to Clients</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Clients" (clicked)="router.navigate(['clients'])" />
     </app-empty-state>
   }
 
   @if (!loading() && client(); as c) {
     <div class="detail-nav">
-      <button mat-stroked-button type="button" routerLink="/clients">
-        <mat-icon>arrow_back</mat-icon> Back
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="router.navigate(['clients'])" />
     </div>
 
     <section class="detail-profile">
@@ -26,9 +24,7 @@
           <div class="detail-profile__info">
             <div class="detail-profile__title-row">
               <h1 class="detail-profile__name">{{ c.companyName }}</h1>
-              <span class="badge" [class.badge--active]="c.isActive" [class.badge--inactive]="!c.isActive">
-                {{ c.isActive ? 'Active' : 'Inactive' }}
-              </span>
+              <signet-status-button [label]="c.isActive ? 'Active' : 'Inactive'" [status]="c.isActive" />
             </div>
             <div class="detail-profile__chips">
               <span class="meta-chip mono">{{ c.clientCode }}</span>
@@ -44,15 +40,9 @@
           </div>
         </div>
         <div class="detail-profile__actions">
-          <a mat-stroked-button routerLink="/billing/invoices/new">
-            <mat-icon>receipt_long</mat-icon> Invoice
-          </a>
-          <a mat-stroked-button routerLink="/sites/new">
-            <mat-icon>add_location_alt</mat-icon> Add Site
-          </a>
-          <a mat-raised-button color="primary" [routerLink]="['/clients', c.id, 'edit']">
-            <mat-icon>edit</mat-icon> Edit
-          </a>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Invoice" (clicked)="router.navigate(['billing','invoices','new'])" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Site" (clicked)="router.navigate(['sites','new'])" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Edit" (clicked)="router.navigate(['/clients', c.id, 'edit'])" />
         </div>
       </div>
     </section>
@@ -150,9 +140,7 @@
           <h3>Sites</h3>
           <p>Locations managed under this client</p>
         </div>
-        <a mat-stroked-button routerLink="/sites/new">
-          <mat-icon>add</mat-icon> Add Site
-        </a>
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Site" (clicked)="router.navigate(['sites','new'])" />
       </div>
 
       @if (sites().length) {
@@ -161,18 +149,16 @@
             <a class="site-card" [routerLink]="['/sites', site.id]">
               <div class="site-card__head">
                 <span class="site-card__name">{{ site.siteName }}</span>
-                <span class="badge badge--sm" [class.badge--active]="site.isActive" [class.badge--inactive]="!site.isActive">
-                  {{ site.isActive ? 'Active' : 'Inactive' }}
-                </span>
+                <signet-status-button size="sm" [label]="site.isActive ? 'Active' : 'Inactive'" [status]="site.isActive" />
               </div>
               <p class="site-card__meta">{{ site.siteCode }} · {{ site.city }}, {{ site.state }}</p>
               <div class="site-card__stats">
                 <div>
-                  <span class="site-stat__val">{{ site.deployedHeadcount ?? 0 }}</span>
+                  <span class="site-stat__val">{{ site.deployedHeadcount }}</span>
                   <span class="site-stat__lbl">Deployed</span>
                 </div>
                 <div>
-                  <span class="site-stat__val">{{ site.requiredHeadcount ?? 0 }}</span>
+                  <span class="site-stat__val">{{ site.requiredHeadcount }}</span>
                   <span class="site-stat__lbl">Required</span>
                 </div>
               </div>
@@ -184,7 +170,7 @@
         <div class="empty-inline">
           <mat-icon>location_off</mat-icon>
           <p>No sites linked to this client yet.</p>
-          <a mat-stroked-button routerLink="/sites/new">Add first site</a>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add first site" (clicked)="router.navigate(['sites','new'])" />
         </div>
       }
     </div>
@@ -197,21 +183,15 @@
           <p>Configured under departments and designations — view details or manage from those modules</p>
         </div>
         <div class="section-header__actions">
-          <a mat-stroked-button [routerLink]="['/departments']" [queryParams]="{ clientId: c.id }">
-            <mat-icon>corporate_fare</mat-icon> All Departments
-          </a>
-          <a mat-stroked-button [routerLink]="['/designations']" [queryParams]="{ clientId: c.id }">
-            <mat-icon>badge</mat-icon> All Designations
-          </a>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="All Departments" (clicked)="router.navigate(['/departments'], { queryParams: { clientId: c.id } })" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="All Designations" (clicked)="router.navigate(['/designations'], { queryParams: { clientId: c.id } })" />
         </div>
       </div>
 
       <div class="org-subsection">
         <div class="org-subsection__head">
           <h4>Departments</h4>
-          <a mat-stroked-button [routerLink]="['/departments/new']" [queryParams]="{ clientId: c.id }">
-            <mat-icon>add</mat-icon> Add Department
-          </a>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Department" (clicked)="router.navigate(['/departments/new'], { queryParams: { clientId: c.id } })" />
         </div>
 
         @if (departments().length) {
@@ -238,7 +218,7 @@
           <div class="empty-inline">
             <mat-icon>corporate_fare</mat-icon>
             <p>No departments configured for this client yet.</p>
-            <a mat-stroked-button [routerLink]="['/departments/new']" [queryParams]="{ clientId: c.id }">Add department</a>
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add department" (clicked)="router.navigate(['/departments/new'], { queryParams: { clientId: c.id } })" />
           </div>
         }
       </div>
@@ -246,9 +226,7 @@
       <div class="org-subsection">
         <div class="org-subsection__head">
           <h4>Designations</h4>
-          <a mat-stroked-button [routerLink]="['/designations/new']" [queryParams]="{ clientId: c.id }">
-            <mat-icon>add</mat-icon> Add Designation
-          </a>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Designation" (clicked)="router.navigate(['/designations/new'], { queryParams: { clientId: c.id } })" />
         </div>
 
         @if (designations().length) {
@@ -276,7 +254,7 @@
           <div class="empty-inline">
             <mat-icon>badge</mat-icon>
             <p>No designations configured for this client yet.</p>
-            <a mat-stroked-button [routerLink]="['/designations/new']" [queryParams]="{ clientId: c.id }">Add designation</a>
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add designation" (clicked)="router.navigate(['/designations/new'], { queryParams: { clientId: c.id } })" />
           </div>
         }
       </div>

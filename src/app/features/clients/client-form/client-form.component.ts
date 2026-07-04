@@ -1,34 +1,16 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ClientsService } from '../../../core/services/clients.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { CreateClientRequest } from '../../../core/models/client.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-client-form',
-  standalone: true,
-  imports: [
-    NgIf,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './client-form.component.html',
+    templateUrl: './client-form.component.html',
   styleUrl: './client-form.component.less',
 })
 export class ClientFormComponent implements OnInit {

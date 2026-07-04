@@ -1,25 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HighchartsChartModule } from 'highcharts-angular';
 import * as Highcharts from 'highcharts';
 
 import { DashboardService, DashboardStats } from '../../../core/services/dashboard.service';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    HighchartsChartModule,
-  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.less',
 })
@@ -51,7 +38,7 @@ export class DashboardComponent implements OnInit {
 
   private buildCharts(data: DashboardStats) {
     this.attendanceChartOptions.set({
-      chart: { type: 'area', backgroundColor: 'transparent', style: { fontFamily: 'Inter, sans-serif' }, height: 220 },
+      chart: { type: 'area', backgroundColor: 'transparent', style: { fontFamily: 'ProximaNova-Regular, sans-serif' }, height: 220 },
       title: { text: undefined },
       xAxis: {
         categories: data.attendanceTrend.map(d => d.date),
@@ -63,15 +50,15 @@ export class DashboardComponent implements OnInit {
       series: [
         { type: 'area', name: 'Present', data: data.attendanceTrend.map(d => d.present), color: '#2e7d32', fillOpacity: 0.1 },
         { type: 'area', name: 'Absent', data: data.attendanceTrend.map(d => d.absent), color: '#c62828', fillOpacity: 0.1 },
-        { type: 'area', name: 'On Leave', data: data.attendanceTrend.map(d => d.onLeave), color: '#0277bd', fillOpacity: 0.1 },
-      ],
+        { type: 'area', name: 'On Leave', data: data.attendanceTrend.map(d => d.onLeave), color: '#0277bd', fillOpacity: 0.1 }
+  ],
       legend: { itemStyle: { fontSize: '12px', color: '#5a6478' } },
       credits: { enabled: false },
       tooltip: { shared: true },
     });
 
     this.revenueChartOptions.set({
-      chart: { type: 'column', backgroundColor: 'transparent', style: { fontFamily: 'Inter, sans-serif' }, height: 220 },
+      chart: { type: 'column', backgroundColor: 'transparent', style: { fontFamily: 'ProximaNova-Regular, sans-serif' }, height: 220 },
       title: { text: undefined },
       xAxis: {
         categories: data.revenueTrend.map(d => d.month),
@@ -90,8 +77,8 @@ export class DashboardComponent implements OnInit {
       },
       series: [
         { type: 'column', name: 'Revenue', data: data.revenueTrend.map(d => d.revenue), color: '#1565C0', borderRadius: 4 },
-        { type: 'column', name: 'Payroll Cost', data: data.revenueTrend.map(d => d.payrollCost), color: '#e65100', borderRadius: 4 },
-      ],
+        { type: 'column', name: 'Payroll Cost', data: data.revenueTrend.map(d => d.payrollCost), color: '#e65100', borderRadius: 4 }
+  ],
       credits: { enabled: false },
       tooltip: {
         shared: true,
@@ -129,16 +116,16 @@ export class DashboardComponent implements OnInit {
         { date: 'Thu', present: 215, absent: 20, onLeave: 13 },
         { date: 'Fri', present: 222, absent: 14, onLeave: 12 },
         { date: 'Sat', present: 180, absent: 40, onLeave: 28 },
-        { date: 'Today', present: 198, absent: 12, onLeave: 21 },
-      ],
+        { date: 'Today', present: 198, absent: 12, onLeave: 21 }
+  ],
       revenueTrend: [
         { month: 'Jan', revenue: 3800000, payrollCost: 2100000 },
         { month: 'Feb', revenue: 3950000, payrollCost: 2200000 },
         { month: 'Mar', revenue: 4100000, payrollCost: 2300000 },
         { month: 'Apr', revenue: 3900000, payrollCost: 2250000 },
         { month: 'May', revenue: 4050000, payrollCost: 2350000 },
-        { month: 'Jun', revenue: 4200000, payrollCost: 2450000 },
-      ],
+        { month: 'Jun', revenue: 4200000, payrollCost: 2450000 }
+  ],
     };
   }
 

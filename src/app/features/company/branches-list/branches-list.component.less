@@ -3,7 +3,7 @@
 @import '../../../shared/styles/module-layout.less';
 
 .code-chip {
-  font-family: monospace;
+  font-family: ProximaNova-Medium, sans-serif;
   background: var(--color-divider);
   padding: 2px 8px;
   border-radius: 4px;
@@ -23,4 +23,9 @@
     max-width: none !important;
     flex: 1 1 100% !important;
   });
+}
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 634) * 110) calc(calc(100% / 634) * 160) calc(calc(100% / 634) * 140) calc(calc(100% / 634) * 80) calc(calc(100% / 634) * 100) calc(calc(100% / 634) * 44);
+  --data-list-min-width: 634px;
 }

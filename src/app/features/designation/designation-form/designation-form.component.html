@@ -8,7 +8,7 @@
     <header class="form-page-header">
       <button
         mat-icon-button
-        type="button"
+       
         class="form-page-header__back"
         (click)="cancel()"
         matTooltip="Back to designations"
@@ -40,35 +40,38 @@
           </div>
           <div class="form-section__body">
             <div class="form-grid form-grid--2">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Client *</mat-label>
-                <mat-select formControlName="clientId" [disabled]="isEdit()">
-                  @for (c of clients(); track c.id) {
-                    <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
-                  }
-                </mat-select>
-                @if (form.get('clientId')?.hasError('required') && form.get('clientId')?.touched) {
-                  <mat-error>Client is required</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Department *</mat-label>
-                <mat-select formControlName="departmentId" [compareWith]="compareSelectValue" [disabled]="!form.value.clientId">
-                  <mat-option value="">Select department</mat-option>
-                  @for (d of departments(); track d.id) {
-                    <mat-option [value]="d.id">{{ d.departmentName }}</mat-option>
-                  }
-                </mat-select>
-                @if (form.get('departmentId')?.hasError('required') && form.get('departmentId')?.touched) {
-                  <mat-error>Department is required</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Reports To</mat-label>
-                <mat-select formControlName="parentDesignationId">
-                  <mat-option value="">None — top-level designation</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <signet-search-select-dropdown
+                formControlName="clientId"
+                fieldTitle="Client"
+                placeholder="Select client"
+                [options]="clientOptions()"
+                [disabled]="isEdit()"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+                [required]="true"
+              />
+              <signet-search-select-dropdown
+                formControlName="departmentId"
+                fieldTitle="Department"
+                placeholder="Select department"
+                [options]="departmentOptions()"
+                [disabled]="!form.value.clientId"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+                [required]="true"
+              />
+              <signet-search-select-dropdown
+                formControlName="parentDesignationId"
+                fieldTitle="Reports To"
+                placeholder="None — top-level designation"
+                [options]="parentDesignationOptions()"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+                [required]="false"
+              />
             </div>
           </div>
         </section>
@@ -83,27 +86,8 @@
           </div>
           <div class="form-section__body">
             <div class="form-grid form-grid--2">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Designation Code *</mat-label>
-                <input
-                  matInput
-                  formControlName="designationCode"
-                  [readonly]="!isEdit()"
-                  placeholder="Auto-generated">
-                @if (form.get('designationCode')?.hasError('required') && form.get('designationCode')?.touched) {
-                  <mat-error>Designation code is required</mat-error>
-                }
-                @if (!isEdit()) {
-                  <mat-hint>Auto-generated from existing designations in the department</mat-hint>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Designation Name *</mat-label>
-                <input matInput formControlName="designationName" placeholder="e.g. Senior Engineer">
-                @if (form.get('designationName')?.hasError('required') && form.get('designationName')?.touched) {
-                  <mat-error>Designation name is required</mat-error>
-                }
-              </mat-form-field>
+              <signet-custom-text-field fieldTitle="Designation Code" formControlName="designationCode" placeholder="Auto-generated" [readOnly]="!isEdit()" [required]="true" />
+              <signet-custom-text-field fieldTitle="Designation Name" formControlName="designationName" [required]="true" />
             </div>
             <div class="status-toggle">
               <mat-slide-toggle formControlName="isActive" color="primary">Active designation</mat-slide-toggle>
@@ -120,23 +104,13 @@
             </div>
           </div>
           <div class="form-section__body">
-            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
-              <mat-label>Description</mat-label>
-              <textarea
-                matInput
-                formControlName="description"
-                rows="3"
-                placeholder="Optional description of role scope or requirements"
-              ></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field class="full-width" fieldTitle="Description" formControlName="description" [height]="80" [required]="false" />
           </div>
         </section>
 
         <footer class="form-footer">
-          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-            {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Designation') }}
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" [disabled]="saving()" (clicked)="cancel()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="{{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Designation') }}" [disabled]="saving()" (clicked)="onSubmit()" />
         </footer>
       </form>
     </div>

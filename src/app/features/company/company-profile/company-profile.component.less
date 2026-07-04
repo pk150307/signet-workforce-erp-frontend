@@ -16,7 +16,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: var(--color-bg-subtle, #f8f9fb);
+    background: var(--color-bg-subtle);
 
     img {
       width: 100%;
@@ -33,9 +33,11 @@
   }
 
   &__actions {
-    h3 {
+    &__title {
+      display: block;
       margin: 0 0 4px;
       font-size: 15px;
+      font-weight: 600;
     }
 
     p {
@@ -46,8 +48,19 @@
   }
 }
 
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__nav {
+    display: block;
+    width: 100%;
+  }
+}
+
 .tab-content {
-  padding: 20px 0;
+  padding: 4px 0 0;
 }
 
 .form-row {

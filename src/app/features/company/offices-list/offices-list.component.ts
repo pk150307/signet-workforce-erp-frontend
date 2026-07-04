@@ -1,94 +1,102 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { confirmDialogConfig } from '../../../core/utils/dialog.util';
-
+import { confirmDialogConfig, featureDialogConfig } from '../../../core/utils/dialog.util';
 import { CompanyService } from '../../../core/services/company.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { OfficeListItem } from '../../../core/models/company.models';
-import { PaginatedResult } from '../../../core/models/api.models';
+import { BranchListItem, OfficeListItem } from '../../../core/models/company.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
+import {
+  OfficeFormDialogComponent,
+  OfficeFormResult,
+} from '../office-form-dialog/office-form-dialog.component';
 
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 @Component({
   selector: 'app-offices-list',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    RouterLink,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-  ],
   templateUrl: './offices-list.component.html',
   styleUrl: './offices-list.component.less',
 })
 export class OfficesListComponent implements OnInit {
-
   private readonly companyService = inject(CompanyService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
-  readonly data = signal<PaginatedResult<OfficeListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<OfficeListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
+  readonly branches = signal<BranchListItem[]>([]);
   readonly searchCtrl = new FormControl('');
-  readonly statusCtrl = new FormControl<boolean | null>(null);
+  readonly statusCtrl = new FormControl<string>('');
   readonly cols = ['officeCode', 'officeName', 'branchName', 'floor', 'capacity', 'status', 'actions'];
 
-  page = 1;
-  pageSize = 20;
+  readonly statusOptions = computed(() => [
+    { key: '', value: 'All' },
+    { key: 'true', value: 'Active' },
+    { key: 'false', value: 'Inactive' },
+  ]);
+
 
   ngOnInit() {
+    this.loadBranches();
     this.load();
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
     this.statusCtrl.valueChanges.subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
   }
 
-  load() {
+  load(params?: CursorPageParams) {
     this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
     this.companyService.getOffices({
-      page: this.page,
-      pageSize: this.pageSize,
+      ...pageParams,
       search: this.searchCtrl.value || undefined,
-      isActive: this.statusCtrl.value ?? undefined,
+      isActive: this.parseBoolFilter(this.statusCtrl.value),
     }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {
+        this.data.set(emptyCursorPage(this.pager.pageSize));
+        this.pager.reset();
+        this.loading.set(false);
+        this.notification.error('Failed to load offices.');
+      },
     });
   }
 
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.load();
+  openCreate(): void {
+    this.openForm();
+  }
+
+  openEdit(office: OfficeListItem): void {
+    this.openForm(office);
+  }
+
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.load(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.load(p);
+    }
   }
 
   deleteOffice(office: OfficeListItem) {
@@ -115,6 +123,58 @@ export class OfficesListComponent implements OnInit {
 
   clearFilters() {
     this.searchCtrl.setValue('');
-    this.statusCtrl.setValue(null);
+    this.statusCtrl.setValue('');
+  }
+
+  private loadBranches(): void {
+    this.companyService.getBranches({ pageSize: 100, isActive: true }).subscribe({
+      next: (result) => this.branches.set(result.items),
+      error: () => this.branches.set([]),
+    });
+  }
+
+  private openForm(office?: OfficeListItem): void {
+    const branches = this.branches();
+    if (!branches.length) {
+      this.notification.warning('Add a branch before creating an office.');
+      return;
+    }
+
+    this.dialog.open(OfficeFormDialogComponent, {
+      ...featureDialogConfig({ width: '480px' }),
+      data: { office: office ?? null, branches },
+    }).afterClosed().subscribe((result?: OfficeFormResult) => {
+      if (!result) return;
+
+      const payload = {
+        officeCode: result.officeCode,
+        officeName: result.officeName,
+        branchId: result.branchId,
+        floor: result.floor,
+        capacity: result.capacity,
+        isActive: result.isActive,
+      };
+
+      const request$ = office
+        ? this.companyService.updateOffice(office.id, payload)
+        : this.companyService.createOffice(payload);
+
+      request$.subscribe({
+        next: () => {
+          this.notification.success(office ? 'Office updated.' : 'Office created.');
+          this.load();
+        },
+        error: (err) => {
+          this.notification.error(
+            err?.error?.detail ?? err?.error?.message ?? (office ? 'Failed to update office.' : 'Failed to create office.'),
+          );
+        },
+      });
+    });
+  }
+
+  private parseBoolFilter(value: string | null): boolean | undefined {
+    if (!value) return undefined;
+    return value === 'true';
   }
 }

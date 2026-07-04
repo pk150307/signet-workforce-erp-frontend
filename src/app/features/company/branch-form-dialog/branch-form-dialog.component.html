@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Branch' : 'Add Branch' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-custom-text-field formControlName="branchCode" fieldTitle="Branch Code" placeholder="e.g. BR-BLR" [required]="true" />
+    <signet-custom-text-field formControlName="branchName" fieldTitle="Branch Name" placeholder="Branch name" [required]="true" />
+    <signet-custom-text-field formControlName="city" fieldTitle="City" placeholder="City" [required]="true" />
+    <signet-custom-text-field formControlName="state" fieldTitle="State" placeholder="State" [required]="true" />
+    <signet-search-select-dropdown
+      formControlName="isActive"
+      fieldTitle="Status"
+      placeholder="Status"
+      [options]="statusOptions"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button [width]="100" [widthUnit]="'%'" type="primary" [displayText]="isEdit ? 'Save' : 'Add Branch'" [disabled]="form.invalid" (clicked)="submit()" />
+</mat-dialog-actions>

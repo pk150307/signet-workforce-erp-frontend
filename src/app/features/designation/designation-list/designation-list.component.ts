@@ -1,15 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -21,30 +13,17 @@ import { NotificationService } from '../../../core/services/notification.service
 import { runDeleteWithApproval } from '../../../core/utils/delete-record.util';
 import { DesignationListItem } from '../../../core/models/designation.models';
 import { ClientListItem } from '../../../core/models/client.models';
-import { PaginatedResult } from '../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-
 @Component({
   selector: 'app-designation-list',
-  standalone: true,
-  imports: [
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatTooltipModule,
-    EmptyStateComponent,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './designation-list.component.html',
+    templateUrl: './designation-list.component.html',
   styleUrl: './designation-list.component.less',
 })
 export class DesignationListComponent implements OnInit {
@@ -58,17 +37,27 @@ export class DesignationListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(true);
-  readonly data = signal<PaginatedResult<DesignationListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<DesignationListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly clients = signal<ClientListItem[]>([]);
   readonly viewMode = signal<'table' | 'hierarchy'>('table');
   readonly searchCtrl = new FormControl('');
-  readonly statusCtrl = new FormControl<boolean | null>(null);
+  readonly statusCtrl = new FormControl<string>('');
   readonly gradeCtrl = new FormControl<string>('');
   readonly clientCtrl = new FormControl<string>('');
   readonly cols = ['designationCode', 'designationName', 'departmentName', 'gradeCount', 'employeeCount', 'status', 'actions'];
 
-  page = 1;
-  pageSize = 20;
+  readonly clientOptions = computed(() => [
+    { key: '', value: 'Select client' },
+    ...this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  ]);
+
+  readonly statusOptions = computed(() => [
+    { key: '', value: 'All Statuses' },
+    { key: 'true', value: 'Active' },
+    { key: 'false', value: 'Inactive' },
+  ]);
+
 
   ngOnInit() {
     const queryClientId = this.route.snapshot.queryParamMap.get('clientId');
@@ -88,21 +77,21 @@ export class DesignationListComponent implements OnInit {
     });
 
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
-    this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.load(); });
+    this.statusCtrl.valueChanges.subscribe(() => { this.pager.reset(); this.load(this.pager.firstPageParams()); });
     this.gradeCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
     this.clientCtrl.valueChanges.subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
   }
 
-  load() {
+  load(params?: CursorPageParams) {
     const clientId = this.clientCtrl.value?.trim();
     if (!clientId) {
       this.data.set(null);
@@ -111,26 +100,40 @@ export class DesignationListComponent implements OnInit {
     }
 
     this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
     this.designationService.getAll({
-      page: this.page,
-      pageSize: this.pageSize,
+      ...pageParams,
       clientId,
       search: this.searchCtrl.value || undefined,
-      isActive: this.statusCtrl.value ?? undefined,
+      isActive: this.parseBoolFilter(this.statusCtrl.value),
       gradeCode: this.gradeCtrl.value?.trim() || undefined,
     }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.load(this.pager.firstPageParams());
+          return;
+        }
+        this.data.set(emptyCursorPage(this.pager.pageSize));
+        this.pager.reset();
+        this.loading.set(false);
+      },
     });
   }
 
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.load();
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.load(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.load(p);
+    }
   }
 
   addDesignationQueryParams(): { clientId?: string } {
@@ -159,12 +162,17 @@ export class DesignationListComponent implements OnInit {
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.searchCtrl.value?.trim() || this.statusCtrl.value !== null || this.gradeCtrl.value?.trim());
+    return !!(this.searchCtrl.value?.trim() || this.statusCtrl.value || this.gradeCtrl.value?.trim());
   }
 
   clearFilters() {
     this.searchCtrl.setValue('');
-    this.statusCtrl.setValue(null);
+    this.statusCtrl.setValue('');
     this.gradeCtrl.setValue('');
+  }
+
+  private parseBoolFilter(value: string | null): boolean | undefined {
+    if (!value) return undefined;
+    return value === 'true';
   }
 }

@@ -26,30 +26,33 @@
           </div>
           <div class="form-section__body">
             <div class="form-grid form-grid--2">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Company Name *</mat-label>
-                <input matInput formControlName="companyName">
-                @if (form.get('companyName')?.hasError('required') && form.get('companyName')?.touched) {
-                  <mat-error>Company name is required</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Contact Person</mat-label>
-                <input matInput formControlName="contactPerson">
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="companyName"
+                fieldTitle="Company Name"
+                [required]="true"
+                [showError]="!!(form.get('companyName')?.hasError('required') && form.get('companyName')?.touched)"
+                errorMessage="Company name is required"
+              />
+              <signet-custom-text-field
+                formControlName="contactPerson"
+                fieldTitle="Contact Person"
+                [required]="false"
+              />
             </div>
             <div class="form-grid form-grid--2">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Email</mat-label>
-                <input matInput type="email" formControlName="email">
-                @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
-                  <mat-error>Enter a valid email</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Phone</mat-label>
-                <input matInput formControlName="phone">
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="email"
+                fieldTitle="Email"
+                type="email"
+                [required]="false"
+                [showError]="!!(form.get('email')?.hasError('email') && form.get('email')?.touched)"
+                errorMessage="Enter a valid email"
+              />
+              <signet-custom-text-field
+                formControlName="phone"
+                fieldTitle="Phone"
+                [required]="false"
+              />
             </div>
           </div>
         </section>
@@ -63,23 +66,17 @@
             </div>
           </div>
           <div class="form-section__body">
-            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
-              <mat-label>Address</mat-label>
-              <textarea matInput formControlName="address" rows="2"></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field
+              formControlName="address"
+              fieldTitle="Address"
+              [required]="false"
+              [width]="100"
+              widthUnit="%"
+            />
             <div class="form-grid form-grid--3">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>City</mat-label>
-                <input matInput formControlName="city">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>State</mat-label>
-                <input matInput formControlName="state">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Pin Code</mat-label>
-                <input matInput formControlName="pinCode">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="city" fieldTitle="City" [required]="false" />
+              <signet-custom-text-field formControlName="state" fieldTitle="State" [required]="false" />
+              <signet-custom-text-field formControlName="pinCode" fieldTitle="Pin Code" [required]="false" />
             </div>
           </div>
         </section>
@@ -94,27 +91,28 @@
           </div>
           <div class="form-section__body">
             <div class="form-grid form-grid--2">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>GST Number</mat-label>
-                <input matInput formControlName="gstNumber">
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>PAN Number</mat-label>
-                <input matInput formControlName="panNumber">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="gstNumber" fieldTitle="GST Number" [required]="false" />
+              <signet-custom-text-field formControlName="panNumber" fieldTitle="PAN Number" [required]="false" />
             </div>
-            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
-              <mat-label>Notes</mat-label>
-              <textarea matInput formControlName="notes" rows="2" placeholder="Optional internal notes"></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field
+              formControlName="notes"
+              fieldTitle="Notes"
+              fieldPlaceholder="Optional internal notes"
+              [required]="false"
+              [width]="100"
+              widthUnit="%"
+            />
           </div>
         </section>
 
         <footer class="form-footer">
-          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-            {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Client') }}
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
+          <signet-button [width]="100" [widthUnit]="'%'"
+            type="primary"
+            [displayText]="saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Client')"
+            [disabled]="saving()"
+            (clicked)="onSubmit()"
+          />
         </footer>
       </form>
     </div>

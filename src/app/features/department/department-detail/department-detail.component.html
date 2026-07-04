@@ -10,15 +10,13 @@
       title="Department not found"
       description="The requested department could not be loaded."
     >
-      <button mat-stroked-button routerLink="/departments">Back to Departments</button>
+      <a routerLink="/departments" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Departments" /></a>
     </app-empty-state>
   }
 
   @if (!loading() && department(); as d) {
     <div class="detail-nav">
-      <button mat-stroked-button type="button" routerLink="/departments">
-        <mat-icon>arrow_back</mat-icon> Back
-      </button>
+      <a routerLink="/departments" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" /></a>
     </div>
 
     <section class="detail-profile">
@@ -29,9 +27,7 @@
           <div class="detail-profile__info">
             <div class="detail-profile__title-row">
               <h1 class="detail-profile__name">{{ d.departmentName }}</h1>
-              <span class="badge" [class.badge--active]="d.isActive" [class.badge--inactive]="!d.isActive">
-                {{ d.isActive ? 'Active' : 'Inactive' }}
-              </span>
+              <signet-status-button [label]="d.isActive ? 'Active' : 'Inactive'" [status]="d.isActive" />
             </div>
             <div class="detail-profile__chips">
               <span class="meta-chip mono">{{ d.departmentCode }}</span>
@@ -44,9 +40,8 @@
           </div>
         </div>
         <div class="detail-profile__actions">
-          <a mat-raised-button color="primary" [routerLink]="['/departments', d.id, 'edit']">
-            <mat-icon>edit</mat-icon> Edit
-          </a>
+          <a [routerLink]="['/departments', d.id, 'edit']" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="<mat-icon>edit</mat-icon> Edit
+          " /></a>
         </div>
       </div>
     </section>

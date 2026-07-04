@@ -1,0 +1,32 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Office' : 'Add Office' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-custom-text-field formControlName="officeCode" fieldTitle="Office Code" placeholder="e.g. OF-MUM-01" [required]="true" />
+    <signet-custom-text-field formControlName="officeName" fieldTitle="Office Name" placeholder="Office name" [required]="true" />
+    <signet-search-select-dropdown
+      formControlName="branchId"
+      fieldTitle="Branch"
+      placeholder="Select branch"
+      [options]="branchOptions"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="true"
+      [required]="true"
+    />
+    <signet-custom-text-field formControlName="floor" fieldTitle="Floor" placeholder="e.g. 5th Floor" [required]="true" />
+    <signet-custom-text-field formControlName="capacity" fieldTitle="Capacity" type="number" [required]="true" />
+    <signet-search-select-dropdown
+      formControlName="isActive"
+      fieldTitle="Status"
+      placeholder="Status"
+      [options]="statusOptions"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button [width]="100" [widthUnit]="'%'" type="primary" [displayText]="isEdit ? 'Save' : 'Add Office'" [disabled]="form.invalid" (clicked)="submit()" />
+</mat-dialog-actions>

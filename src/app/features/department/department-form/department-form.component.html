@@ -40,38 +40,19 @@
           </div>
           <div class="form-section__body">
             <div class="form-grid form-grid--2">
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Client *</mat-label>
-                <mat-select formControlName="clientId" [disabled]="isEdit()">
-                  @for (c of clients(); track c.id) {
-                    <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
-                  }
-                </mat-select>
-                @if (form.get('clientId')?.hasError('required') && form.get('clientId')?.touched) {
-                  <mat-error>Client is required</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Department Code *</mat-label>
-                <input
-                  matInput
-                  formControlName="departmentCode"
-                  [readonly]="!isEdit()"
-                  placeholder="Auto-generated">
-                @if (form.get('departmentCode')?.hasError('required') && form.get('departmentCode')?.touched) {
-                  <mat-error>Department code is required</mat-error>
-                }
-                @if (!isEdit()) {
-                  <mat-hint>Auto-generated from existing departments for this client</mat-hint>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" subscriptSizing="fixed">
-                <mat-label>Department Name *</mat-label>
-                <input matInput formControlName="departmentName" placeholder="e.g. Human Resources">
-                @if (form.get('departmentName')?.hasError('required') && form.get('departmentName')?.touched) {
-                  <mat-error>Department name is required</mat-error>
-                }
-              </mat-form-field>
+              <signet-search-select-dropdown
+                formControlName="clientId"
+                fieldTitle="Client"
+                placeholder="Select client"
+                [options]="clientOptions()"
+                [disabled]="isEdit()"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+                [required]="true"
+              />
+              <signet-custom-text-field fieldTitle="Department Code" formControlName="departmentCode" placeholder="Auto-generated" [readOnly]="!isEdit()" [required]="true" />
+              <signet-custom-text-field fieldTitle="Department Name" formControlName="departmentName" [required]="true" />
             </div>
             <div class="status-toggle">
               <mat-slide-toggle formControlName="isActive" color="primary">Active department</mat-slide-toggle>
@@ -89,12 +70,17 @@
           </div>
           <div class="form-section__body">
             <div class="form-grid form-grid--1">
-              <mat-form-field appearance="outline" subscriptSizing="fixed" class="field-narrow">
-                <mat-label>Parent Department</mat-label>
-                <mat-select formControlName="parentDepartmentId">
-                  <mat-option value="">None — top-level department</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <signet-search-select-dropdown
+                class="field-narrow"
+                formControlName="parentDepartmentId"
+                fieldTitle="Parent Department"
+                placeholder="None — top-level department"
+                [options]="parentDepartmentOptions()"
+                [width]="100"
+                widthUnit="%"
+                [searchFunctionality]="true"
+                [required]="false"
+              />
             </div>
           </div>
         </section>
@@ -108,23 +94,13 @@
             </div>
           </div>
           <div class="form-section__body">
-            <mat-form-field appearance="outline" class="full-width" subscriptSizing="fixed">
-              <mat-label>Description</mat-label>
-              <textarea
-                matInput
-                formControlName="description"
-                rows="3"
-                placeholder="Optional description of responsibilities or scope"
-              ></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field class="full-width" fieldTitle="Description" formControlName="description" [height]="80" [required]="false" />
           </div>
         </section>
 
         <footer class="form-footer">
-          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-            {{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Department') }}
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" [disabled]="saving()" (clicked)="cancel()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="{{ saving() ? 'Saving…' : (isEdit() ? 'Save Changes' : 'Create Department') }}" [disabled]="saving()" (clicked)="onSubmit()" />
         </footer>
       </form>
     </div>

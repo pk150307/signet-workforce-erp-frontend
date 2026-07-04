@@ -1,13 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { forkJoin } from 'rxjs';
@@ -19,27 +14,11 @@ import { NotificationService } from '../../../core/services/notification.service
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { DesignationDetail } from '../../../core/models/designation.models';
 import { DesignationGradeListItem } from '../../../core/models/designation-grade.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-designation-detail',
-  standalone: true,
-  imports: [
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSlideToggleModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
-    SkeletonLoaderComponent,
-    EmptyStateComponent,
-  ],
-  templateUrl: './designation-detail.component.html',
+    templateUrl: './designation-detail.component.html',
   styleUrl: './designation-detail.component.less',
 })
 export class DesignationDetailComponent implements OnInit {

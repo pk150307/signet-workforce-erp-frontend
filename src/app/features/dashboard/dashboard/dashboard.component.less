@@ -24,6 +24,11 @@
   margin: 0 0 16px;
 }
 
+.dashboard-chart {
+  width: 100%;
+  display: block;
+}
+
 .alerts-grid {
   .content-grid-responsive();
 }
@@ -102,10 +107,22 @@
     grid-template-columns: 1fr;
   });
 
-  button {
+  a,
+  .signet-btn-link,
+  signet-button {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    text-decoration: none;
+  }
+
+  button,
+  .signet-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+    width: 100%;
     font-size: 13px;
     border-radius: 8px !important;
   }

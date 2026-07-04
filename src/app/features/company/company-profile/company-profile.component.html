@@ -5,12 +5,8 @@
       <p class="page-header__subtitle">Manage company information, GST, billing, and logo</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button routerLink="/company/branches">
-        <mat-icon>account_tree</mat-icon> Branches
-      </button>
-      <button mat-stroked-button routerLink="/company/offices">
-        <mat-icon>domain</mat-icon> Offices
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Branches" (clicked)="router.navigate(['/company/branches'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Offices" (clicked)="router.navigate(['/company/offices'])" />
     </div>
   </div>
 
@@ -24,119 +20,105 @@
           <mat-icon *ngIf="!logoPreview()">business</mat-icon>
         </div>
         <div class="logo-section__actions">
-          <h3>Company Logo</h3>
-          <p>Upload PNG or JPG, max 2 MB. Recommended 200×200 px.</p>
-          <input type="file" #logoInput accept="image/png,image/jpeg" hidden (change)="onLogoSelected($event)">
-          <button mat-stroked-button type="button" (click)="logoInput.click()">
-            <mat-icon>upload</mat-icon> Upload Logo
-          </button>
+          <label for="company-logo-input" class="logo-section__title">Company Logo</label>
+          <p id="company-logo-hint">Upload PNG or JPG, max 2 MB. Recommended 200×200 px.</p>
+          <input
+            id="company-logo-input"
+            type="file"
+            #logoInput
+            accept="image/png,image/jpeg"
+            hidden
+            aria-describedby="company-logo-hint"
+            (change)="onLogoSelected($event)">
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Upload Logo" (clicked)="logoInput.click()" />
         </div>
       </div>
 
       <mat-divider></mat-divider>
 
-      <mat-tab-group animationDuration="0ms">
-        <mat-tab label="Company Info">
+      <div class="detail-sections">
+        <signet-sections-navigator
+          class="detail-sections__nav"
+          [navigationItems]="sectionItems"
+          [selectedItem]="activeSection()"
+          [activeBackgroundColour]="'var(--color-primary)'"
+          [borderColor]="'var(--color-border)'"
+          [backgroundColor]="'var(--color-bg-subtle)'"
+          height="48px"
+          (selectedItemChange)="activeSection.set($event)"
+        />
+
+        @if (activeSection() === 'info') {
           <div class="tab-content">
             <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Company Name *</mat-label>
-                <input matInput formControlName="companyName">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Legal Name *</mat-label>
-                <input matInput formControlName="legalName">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="companyName" fieldTitle="Company Name" [required]="true" />
+              <signet-custom-text-field formControlName="legalName" fieldTitle="Legal Name" [required]="true" />
             </div>
             <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Registration Number</mat-label>
-                <input matInput formControlName="registrationNumber">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Email *</mat-label>
-                <input matInput formControlName="email">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Phone *</mat-label>
-                <input matInput formControlName="phone">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="registrationNumber" fieldTitle="Registration Number" [required]="false" />
+              <signet-custom-text-field formControlName="email" fieldTitle="Email" type="email" [required]="true" />
+              <signet-custom-text-field formControlName="phone" fieldTitle="Phone" [required]="true" />
             </div>
             <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Website</mat-label>
-                <input matInput formControlName="website">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="website" fieldTitle="Website" [required]="false" />
             </div>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Address *</mat-label>
-              <textarea matInput formControlName="address" rows="2"></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field
+              formControlName="address"
+              fieldTitle="Address"
+              [required]="true"
+              [width]="100"
+              widthUnit="%"
+            />
             <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>City *</mat-label>
-                <input matInput formControlName="city">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>State *</mat-label>
-                <input matInput formControlName="state">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>PIN Code</mat-label>
-                <input matInput formControlName="pinCode">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="city" fieldTitle="City" [required]="true" />
+              <signet-custom-text-field formControlName="state" fieldTitle="State" [required]="true" />
+              <signet-custom-text-field formControlName="pinCode" fieldTitle="PIN Code" [required]="false" />
             </div>
           </div>
-        </mat-tab>
+        }
 
-        <mat-tab label="GST & Tax">
+        @if (activeSection() === 'gst') {
           <div class="tab-content">
             <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>GST Number</mat-label>
-                <input matInput formControlName="gstNumber" placeholder="e.g. 27AABCS1234F1Z5">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>PAN Number</mat-label>
-                <input matInput formControlName="panNumber" placeholder="e.g. AABCS1234F">
-              </mat-form-field>
+              <signet-custom-text-field
+                formControlName="gstNumber"
+                fieldTitle="GST Number"
+                placeholder="e.g. 27AABCS1234F1Z5"
+                [required]="false"
+              />
+              <signet-custom-text-field
+                formControlName="panNumber"
+                fieldTitle="PAN Number"
+                placeholder="e.g. AABCS1234F"
+                [required]="false"
+              />
             </div>
           </div>
-        </mat-tab>
+        }
 
-        <mat-tab label="Billing Address">
+        @if (activeSection() === 'billing') {
           <div class="tab-content">
             <div class="billing-actions">
-              <button mat-stroked-button type="button" (click)="copyBillingFromCompany()">
-                <mat-icon>content_copy</mat-icon> Copy from company address
-              </button>
+              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Copy from company address" (clicked)="copyBillingFromCompany()" />
             </div>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Billing Address</mat-label>
-              <textarea matInput formControlName="billingAddress" rows="2"></textarea>
-            </mat-form-field>
+            <signet-custom-text-area-field
+              formControlName="billingAddress"
+              fieldTitle="Billing Address"
+              [required]="false"
+              [width]="100"
+              widthUnit="%"
+            />
             <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>City</mat-label>
-                <input matInput formControlName="billingCity">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>State</mat-label>
-                <input matInput formControlName="billingState">
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>PIN Code</mat-label>
-                <input matInput formControlName="billingPinCode">
-              </mat-form-field>
+              <signet-custom-text-field formControlName="billingCity" fieldTitle="City" [required]="false" />
+              <signet-custom-text-field formControlName="billingState" fieldTitle="State" [required]="false" />
+              <signet-custom-text-field formControlName="billingPinCode" fieldTitle="PIN Code" [required]="false" />
             </div>
           </div>
-        </mat-tab>
-      </mat-tab-group>
+        }
+      </div>
 
       <div class="form-actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
-          Save Changes
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Save Changes" [disabled]="saving()" (clicked)="onSubmit()" />
       </div>
     </form>
   </div>

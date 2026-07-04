@@ -2,21 +2,21 @@
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Clients</h1>
-      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} clients</p>
+      <p class="page-header__subtitle">{{ data()?.items?.length ?? 0 }} clients</p>
     </div>
     <div class="page-header__actions">
-      <button mat-raised-button color="primary" routerLink="/clients/new">
-        <mat-icon>add_business</mat-icon> Add Client
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Client" (clicked)="router.navigate(['/clients/new'])" />
     </div>
   </div>
 
   <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-bar__search">
-      <mat-label>Search clients...</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl">
-    </mat-form-field>
+    <signet-custom-text-field
+      class="filter-bar__search"
+      [formControl]="searchCtrl"
+      fieldTitle="Search clients..."
+      placeholder="Search clients..."
+      [required]="false"
+    />
   </div>
 
   <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
@@ -26,57 +26,52 @@
       <mat-icon>business_center</mat-icon>
       <h3>No clients yet</h3>
       <p>Add your first client to get started.</p>
-      <button mat-raised-button color="primary" routerLink="/clients/new">Add Client</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Client" (clicked)="router.navigate(['/clients/new'])" />
     </div>
-    <div class="table-scroll">
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
-      <ng-container matColumnDef="clientCode">
-        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-        <mat-cell *matCellDef="let c"><span class="code-chip">{{ c.clientCode }}</span></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="companyName">
-        <mat-header-cell *matHeaderCellDef>Company</mat-header-cell>
-        <mat-cell *matCellDef="let c"><strong>{{ c.companyName }}</strong></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="contactPerson">
-        <mat-header-cell *matHeaderCellDef>Contact</mat-header-cell>
-        <mat-cell *matCellDef="let c">{{ c.contactPerson }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="location">
-        <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
-        <mat-cell *matCellDef="let c">{{ c.city }}, {{ c.state }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="status">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let c">
-          <span class="badge" [class.badge--active]="c.isActive" [class.badge--inactive]="!c.isActive">
-            {{ c.isActive ? 'Active' : 'Inactive' }}
-          </span>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let c">
-          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="More actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu>
-            <button mat-menu-item [routerLink]="['/clients', c.id]">
-              <mat-icon>visibility</mat-icon> View Details
-            </button>
-            <button mat-menu-item [routerLink]="['/clients', c.id, 'edit']">
-              <mat-icon>edit</mat-icon> Edit
-            </button>
-            <button mat-menu-item (click)="deleteClient(c)">
-              <mat-icon>delete</mat-icon> Delete
-            </button>
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-    </mat-table>
+    <div class="data-list-scroll" *ngIf="(data()?.items?.length ?? 0) > 0">
+      <div class="data-list">
+        <div class="data-list__header">
+          <div class="data-list__cell">Code</div>
+          <div class="data-list__cell">Company</div>
+          <div class="data-list__cell">Contact</div>
+          <div class="data-list__cell">Location</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
+        @for (c of data()?.items ?? []; track c.id) {
+          <div class="data-list__row">
+            <div class="data-list__cell"><span class="code-chip">{{ c.clientCode }}</span></div>
+            <div class="data-list__cell"><strong>{{ c.companyName }}</strong></div>
+            <div class="data-list__cell">{{ c.contactPerson }}</div>
+            <div class="data-list__cell">{{ c.city }}, {{ c.state }}</div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="c.isActive ? 'Active' : 'Inactive'" [status]="c.isActive" />
+            </div>
+            <div class="data-list__cell data-list__cell--center">
+              <signet-action-menu ariaLabel="More actions">
+                <a actionMenuItem [routerLink]="['/clients', c.id]">
+                  <mat-icon>visibility</mat-icon><span>View Details</span>
+                </a>
+                <a actionMenuItem [routerLink]="['/clients', c.id, 'edit']">
+                  <mat-icon>edit</mat-icon><span>Edit</span>
+                </a>
+                <button type="button" actionMenuItem class="action-delete" (click)="deleteClient(c)">
+                  <mat-icon>delete</mat-icon><span>Delete</span>
+                </button>
+              </signet-action-menu>
+            </div>
+          </div>
+        }
+      </div>
     </div>
-    <mat-paginator [length]="data()?.totalCount ?? 0" [pageSize]="20" *ngIf="(data()?.totalCount ?? 0) > 0"></mat-paginator>
-  </div>
+<signet-pagination
+      *ngIf="data()"
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
+</div>
 </div>

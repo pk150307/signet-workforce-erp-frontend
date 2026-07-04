@@ -1,38 +1,15 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { DepartmentService } from '../../../core/services/department.service';
 import { ClientsService } from '../../../core/services/clients.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CreateDepartmentRequest } from '../../../core/models/department.models';
 import { ClientListItem } from '../../../core/models/client.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-
 @Component({
   selector: 'app-department-form',
-  standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    MatSlideToggleModule,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './department-form.component.html',
+    templateUrl: './department-form.component.html',
   styleUrl: './department-form.component.less',
 })
 export class DepartmentFormComponent implements OnInit {
@@ -49,6 +26,14 @@ export class DepartmentFormComponent implements OnInit {
   readonly isEdit = signal(false);
   readonly clients = signal<ClientListItem[]>([]);
   private departmentId: string | null = null;
+
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+
+  readonly parentDepartmentOptions = computed(() => [
+    { key: '', value: 'None — top-level department' },
+  ]);
 
   readonly form = this.fb.group({
     clientId: ['', Validators.required],
