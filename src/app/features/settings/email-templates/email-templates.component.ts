@@ -9,6 +9,7 @@ import {
   CursorPaginationState,
   emptyCursorPage,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { EmailTemplateItem } from '../../../core/models/settings.models';
@@ -60,12 +61,7 @@ export class EmailTemplatesComponent implements OnInit {
   }
 
   onPaginationNavigate(event: PaginationNavigateEvent) {
-    if (event.direction === 'next') {
-      const p = this.pager.nextPageParams();
-      if (p) this.load(p);
-    } else {
-      const p = this.pager.prevPageParams();
-      if (p) this.load(p);
-    }
+    const p = resolvePaginationNavigate(this.pager, event);
+    if (p) this.load(p);
   }
 }

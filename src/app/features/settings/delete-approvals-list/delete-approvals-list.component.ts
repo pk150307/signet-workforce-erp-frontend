@@ -16,6 +16,7 @@ import {
   CursorPaginationState,
   emptyCursorPage,
   isInvalidCursorError,
+  resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 
@@ -88,14 +89,9 @@ export class DeleteApprovalsListComponent implements OnInit {
     });
   }
 
-  onPaginationNavigate(event: PaginationNavigateEvent): void {
-    if (event.direction === 'next') {
-      const params = this.pager.nextPageParams();
-      if (params) this.load(params);
-      return;
-    }
-    const params = this.pager.prevPageParams();
-    if (params) this.load(params);
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    const p = resolvePaginationNavigate(this.pager, event);
+    if (p) this.load(p);
   }
 
   private reloadFirstPage(): void {
