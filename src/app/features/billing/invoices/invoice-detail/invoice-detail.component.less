@@ -89,7 +89,7 @@
   }
 
   &--accent {
-    background: linear-gradient(135deg, #0f1c35, #1565c0);
+    background: var(--hero-gradient-compact);
     border-color: transparent;
     color: #fff;
     span { color: rgba(255,255,255,.75); }
@@ -296,6 +296,7 @@
       justify-content: flex-start;
 
       button,
+      signet-button,
       a {
         flex: 1 1 calc(50% - 4px);
         min-width: 0;

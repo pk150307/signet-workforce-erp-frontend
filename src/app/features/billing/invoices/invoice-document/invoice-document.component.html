@@ -1,20 +1,33 @@
 <div class="invoice-document">
   <header class="doc-header">
     <div class="company">
-      <h1>{{ inv.company?.companyName }}</h1>
-      <p class="company-address">{{ companyAddress() }}</p>
-      <p *ngIf="inv.company?.gstNumber || inv.company?.panNumber">
-        <span *ngIf="inv.company?.gstNumber">GSTIN: {{ inv.company?.gstNumber }}</span>
-        <span *ngIf="inv.company?.panNumber"> · PAN: {{ inv.company?.panNumber }}</span>
-      </p>
-      <p *ngIf="inv.company?.email || inv.company?.phone">
-        {{ inv.company?.email }}<span *ngIf="inv.company?.email && inv.company?.phone"> · </span>{{ inv.company?.phone }}
-      </p>
+      @if (inv.company; as company) {
+        <h1>{{ company.companyName }}</h1>
+        <p class="company-address">{{ companyAddress() }}</p>
+        @if (company.gstNumber || company.panNumber) {
+          <p>
+            @if (company.gstNumber) {
+              <span>GSTIN: {{ company.gstNumber }}</span>
+            }
+            @if (company.panNumber) {
+              <span> · PAN: {{ company.panNumber }}</span>
+            }
+          </p>
+        }
+        @if (company.email || company.phone) {
+          <p>
+            {{ company.email }}@if (company.email && company.phone) { · }{{ company.phone }}
+          </p>
+        }
+      } @else {
+        <h1>—</h1>
+        <p class="company-address">{{ companyAddress() }}</p>
+      }
     </div>
     <div class="doc-meta">
       <h2>TAX INVOICE</h2>
       <p class="inv-number">{{ inv.invoiceNumber }}</p>
-      <span class="status-pill">{{ statusLabel(inv.status) }}</span>
+      <signet-status-button [label]="statusLabel(inv.status)" [status]="inv.status" />
     </div>
   </header>
 
@@ -91,6 +104,8 @@
 
   <footer class="doc-footer">
     <p>This is a computer-generated tax invoice and is valid without signature.</p>
-    <p *ngIf="inv.company?.email">For payment queries: {{ inv.company?.email }}</p>
+    @if (inv.company?.email; as companyEmail) {
+      <p>For payment queries: {{ companyEmail }}</p>
+    }
   </footer>
 </div>

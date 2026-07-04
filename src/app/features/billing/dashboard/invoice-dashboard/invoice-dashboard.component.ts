@@ -1,23 +1,16 @@
 import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgFor, NgIf, DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-
+import { Router, RouterLink } from '@angular/router';
 import { InvoiceService } from '../../../../core/services/invoice.service';
 import { BillingFilterService } from '../../../../core/services/billing-filter.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
 import { getMockBillingDashboard, getMockSiteBillingSummary } from '../../invoices/invoice.mock';
 import { SiteBillingSummary } from '../../../../core/models/invoice.models';
-
 @Component({
   selector: 'app-invoice-dashboard',
-  standalone: true,
-  imports: [NgIf, NgFor, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, SkeletonLoaderComponent, BillingSubnavComponent],
-  templateUrl: './invoice-dashboard.component.html',
+    templateUrl: './invoice-dashboard.component.html',
   styleUrl: './invoice-dashboard.component.less',
 })
 export class InvoiceDashboardComponent implements OnInit {
@@ -26,6 +19,7 @@ export class InvoiceDashboardComponent implements OnInit {
   private readonly billingFilter = inject(BillingFilterService);
   private readonly notification = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly usingMock = signal(false);

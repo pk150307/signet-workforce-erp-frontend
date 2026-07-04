@@ -3,14 +3,17 @@
 @import '../../shared/billing-layout.less';
 
 .billing-reports-panel {
-  padding: 0;
-  overflow: hidden;
+  padding: 16px 20px 20px;
 }
 
-.billing-reports-tabs {
-  ::ng-deep .mat-mdc-tab-header {
-    border-bottom: 1px solid var(--color-border);
-    padding: 0 16px;
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__nav {
+    display: block;
+    width: 100%;
   }
 }
 
@@ -24,4 +27,25 @@
 
 .mobile-down({
   .billing-reports-kpi--compact { grid-template-columns: repeat(2, 1fr); }
+
+  .detail-sections__nav {
+    min-width: 420px;
+  }
+
+  .billing-reports-panel {
+    overflow-x: auto;
+  }
 });
+
+.data-list--aging {
+  --data-list-cols: calc(calc(100% / 560) * 110) calc(calc(100% / 560) * 150) calc(calc(100% / 560) * 96) calc(calc(100% / 560) * 104) calc(calc(100% / 560) * 100);
+  --data-list-min-width: 560px;
+}
+.data-list--collections {
+  --data-list-cols: calc(calc(100% / 570) * 110) calc(calc(100% / 570) * 110) calc(calc(100% / 570) * 150) calc(calc(100% / 570) * 96) calc(calc(100% / 570) * 104);
+  --data-list-min-width: 570px;
+}
+.data-list--gst {
+  --data-list-cols: calc(calc(100% / 464) * 180) calc(calc(100% / 464) * 80) calc(calc(100% / 464) * 104) calc(calc(100% / 464) * 100);
+  --data-list-min-width: 464px;
+}

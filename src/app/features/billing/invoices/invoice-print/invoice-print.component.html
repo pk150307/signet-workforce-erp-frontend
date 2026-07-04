@@ -4,13 +4,18 @@
     <span *ngIf="invoice() as inv">{{ inv.invoiceNumber }}</span>
   </div>
   <div class="print-toolbar__actions">
-    <button mat-stroked-button (click)="downloadPdf()" [disabled]="(!invoice() && !useServerHtml()) || downloading()">
-      <mat-icon>picture_as_pdf</mat-icon>
-      {{ downloading() ? 'Generating…' : 'Download PDF' }}
-    </button>
-    <button mat-raised-button color="primary" (click)="print()" [disabled]="!invoice() && !useServerHtml()">
-      <mat-icon>print</mat-icon> Print
-    </button>
+    <signet-button [width]="100" [widthUnit]="'%'"
+      type="stroke"
+      [displayText]="downloading() ? 'Generating…' : 'Download PDF'"
+      [disabled]="(!invoice() && !useServerHtml()) || downloading()"
+      (clicked)="downloadPdf()"
+    />
+    <signet-button [width]="100" [widthUnit]="'%'"
+      type="primary"
+      displayText="Print"
+      [disabled]="!invoice() && !useServerHtml()"
+      (clicked)="print()"
+    />
   </div>
 </div>
 

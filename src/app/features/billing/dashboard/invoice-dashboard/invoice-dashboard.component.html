@@ -13,13 +13,9 @@
       </div>
     </div>
     <div class="billing-hero__actions">
-      <button mat-stroked-button (click)="loadData()" matTooltip="Refresh"><mat-icon>refresh</mat-icon></button>
-      <button mat-stroked-button routerLink="/billing/invoices/generate">
-        <mat-icon>auto_awesome</mat-icon> Generate
-      </button>
-      <button mat-raised-button color="primary" routerLink="/billing/invoices/new">
-        <mat-icon>add</mat-icon> New Invoice
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadData()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Generate" (clicked)="router.navigate(['/billing/invoices/generate'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="New Invoice" (clicked)="router.navigate(['/billing/invoices/new'])" />
     </div>
   </section>
 
@@ -77,10 +73,10 @@
     </div>
 
     <div class="billing-quick-links">
-      <a mat-stroked-button routerLink="/billing/invoices"><mat-icon>receipt_long</mat-icon> All Invoices</a>
-      <a mat-stroked-button routerLink="/billing/configurations"><mat-icon>settings</mat-icon> Configuration</a>
-      <a mat-stroked-button routerLink="/billing/contracts"><mat-icon>description</mat-icon> Contracts</a>
-      <a mat-stroked-button routerLink="/billing/reports"><mat-icon>analytics</mat-icon> Reports</a>
+      <a class="billing-quick-link" routerLink="/billing/invoices"><mat-icon>receipt_long</mat-icon> All Invoices</a>
+      <a class="billing-quick-link" routerLink="/billing/configurations"><mat-icon>settings</mat-icon> Configuration</a>
+      <a class="billing-quick-link" routerLink="/billing/contracts"><mat-icon>description</mat-icon> Contracts</a>
+      <a class="billing-quick-link" routerLink="/billing/reports"><mat-icon>analytics</mat-icon> Reports</a>
     </div>
   </ng-container>
 </div>

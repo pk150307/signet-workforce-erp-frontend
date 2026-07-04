@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="billing-hero__actions">
-      <a mat-stroked-button routerLink="/billing/contracts"><mat-icon>arrow_back</mat-icon> Back</a>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="router.navigate(['/billing/contracts'])" />
     </div>
   </section>
 
@@ -21,19 +21,23 @@
       <h3>Client & site</h3>
       <p class="section-hint">Select who this contract covers. Defaults refresh when client or site changes.</p>
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Client</mat-label>
-          <mat-select formControlName="clientId">
-            <mat-option *ngFor="let c of clients()" [value]="c.id">{{ c.companyName }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Site (optional)</mat-label>
-          <mat-select formControlName="siteId">
-            <mat-option [value]="null">All sites (client-level)</mat-option>
-            <mat-option *ngFor="let s of sites()" [value]="s.id">{{ s.siteName }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <signet-search-select-dropdown
+          formControlName="clientId"
+          fieldTitle="Client"
+          placeholder="Select client"
+          [options]="clientOptions()"
+          [width]="100"
+          widthUnit="%"
+        />
+        <signet-search-select-dropdown
+          formControlName="siteId"
+          fieldTitle="Site (optional)"
+          placeholder="All sites (client-level)"
+          [options]="siteOptions()"
+          [required]="false"
+          [width]="100"
+          widthUnit="%"
+        />
       </div>
     </section>
 
@@ -42,120 +46,123 @@
       <p class="section-hint">Auto-suggested from client/site. Click refresh to regenerate any field.</p>
       <div class="form-grid">
         <div class="billing-field-with-action full-width">
-          <mat-form-field appearance="outline">
-            <mat-label>Contract Name</mat-label>
-            <input matInput formControlName="contractName" />
-          </mat-form-field>
+          <signet-custom-text-field
+            formControlName="contractName"
+            fieldTitle="Contract Name"
+            [required]="true"
+          />
           <button mat-icon-button type="button" matTooltip="Regenerate name" (click)="regenerateField('name')" [disabled]="suggesting()">
             <mat-icon>autorenew</mat-icon>
           </button>
         </div>
         <div class="billing-field-with-action">
-          <mat-form-field appearance="outline">
-            <mat-label>Contract Code</mat-label>
-            <input matInput formControlName="contractCode" />
-          </mat-form-field>
+          <signet-custom-text-field
+            formControlName="contractCode"
+            fieldTitle="Contract Code"
+            [required]="true"
+          />
           <button mat-icon-button type="button" matTooltip="Regenerate code" (click)="regenerateField('code')" [disabled]="suggesting()">
             <mat-icon>autorenew</mat-icon>
           </button>
         </div>
         <div class="billing-field-with-action">
-          <mat-form-field appearance="outline">
-            <mat-label>Invoice Prefix</mat-label>
-            <input matInput formControlName="invoicePrefix" />
-          </mat-form-field>
+          <signet-custom-text-field
+            formControlName="invoicePrefix"
+            fieldTitle="Invoice Prefix"
+            [required]="true"
+          />
           <button mat-icon-button type="button" matTooltip="Regenerate prefix" (click)="regenerateField('prefix')" [disabled]="suggesting()">
             <mat-icon>autorenew</mat-icon>
           </button>
         </div>
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            <mat-option *ngFor="let s of statusOptions" [value]="s">{{ s | titlecase }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <signet-search-select-dropdown
+          formControlName="status"
+          fieldTitle="Status"
+          placeholder="Select status"
+          [options]="statusOptions()"
+          [searchFunctionality]="false"
+          [width]="100"
+          widthUnit="%"
+        />
       </div>
     </section>
 
     <section class="billing-form-section">
       <h3>Contract period</h3>
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Start Date</mat-label>
-          <input matInput [matDatepicker]="startPicker" formControlName="startDate">
-          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-          <mat-datepicker #startPicker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>End Date</mat-label>
-          <input matInput [matDatepicker]="endPicker" formControlName="endDate">
-          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-          <mat-datepicker #endPicker></mat-datepicker>
-        </mat-form-field>
+        <signet-date-input-field
+          fieldTitle="Start Date"
+          [value]="dateFieldValue('startDate')"
+          (valueChange)="onDateChange('startDate', $event)"
+          [required]="true"
+          [width]="100"
+          widthUnit="%"
+        />
+        <signet-date-input-field
+          fieldTitle="End Date"
+          [value]="dateFieldValue('endDate')"
+          (valueChange)="onDateChange('endDate', $event)"
+          [required]="false"
+          [width]="100"
+          widthUnit="%"
+        />
       </div>
     </section>
 
     <section class="billing-form-section">
       <h3>Invoice rates (tax template)</h3>
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Billing Type</mat-label>
-          <mat-select formControlName="billingType">
-            <mat-option value="monthly">Monthly</mat-option>
-            <mat-option value="daily">Daily</mat-option>
-            <mat-option value="hourly">Hourly</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Billing Rate</mat-label>
-          <input matInput type="number" formControlName="billingRate" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>EPF %</mat-label>
-          <input matInput type="number" step="0.01" formControlName="pfPct" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>ESIC %</mat-label>
-          <input matInput type="number" step="0.01" formControlName="esicPct" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>LWF %</mat-label>
-          <input matInput type="number" step="0.01" formControlName="lwfPct" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Service Charge %</mat-label>
-          <input matInput type="number" step="0.01" formControlName="serviceChargePct" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>GST %</mat-label>
-          <input matInput type="number" formControlName="gstPct" />
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Invoice Frequency</mat-label>
-          <mat-select formControlName="invoiceFrequency">
-            <mat-option value="monthly">Monthly</mat-option>
-            <mat-option value="biweekly">Biweekly</mat-option>
-            <mat-option value="weekly">Weekly</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <signet-search-select-dropdown
+          formControlName="billingType"
+          fieldTitle="Billing Type"
+          placeholder="Select billing type"
+          [options]="billingTypeOptions()"
+          [searchFunctionality]="false"
+          [width]="100"
+          widthUnit="%"
+        />
+        <signet-custom-text-field formControlName="billingRate" fieldTitle="Billing Rate" type="number" [required]="false" />
+        <signet-custom-text-field formControlName="pfPct" fieldTitle="EPF %" type="number" [required]="false" />
+        <signet-custom-text-field formControlName="esicPct" fieldTitle="ESIC %" type="number" [required]="false" />
+        <signet-custom-text-field formControlName="lwfPct" fieldTitle="LWF %" type="number" [required]="false" />
+        <signet-custom-text-field formControlName="serviceChargePct" fieldTitle="Service Charge %" type="number" [required]="false" />
+        <signet-custom-text-field formControlName="gstPct" fieldTitle="GST %" type="number" [required]="false" />
+        <signet-search-select-dropdown
+          formControlName="invoiceFrequency"
+          fieldTitle="Invoice Frequency"
+          placeholder="Select frequency"
+          [options]="invoiceFrequencyOptions()"
+          [searchFunctionality]="false"
+          [width]="100"
+          widthUnit="%"
+        />
       </div>
     </section>
 
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Notes</mat-label>
-      <textarea matInput rows="3" formControlName="notes"></textarea>
-    </mat-form-field>
+    <signet-custom-text-area-field
+      formControlName="notes"
+      fieldTitle="Notes"
+      class="full-width"
+      [required]="false"
+      [height]="80"
+    />
 
     <div *ngIf="!isEdit()">
-      <mat-checkbox formControlName="syncBillingConfiguration">
-        Sync rates to linked billing configuration when activated
-      </mat-checkbox>
+      <signet-custom-checkbox
+        formControlName="syncBillingConfiguration"
+        permissionKey="syncBillingConfiguration"
+        label="Sync rates to linked billing configuration when activated"
+        [required]="false"
+      />
     </div>
 
     <div class="form-actions">
-      <button mat-raised-button color="primary" type="submit" [disabled]="saving() || form.invalid">
-        {{ saving() ? 'Saving…' : (isEdit() ? 'Update Contract' : 'Create Contract') }}
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'"
+        type="primary"
+        [displayText]="saving() ? 'Saving…' : (isEdit() ? 'Update Contract' : 'Create Contract')"
+        [disabled]="saving() || form.invalid"
+        (clicked)="save()"
+      />
     </div>
   </form>
 </div>

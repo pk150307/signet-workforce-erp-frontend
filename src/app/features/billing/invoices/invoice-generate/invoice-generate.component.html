@@ -10,8 +10,8 @@
       </div>
     </div>
     <div class="billing-hero__actions">
-      <button mat-stroked-button routerLink="/billing/invoices/new"><mat-icon>edit_note</mat-icon> Manual Invoice</button>
-      <button mat-stroked-button routerLink="/billing/invoices"><mat-icon>arrow_back</mat-icon> Back</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Manual Invoice" (clicked)="router.navigate(['/billing/invoices/new'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="router.navigate(['/billing/invoices'])" />
     </div>
   </section>
 
@@ -31,20 +31,24 @@
         <app-skeleton-loader type="card" [rows]="2"></app-skeleton-loader>
       } @else {
       <form [formGroup]="form" class="form-grid form-grid--site" (ngSubmit)="loadPreview()">
-        <mat-form-field appearance="outline" class="span-2">
-          <mat-label>Site</mat-label>
-          <mat-select formControlName="siteId">
-            <mat-option *ngFor="let site of sites()" [value]="site.siteId">
-              {{ site.siteName }} — {{ site.clientName }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <signet-search-select-dropdown
+          formControlName="siteId"
+          class="span-2"
+          fieldTitle="Site"
+          placeholder="Select site"
+          [options]="siteOptions()"
+          [disabled]="loadingSites()"
+          [width]="100"
+          widthUnit="%"
+        />
 
         <div class="form-actions span-2">
-          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loadingPreview() || loadingSites()">
-            <mat-icon>preview</mat-icon>
-            {{ loadingPreview() ? 'Calculating…' : 'Preview Invoice' }}
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'"
+            type="primary"
+            [displayText]="loadingPreview() ? 'Calculating…' : 'Preview Invoice'"
+            [disabled]="form.invalid || loadingPreview() || loadingSites()"
+            (clicked)="loadPreview()"
+          />
         </div>
       </form>
       }
@@ -117,10 +121,12 @@
       </div>
 
       <div class="preview-actions">
-        <button mat-raised-button color="primary" (click)="generate()" [disabled]="generating() || p.alreadyInvoiced || !p.components.length || !p.validation.valid">
-          <mat-icon>receipt_long</mat-icon>
-          {{ generating() ? 'Generating…' : 'Generate Invoice' }}
-        </button>
+        <signet-button [width]="100" [widthUnit]="'%'"
+          type="primary"
+          [displayText]="generating() ? 'Generating…' : 'Generate Invoice'"
+          [disabled]="generating() || p.alreadyInvoiced || !p.components.length || !p.validation.valid"
+          (clicked)="generate()"
+        />
       </div>
     </mat-card>
 

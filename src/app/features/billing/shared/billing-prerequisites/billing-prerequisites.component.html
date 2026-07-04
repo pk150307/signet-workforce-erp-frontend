@@ -1,0 +1,16 @@
+<div class="prereq-card" *ngIf="items().length">
+  <h4>Billing prerequisites</h4>
+  <p class="hint">Complete these steps for the selected period before generating an invoice.</p>
+  <ul>
+    <li *ngFor="let item of items()" [ngClass]="{ ok: item.ok, warn: !item.ok && !item.required, error: !item.ok && item.required }">
+      <mat-icon>{{ item.ok ? 'check_circle' : (item.required ? 'error' : 'info') }}</mat-icon>
+      <span>{{ item.label }}</span>
+      <signet-button [width]="100" [widthUnit]="'%'"
+        *ngIf="!item.ok"
+        type="stroke"
+        [displayText]="item.action"
+        (clicked)="navigate(item.route)"
+      />
+    </li>
+  </ul>
+</div>

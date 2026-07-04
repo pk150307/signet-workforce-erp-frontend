@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Record Payment</h2>
+<mat-dialog-content>
+  <p>Outstanding balance: ₹{{ data.balanceAmount | number:'1.2-2' }}</p>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-custom-text-field formControlName="paymentDate" fieldTitle="Payment Date" [required]="true" />
+    <signet-custom-text-field formControlName="amount" fieldTitle="Amount" type="number" [required]="true" />
+    <signet-search-select-dropdown
+      formControlName="paymentMode"
+      fieldTitle="Payment Mode"
+      placeholder="Select payment mode"
+      [options]="paymentModeOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
+    <signet-custom-text-field formControlName="utrNumber" fieldTitle="UTR / Reference" [required]="false" />
+    <signet-custom-text-area-field formControlName="remarks" fieldTitle="Remarks" [required]="false" [height]="60" />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button [width]="100" [widthUnit]="'%'"
+    type="primary"
+    displayText="Record"
+    [disabled]="form.invalid"
+    (clicked)="dialogRef.close(form.getRawValue())"
+  />
+</mat-dialog-actions>

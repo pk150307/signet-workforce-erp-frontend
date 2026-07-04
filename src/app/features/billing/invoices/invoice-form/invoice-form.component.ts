@@ -1,15 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NgFor, NgIf, DecimalPipe } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { catchError, finalize, map, of } from 'rxjs';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
@@ -19,29 +11,10 @@ import { ClientListItem } from '../../../../core/models/client.models';
 import { SiteListItem } from '../../../../core/models/sites.models';
 import { BillableDepartmentOption, InvoiceDetail } from '../../../../core/models/invoice.models';
 
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
 @Component({
   selector: 'app-invoice-form',
-  standalone: true,
-  imports: [
-    BillingSubnavComponent,
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
-  ],
-  templateUrl: './invoice-form.component.html',
+    templateUrl: './invoice-form.component.html',
   styleUrl: './invoice-form.component.less',
 })
 export class InvoiceFormComponent implements OnInit {
@@ -49,7 +22,7 @@ export class InvoiceFormComponent implements OnInit {
   private readonly invoiceService = inject(InvoiceService);
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
   readonly saving = signal(false);
@@ -61,6 +34,17 @@ export class InvoiceFormComponent implements OnInit {
   readonly clients = signal<ClientListItem[]>([]);
   readonly sites = signal<SiteListItem[]>([]);
   readonly billableDepartments = signal<BillableDepartmentOption[]>([]);
+
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+
+  readonly siteOptions = computed(() =>
+    this.sites().map(s => ({
+      key: String(s.id),
+      value: s.city ? `${s.siteName} — ${s.city}` : s.siteName,
+    })),
+  );
 
   readonly form = new FormGroup({
     clientId: new FormControl('', { nonNullable: true, validators: Validators.required }),
@@ -152,14 +136,41 @@ export class InvoiceFormComponent implements OnInit {
     );
   }
 
-  canAddLineItem(): boolean {
-    const departments = this.billableDepartments();
-    if (!departments.length || !this.form.controls.siteId.value) return false;
-    const selectedCount = this.lineItems.controls.filter(c => c.value.departmentId).length;
-    return selectedCount < departments.length;
+  departmentOptionsForRow(rowIndex: number): { key: string; value: string }[] {
+    return this.getDepartmentOptionsForRow(rowIndex).map(dept => ({
+      key: String(dept.departmentId),
+      value: this.formatDepartmentLabel(dept),
+    }));
   }
 
-  onDepartmentSelected(rowIndex: number, departmentId: string) {
+  private formatDepartmentLabel(dept: BillableDepartmentOption): string {
+    let label = dept.departmentName;
+    if (dept.ratePerMonth != null) {
+      label += ` — ₹${dept.ratePerMonth.toLocaleString('en-IN')}/mo`;
+    } else if (dept.ratePerDay != null) {
+      label += ` — ₹${dept.ratePerDay.toLocaleString('en-IN')}/day`;
+    }
+    if (dept.quantity > 1) {
+      label += ` · ${dept.quantity} at site`;
+    }
+    return label;
+  }
+
+  dateFieldValue(controlName: 'invoiceDate' | 'dueDate'): { startDate?: string } {
+    const value = this.form.controls[controlName].value;
+    if (!value) return {};
+    const iso = value.toISOString().slice(0, 10);
+    return { startDate: `${iso}T00:00:00` };
+  }
+
+  onDateChange(controlName: 'invoiceDate' | 'dueDate', event: { startDate?: string }): void {
+    if (!event.startDate) return;
+    const [y, m, d] = event.startDate.split('T')[0].split('-').map(Number);
+    this.form.controls[controlName].setValue(new Date(y, m - 1, d));
+  }
+
+  onDepartmentSelected(rowIndex: number, value: string | number | { key: string; value: string }) {
+    const departmentId = typeof value === 'object' ? value.key : value;
     const dept = this.billableDepartments().find(d => this.compareSelectValue(d.departmentId, departmentId));
     if (!dept) return;
 
@@ -168,6 +179,13 @@ export class InvoiceFormComponent implements OnInit {
       rate: dept.unitRate,
       hsnSacCode: dept.hsnSacCode || '998519',
     }, { emitEvent: false });
+  }
+
+  canAddLineItem(): boolean {
+    const departments = this.billableDepartments();
+    if (!departments.length || !this.form.controls.siteId.value) return false;
+    const selectedCount = this.lineItems.controls.filter(c => c.value.departmentId).length;
+    return selectedCount < departments.length;
   }
 
   loadBillableDepartments(clientId: string, siteId: string) {

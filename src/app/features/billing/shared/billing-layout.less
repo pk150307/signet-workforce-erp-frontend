@@ -17,7 +17,7 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 24px rgba(15, 28, 53, 0.04);
+  box-shadow: var(--shadow-sm);
 
   .mobile-down({
     padding: 16px;
@@ -64,15 +64,16 @@
   margin-bottom: 4px;
   padding-bottom: 4px;
 
+  a.billing-quick-link,
   a[mat-stroked-button] {
     min-width: 0;
     white-space: nowrap;
   }
 
   .active {
-    background: var(--color-primary-soft, #e8f1fb);
-    border-color: var(--color-primary, #1565c0);
-    color: var(--color-primary, #1565c0);
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
 
   .mobile-down({
@@ -84,7 +85,8 @@
     margin-bottom: 0;
     gap: 6px;
 
-    a[mat-stroked-button] {
+    a.billing-quick-link,
+  a[mat-stroked-button] {
       flex: 0 0 auto;
       font-size: 12px;
       padding: 0 10px;
@@ -103,9 +105,10 @@
   gap: 20px;
   padding: 24px 28px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #0f1c35 0%, #1565c0 55%, #42a5f5 100%);
-  color: #fff;
-  box-shadow: 0 12px 32px rgba(21, 101, 192, 0.22);
+  background: var(--hero-gradient-compact);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
 
   h1 {
     margin: 0 0 6px;
@@ -134,7 +137,7 @@
     border-radius: 14px;
     display: grid;
     place-items: center;
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--color-primary-soft);
     flex-shrink: 0;
 
     mat-icon {
@@ -151,9 +154,10 @@
     flex-shrink: 0;
 
     button[mat-stroked-button],
-    a[mat-stroked-button] {
-      color: #fff;
-      border-color: rgba(255, 255, 255, 0.45);
+    a.billing-quick-link,
+  a[mat-stroked-button] {
+      color: var(--color-text-primary);
+      border-color: var(--color-border-strong);
     }
   }
 
@@ -180,6 +184,7 @@
       width: 100%;
 
       button,
+      signet-button,
       a {
         flex: 1 1 calc(50% - 5px);
         min-width: 0;
@@ -361,7 +366,8 @@
   margin-top: 8px;
 
   .mobile-down({
-    a[mat-stroked-button] {
+    a.billing-quick-link,
+  a[mat-stroked-button] {
       flex: 1 1 calc(50% - 5px);
       min-width: 0;
       justify-content: center;

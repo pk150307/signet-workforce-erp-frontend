@@ -2,29 +2,14 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
 import { InvoicePdfService } from '../../../../core/services/invoice-pdf.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { InvoiceDetail } from '../../../../core/models/invoice.models';
-import { InvoiceDocumentComponent } from '../invoice-document/invoice-document.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-
 @Component({
   selector: 'app-invoice-print',
-  standalone: true,
-  imports: [
-    SkeletonLoaderComponent,
-    NgIf,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    InvoiceDocumentComponent,
-  ],
-  templateUrl: './invoice-print.component.html',
+    templateUrl: './invoice-print.component.html',
   styleUrl: './invoice-print.component.less',
 })
 export class InvoicePrintComponent implements OnInit {

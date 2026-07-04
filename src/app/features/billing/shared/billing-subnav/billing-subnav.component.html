@@ -1,0 +1,52 @@
+<div class="billing-shell">
+  <nav class="billing-subnav" aria-label="Billing navigation">
+    <signet-sections-navigator
+      class="billing-subnav__navigator"
+      [navigationItems]="navigationItems"
+      [selectedItem]="selectedNavPath()"
+      [activeBackgroundColour]="'var(--color-primary)'"
+      [borderColor]="'var(--color-border)'"
+      height="48px"
+      (selectedItemChange)="onNavSelect($event)"
+    />
+  </nav>
+
+  <form class="billing-context-filter" [formGroup]="filterForm">
+    <!-- <mat-icon class="billing-context-filter__icon">tune</mat-icon> -->
+    <signet-search-select-dropdown
+      formControlName="clientId"
+      fieldTitle="Client"
+      placeholder="All clients"
+      [options]="clientOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="true"
+    />
+    <signet-search-select-dropdown
+      formControlName="month"
+      fieldTitle="Month"
+      placeholder="Select month"
+      [options]="monthOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
+    <signet-search-select-dropdown
+      formControlName="year"
+      fieldTitle="Year"
+      placeholder="Select year"
+      [options]="yearOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+    />
+    <signet-button [widthUnit]="'%'" *ngIf="hasActiveFilters()"
+      type="secondary"
+      class="billing-context-filter__reset"
+      displayText="Reset"
+      [width]="100"
+      widthUnit="%"
+      (clicked)="resetFilters()"
+    />
+  </form>
+</div>

@@ -2,13 +2,7 @@ import { Component, OnInit, inject, signal, DestroyRef, computed } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
@@ -17,30 +11,11 @@ import { BillingFilterService } from '../../../../core/services/billing-filter.s
 import { NotificationService } from '../../../../core/services/notification.service';
 import { BillingEngineResult } from '../../../../core/models/billing.models';
 import { SiteBillingSummary } from '../../../../core/models/invoice.models';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
-import { BillingPrerequisitesComponent } from '../../shared/billing-prerequisites.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
+import { BillingPrerequisitesComponent } from '../../shared/billing-prerequisites/billing-prerequisites.component';
 @Component({
   selector: 'app-invoice-generate',
-  standalone: true,
-  imports: [
-    BillingSubnavComponent,
-    BillingPrerequisitesComponent,
-    SkeletonLoaderComponent,
-    NgIf,
-    NgFor,
-    DecimalPipe,
-    RouterLink,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatChipsModule,
-  ],
-  templateUrl: './invoice-generate.component.html',
+    templateUrl: './invoice-generate.component.html',
   styleUrl: './invoice-generate.component.less',
 })
 export class InvoiceGenerateComponent implements OnInit {
@@ -49,7 +24,7 @@ export class InvoiceGenerateComponent implements OnInit {
   private readonly engineService = inject(BillingEngineService);
   readonly billingFilter = inject(BillingFilterService);
   private readonly notification = inject(NotificationService);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly loadingSites = signal(true);
@@ -63,6 +38,13 @@ export class InvoiceGenerateComponent implements OnInit {
     const items = this.allSites();
     return clientId ? items.filter(s => s.clientId === clientId) : items;
   });
+
+  readonly siteOptions = computed(() =>
+    this.sites().map(site => ({
+      key: String(site.siteId),
+      value: `${site.siteName} — ${site.clientName}`,
+    })),
+  );
 
   readonly form = new FormGroup({
     siteId: new FormControl('', { nonNullable: true, validators: Validators.required }),

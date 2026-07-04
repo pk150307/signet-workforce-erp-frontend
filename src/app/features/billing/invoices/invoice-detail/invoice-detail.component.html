@@ -9,25 +9,31 @@
         <h1>{{ inv.invoiceNumber }}</h1>
         <p>{{ inv.clientName }} · {{ inv.siteName }}</p>
       </div>
-      <span class="status-badge" [ngClass]="'status-badge--' + getStatusClass(inv.status)">{{ statusLabel(inv.status) }}</span>
+      <signet-status-button [label]="statusLabel(inv.status)" [status]="inv.status" />
     </div>
     <div class="detail-hero__actions">
-      <button mat-stroked-button *ngIf="canEdit(inv)" [routerLink]="['/billing/invoices', inv.id, 'edit']"><mat-icon>edit</mat-icon> Edit</button>
-      <button mat-stroked-button (click)="openPrintPreview()"><mat-icon>print</mat-icon> Print</button>
-      <button mat-stroked-button *ngIf="canRecordPayment(inv)" (click)="recordPayment()"><mat-icon>payments</mat-icon> Record Payment</button>
-      <button mat-stroked-button (click)="downloadPdf()"><mat-icon>download</mat-icon> Download</button>
-      <button mat-stroked-button color="warn" (click)="deleteInvoice()"><mat-icon>delete</mat-icon> Delete</button>
-      <button mat-raised-button color="primary" (click)="emailInvoice()" *ngIf="inv.status !== 'Cancelled' && inv.status !== 'Paid'">
-        <mat-icon>email</mat-icon> Email
-      </button>
-      <button mat-raised-button [matMenuTriggerFor]="statusMenu" *ngIf="availableActions(inv).length">
-        Update Status <mat-icon>expand_more</mat-icon>
-      </button>
-      <mat-menu #statusMenu="matMenu">
-        <button mat-menu-item *ngFor="let action of availableActions(inv)" (click)="transitionStatus(action)">
-          <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+      <signet-button [width]="100" [widthUnit]="'%'" *ngIf="canEdit(inv)" type="stroke" displayText="Edit" (clicked)="router.navigate(['/billing/invoices', inv.id, 'edit'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Print" (clicked)="openPrintPreview()" />
+      <signet-button [width]="100" [widthUnit]="'%'" *ngIf="canRecordPayment(inv)" type="stroke" displayText="Record Payment" (clicked)="recordPayment()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Download" (clicked)="downloadPdf()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="error" displayText="Delete" (clicked)="deleteInvoice()" />
+      <signet-button [width]="100" [widthUnit]="'%'" *ngIf="inv.status !== 'Cancelled' && inv.status !== 'Paid'" type="primary" displayText="Email" (clicked)="emailInvoice()" />
+      <signet-action-menu
+        *ngIf="availableActions(inv).length"
+        triggerType="button"
+        triggerLabel="Update Status"
+        triggerIcon="expand_more"
+        ariaLabel="Update status"
+      >
+        <button
+          type="button"
+          actionMenuItem
+          *ngFor="let action of availableActions(inv)"
+          (click)="transitionStatus(action)"
+        >
+          <mat-icon>{{ action.icon }}</mat-icon><span>{{ action.label }}</span>
         </button>
-      </mat-menu>
+      </signet-action-menu>
     </div>
   </section>
 
@@ -126,7 +132,7 @@
           </div>
         </div>
         <ng-template #legacyTimeline>
-          <div class="timeline" *ngIf="inv.timeline?.length; else noTimeline">
+          <div class="timeline" *ngIf="inv.timeline.length; else noTimeline">
             <div class="timeline-item" *ngFor="let entry of inv.timeline">
               <div class="timeline-dot"></div>
               <div class="timeline-content">
@@ -151,7 +157,7 @@
     <div class="empty-state" *ngIf="!loading() && notFound()">
       <h2>Invoice not found</h2>
       <p>The invoice may have been removed or the link is invalid.</p>
-      <a mat-stroked-button routerLink="/billing/invoices">Back to Invoices</a>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Invoices" (clicked)="router.navigate(['/billing/invoices'])" />
     </div>
   </div>
 </ng-template>

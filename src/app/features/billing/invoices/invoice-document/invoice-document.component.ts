@@ -6,9 +6,7 @@ import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
 
 @Component({
   selector: 'app-invoice-document',
-  standalone: true,
-  imports: [NgIf, NgFor, DecimalPipe, ApiDatePipe],
-  templateUrl: './invoice-document.component.html',
+    templateUrl: './invoice-document.component.html',
   styleUrl: './invoice-document.component.less',
 })
 export class InvoiceDocumentComponent {

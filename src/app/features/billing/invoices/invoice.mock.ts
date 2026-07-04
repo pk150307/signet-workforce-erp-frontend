@@ -1,5 +1,6 @@
-import { PaginatedResult } from '../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult, DEFAULT_PAGE_SIZE } from '../../../core/models/api.models';
 import { InvoiceDetail, InvoiceListItem, InvoiceStatus, SiteBillingSummary } from '../../../core/models/invoice.models';
+import { paginateMock } from '../../../core/utils/mock-pagination.util';
 
 export const INVOICE_STATUS_OPTIONS: { value: InvoiceStatus | null; label: string }[] = [
   { value: null, label: 'All' },
@@ -23,18 +24,12 @@ const MOCK_INVOICES: InvoiceListItem[] = [
   { id: 'inv-005', invoiceNumber: 'INV-2026-05-011', clientName: 'HDFC Bank', siteName: 'Lower Parel HQ', invoiceDate: '2026-05-25', dueDate: '2026-06-08', subtotal: 275000, gstAmount: 49500, totalAmount: 324500, status: 'Draft', month: 5, year: 2026 },
 ];
 
-export function getMockInvoiceList(page = 1, pageSize = 20): PaginatedResult<InvoiceListItem> {
-  const start = (page - 1) * pageSize;
-  const items = MOCK_INVOICES.slice(start, start + pageSize);
-  return {
-    items,
-    page,
-    pageSize,
-    totalCount: MOCK_INVOICES.length,
-    totalPages: Math.ceil(MOCK_INVOICES.length / pageSize),
-    hasPreviousPage: page > 1,
-    hasNextPage: page * pageSize < MOCK_INVOICES.length,
-  };
+export function getMockInvoiceList(params: CursorPageParams = {}): CursorPaginatedResult<InvoiceListItem> {
+  return paginateMock(MOCK_INVOICES, {
+    pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+    cursor: params.cursor,
+    direction: params.direction,
+  }, ['invoiceNumber', 'clientName', 'siteName', 'status']);
 }
 
 export function getMockInvoiceDetail(id: string): InvoiceDetail {

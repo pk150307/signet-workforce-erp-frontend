@@ -2,19 +2,9 @@ import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass, NgFor, NgIf, DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatTableModule } from '@angular/material/table';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -26,48 +16,28 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
-import { PaginatedResult } from '../../../../core/models/api.models';
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
+import { CursorPageParams, CursorPaginatedResult } from '../../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../../library/components/pagination/pagination.component';
 import { InvoiceListItem, InvoiceStatus } from '../../../../core/models/invoice.models';
 import { INVOICE_STATUS_OPTIONS, getInvoiceStatusClass, getMockInvoiceList } from '../invoice.mock';
 import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
 import { mapInvoiceStatusLabel } from '../../../../core/utils/api-response.util';
-
 interface StatusAction {
   status: InvoiceStatus;
   label: string;
   icon: string;
 }
 
+import { FormControl } from '@angular/forms';
 @Component({
   selector: 'app-invoice-list',
-  standalone: true,
-  imports: [
-    NgIf,
-    NgFor,
-    NgClass,
-    DecimalPipe,
-    RouterLink,
-    ApiDatePipe,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatDividerModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatCheckboxModule,
-    EmptyStateComponent,
-    SkeletonLoaderComponent,
-    BillingSubnavComponent,
-  ],
-  templateUrl: './invoice-list.component.html',
+    templateUrl: './invoice-list.component.html',
   styleUrl: './invoice-list.component.less',
 })
 export class InvoiceListComponent implements OnInit {
@@ -77,13 +47,14 @@ export class InvoiceListComponent implements OnInit {
   private readonly billingFilter = inject(BillingFilterService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
   readonly downloadingPdf = signal(false);
   readonly usingMock = signal(false);
-  readonly data = signal<PaginatedResult<InvoiceListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<InvoiceListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly selection = new SelectionModel<InvoiceListItem>(true, []);
 
   readonly statusOptions = INVOICE_STATUS_OPTIONS;
@@ -93,8 +64,6 @@ export class InvoiceListComponent implements OnInit {
   readonly displayedColumns = ['select', 'invoiceNumber', 'client', 'invoiceDate', 'dueDate', 'totalAmount', 'status', 'actions'];
   readonly statusLabel = mapInvoiceStatusLabel;
 
-  page = 1;
-  pageSize = 20;
 
   pageTotal = () => (this.data()?.items ?? []).reduce((s, i) => s + i.totalAmount, 0);
   paidCount = () => (this.data()?.items ?? []).filter(i => i.status === 'Paid').length;
@@ -108,33 +77,41 @@ export class InvoiceListComponent implements OnInit {
     this.loadData();
 
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.loadData();
+      this.pager.reset();
+      this.loadData(this.pager.firstPageParams());
     });
 
-    this.statusCtrl.valueChanges.subscribe(() => { this.page = 1; this.loadData(); });
+    this.statusCtrl.valueChanges.subscribe(() => { this.pager.reset(); this.loadData(this.pager.firstPageParams()); });
     this.billingFilter.filterChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.page = 1;
-      this.loadData();
+      this.pager.reset();
+      this.loadData(this.pager.firstPageParams());
     });
   }
 
-  loadData() {
+  loadData(params?: CursorPageParams) {
     this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
     this.selection.clear();
 
     this.invoiceService.getAll({
-      page: this.page,
-      pageSize: this.pageSize,
       ...this.currentQuery(),
+      ...pageParams,
     }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.usingMock.set(false);
         this.loading.set(false);
       },
-      error: () => {
-        this.data.set(getMockInvoiceList(this.page, this.pageSize));
+      error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.loadData(this.pager.firstPageParams());
+          return;
+        }
+        const mock = getMockInvoiceList(pageParams);
+        this.data.set(mock);
+        this.pager.apply(mock.pagination);
         this.usingMock.set(true);
         this.loading.set(false);
         this.notification.info('Showing sample invoice data.');
@@ -142,10 +119,14 @@ export class InvoiceListComponent implements OnInit {
     });
   }
 
-  onPageChange(event: PageEvent) {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.loadData();
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.loadData(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.loadData(p);
+    }
   }
 
   setStatusFilter(status: InvoiceStatus | null) {
@@ -162,6 +143,14 @@ export class InvoiceListComponent implements OnInit {
       this.selection.clear();
     } else {
       this.selection.select(...(this.data()?.items ?? []));
+    }
+  }
+
+  onRowSelect(inv: InvoiceListItem, event: { checked: boolean }) {
+    if (event.checked) {
+      this.selection.select(inv);
+    } else {
+      this.selection.deselect(inv);
     }
   }
 

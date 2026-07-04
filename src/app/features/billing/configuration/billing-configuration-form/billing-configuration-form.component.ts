@@ -1,13 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NgIf, NgFor } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { BillingConfigurationService } from '../../../../core/services/billing-configuration.service';
 import { ClientsService } from '../../../../core/services/clients.service';
@@ -16,23 +10,15 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ClientListItem } from '../../../../core/models/client.models';
 import { SiteListItem } from '../../../../core/models/sites.models';
 import { BillingComponentMaster } from '../../../../core/models/billing.models';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
 @Component({
   selector: 'app-billing-configuration-form',
-  standalone: true,
-  imports: [
-    NgIf, NgFor, RouterLink, ReactiveFormsModule,
-    MatFormFieldModule, MatSelectModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatCheckboxModule, BillingSubnavComponent, SkeletonLoaderComponent,
-  ],
-  templateUrl: './billing-configuration-form.component.html',
+    templateUrl: './billing-configuration-form.component.html',
   styleUrl: './billing-configuration-form.component.less',
 })
 export class BillingConfigurationFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly service = inject(BillingConfigurationService);
   private readonly clientsService = inject(ClientsService);
   private readonly sitesService = inject(SitesService);
@@ -46,6 +32,25 @@ export class BillingConfigurationFormComponent implements OnInit {
   readonly enabledMap = signal<Record<string, boolean>>({});
   readonly isEdit = signal(false);
   private configId: string | null = null;
+
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+
+  readonly siteOptions = computed(() =>
+    this.sites().map(s => ({ key: String(s.id), value: s.siteName })),
+  );
+
+  readonly billingTypeOptions = computed(() => [
+    { key: 'monthly', value: 'Monthly' },
+    { key: 'daily', value: 'Daily' },
+    { key: 'hourly', value: 'Hourly' },
+  ]);
+
+  readonly gstTypeOptions = computed(() => [
+    { key: 'cgst_sgst', value: 'CGST + SGST' },
+    { key: 'igst', value: 'IGST' },
+  ]);
 
   readonly form = new FormGroup({
     clientId: new FormControl('', { nonNullable: true, validators: Validators.required }),
@@ -81,7 +86,7 @@ export class BillingConfigurationFormComponent implements OnInit {
 
     this.form.controls.clientId.valueChanges.subscribe(clientId => {
       if (!clientId) { this.sites.set([]); return; }
-      this.sitesService.getAll({ clientId, page: 1, pageSize: 100, isActive: true }).subscribe(r => this.sites.set(r.items));
+      this.sitesService.getAllForSelect({ clientId, isActive: true }).subscribe(r => this.sites.set(r));
     });
 
     if (this.isEdit() && this.configId) {
@@ -118,8 +123,8 @@ export class BillingConfigurationFormComponent implements OnInit {
     }
   }
 
-  toggleComponent(id: string, enabled: boolean) {
-    this.enabledMap.update(m => ({ ...m, [id]: enabled }));
+  toggleComponent(id: string, event: { checked: boolean }) {
+    this.enabledMap.update(m => ({ ...m, [id]: event.checked }));
   }
 
   save() {

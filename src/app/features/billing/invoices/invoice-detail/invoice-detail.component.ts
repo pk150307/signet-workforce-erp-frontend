@@ -3,9 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgClass, NgFor, NgIf, DecimalPipe, UpperCasePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 
 import { InvoiceService } from '../../../../core/services/invoice.service';
@@ -17,13 +15,12 @@ import { BreadcrumbService } from '../../../../core/services/breadcrumb.service'
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig } from '../../../../core/utils/dialog.util';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { InvoiceDetail, InvoiceStatus } from '../../../../core/models/invoice.models';
 import { InvoiceActivityEntry, InvoicePayment, InvoicePaymentSummary } from '../../../../core/models/billing.models';
 import { getInvoiceStatusClass } from '../invoice.mock';
 import { mapInvoiceStatusLabel } from '../../../../core/utils/api-response.util';
 import { ApiDatePipe } from '../../../../shared/pipes/api-date.pipe';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
 import { InvoicePaymentDialogComponent } from '../invoice-payment-dialog/invoice-payment-dialog.component';
 
 interface StatusAction {
@@ -35,29 +32,13 @@ interface StatusAction {
 
 @Component({
   selector: 'app-invoice-detail',
-  standalone: true,
-  imports: [
-    NgIf,
-    NgFor,
-    NgClass,
-    DecimalPipe,
-    UpperCasePipe,
-    RouterLink,
-    ApiDatePipe,
-    MatButtonModule,
-    MatIconModule,
-    MatDividerModule,
-    MatMenuModule,
-    SkeletonLoaderComponent,
-    BillingSubnavComponent,
-  ],
-  templateUrl: './invoice-detail.component.html',
+    templateUrl: './invoice-detail.component.html',
   styleUrl: './invoice-detail.component.less',
 })
 export class InvoiceDetailComponent implements OnInit {
 
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoicePdfService = inject(InvoicePdfService);
   private readonly paymentService = inject(BillingPaymentService);

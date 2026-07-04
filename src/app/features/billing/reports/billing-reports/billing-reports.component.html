@@ -10,17 +10,26 @@
       </div>
     </div>
     <div class="billing-hero__actions">
-      <button mat-stroked-button type="button" (click)="loadAll()">
-        <mat-icon>refresh</mat-icon> Refresh
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadAll()" />
     </div>
   </section>
 
   <app-skeleton-loader *ngIf="loading()" type="card" [rows]="4"></app-skeleton-loader>
 
   <div class="billing-form-card billing-reports-panel" *ngIf="!loading()">
-    <mat-tab-group class="billing-reports-tabs" animationDuration="200ms">
-      <mat-tab label="Summary">
+    <div class="detail-sections">
+      <signet-sections-navigator
+        class="detail-sections__nav"
+        [navigationItems]="sectionItems"
+        [selectedItem]="activeSection()"
+        [activeBackgroundColour]="'var(--color-primary)'"
+        [borderColor]="'var(--color-border)'"
+        [backgroundColor]="'var(--color-bg-subtle)'"
+        height="48px"
+        (selectedItemChange)="activeSection.set($event)"
+      />
+
+      @if (activeSection() === 'summary') {
         <div class="billing-tab-panel">
           <div class="billing-reports-kpi" *ngIf="summary() as s">
             <div class="billing-stat-card"><span>Total Billed</span><strong>₹{{ s.totalBilled | number:'1.0-0' }}</strong></div>
@@ -31,9 +40,9 @@
             <div class="billing-stat-card"><span>Overdue</span><strong>{{ s.overdueCount }} (₹{{ s.overdueAmount | number:'1.0-0' }})</strong></div>
           </div>
         </div>
-      </mat-tab>
+      }
 
-      <mat-tab label="Outstanding">
+      @if (activeSection() === 'outstanding') {
         <div class="billing-tab-panel" *ngIf="outstanding() as r">
           <div class="billing-aging-grid">
             <div>Current: ₹{{ r.summary.current | number:'1.0-0' }}</div>
@@ -42,38 +51,74 @@
             <div>61-90 days: ₹{{ r.summary.days61To90 | number:'1.0-0' }}</div>
             <div>90+ days: ₹{{ r.summary.days90Plus | number:'1.0-0' }}</div>
           </div>
-          <div class="table-scroll" *ngIf="r.items.length">
-            <table mat-table [dataSource]="r.items" class="data-table">
-              <ng-container matColumnDef="invoice"><th mat-header-cell *matHeaderCellDef>Invoice</th><td mat-cell *matCellDef="let row">{{ row.invoiceNumber }}</td></ng-container>
-              <ng-container matColumnDef="client"><th mat-header-cell *matHeaderCellDef>Client</th><td mat-cell *matCellDef="let row">{{ row.clientName }}</td></ng-container>
-              <ng-container matColumnDef="due"><th mat-header-cell *matHeaderCellDef>Due</th><td mat-cell *matCellDef="let row">{{ row.dueDate | apiDate }}</td></ng-container>
-              <ng-container matColumnDef="balance"><th mat-header-cell *matHeaderCellDef>Balance</th><td mat-cell *matCellDef="let row">₹{{ row.balanceAmount | number:'1.0-0' }}</td></ng-container>
-              <ng-container matColumnDef="aging"><th mat-header-cell *matHeaderCellDef>Aging</th><td mat-cell *matCellDef="let row">{{ row.agingBucket }}</td></ng-container>
-              <tr mat-header-row *matHeaderRowDef="['invoice','client','due','balance','aging']"></tr>
-              <tr mat-row *matRowDef="let row; columns: ['invoice','client','due','balance','aging']"></tr>
-            </table>
+          <div class="data-list-scroll" *ngIf="r.items.length">
+            <div class="data-list data-list--aging">
+              <div class="data-list__header">
+                <div class="data-list__cell">Invoice</div>
+                <div class="data-list__cell">Client</div>
+                <div class="data-list__cell">Due</div>
+                <div class="data-list__cell">Balance</div>
+                <div class="data-list__cell">Aging</div>
+              </div>
+              @for (row of r.items; track row.id) {
+                <div class="data-list__row">
+                  <div class="data-list__cell">{{ row.invoiceNumber }}</div>
+                  <div class="data-list__cell">{{ row.clientName }}</div>
+                  <div class="data-list__cell">{{ row.dueDate | apiDate }}</div>
+                  <div class="data-list__cell">₹{{ row.balanceAmount | number:'1.0-0' }}</div>
+                  <div class="data-list__cell">{{ row.agingBucket }}</div>
+                </div>
+              }
+            </div>
           </div>
+          <signet-pagination
+            *ngIf="r.items.length"
+            [hasPrev]="outstandingPager.hasPrev"
+            [hasNext]="outstandingPager.hasNext"
+            [prevCursor]="outstandingPager.currentPrevCursor"
+            [nextCursor]="outstandingPager.currentNextCursor"
+            [pageSize]="outstandingPager.pageSize"
+            (pageChange)="onOutstandingNavigate($event)"
+          />
         </div>
-      </mat-tab>
+      }
 
-      <mat-tab label="Collections">
+      @if (activeSection() === 'collections') {
         <div class="billing-tab-panel" *ngIf="collections() as r">
           <p class="tab-summary"><strong>Total collected:</strong> ₹{{ r.summary.totalCollected | number:'1.0-0' }} ({{ r.summary.paymentCount }} payments)</p>
-          <div class="table-scroll" *ngIf="r.items.length">
-            <table mat-table [dataSource]="r.items" class="data-table">
-              <ng-container matColumnDef="date"><th mat-header-cell *matHeaderCellDef>Date</th><td mat-cell *matCellDef="let row">{{ row.paymentDate | apiDate }}</td></ng-container>
-              <ng-container matColumnDef="invoice"><th mat-header-cell *matHeaderCellDef>Invoice</th><td mat-cell *matCellDef="let row">{{ row.invoiceNumber }}</td></ng-container>
-              <ng-container matColumnDef="client"><th mat-header-cell *matHeaderCellDef>Client</th><td mat-cell *matCellDef="let row">{{ row.clientName }}</td></ng-container>
-              <ng-container matColumnDef="mode"><th mat-header-cell *matHeaderCellDef>Mode</th><td mat-cell *matCellDef="let row">{{ row.paymentMode }}</td></ng-container>
-              <ng-container matColumnDef="amount"><th mat-header-cell *matHeaderCellDef>Amount</th><td mat-cell *matCellDef="let row">₹{{ row.amount | number:'1.0-0' }}</td></ng-container>
-              <tr mat-header-row *matHeaderRowDef="['date','invoice','client','mode','amount']"></tr>
-              <tr mat-row *matRowDef="let row; columns: ['date','invoice','client','mode','amount']"></tr>
-            </table>
+          <div class="data-list-scroll" *ngIf="r.items.length">
+            <div class="data-list data-list--collections">
+              <div class="data-list__header">
+                <div class="data-list__cell">Date</div>
+                <div class="data-list__cell">Invoice</div>
+                <div class="data-list__cell">Client</div>
+                <div class="data-list__cell">Mode</div>
+                <div class="data-list__cell">Amount</div>
+              </div>
+              @for (row of r.items; track row.id) {
+                <div class="data-list__row">
+                  <div class="data-list__cell">{{ row.paymentDate | apiDate }}</div>
+                  <div class="data-list__cell">{{ row.invoiceNumber }}</div>
+                  <div class="data-list__cell">{{ row.clientName }}</div>
+                  <div class="data-list__cell">{{ row.paymentMode }}</div>
+                  <div class="data-list__cell">₹{{ row.amount | number:'1.0-0' }}</div>
+                </div>
+              }
+            </div>
           </div>
+          <signet-pagination
+            *ngIf="r.items.length"
+            [hasPrev]="collectionsPager.hasPrev"
+            [hasNext]="collectionsPager.hasNext"
+            [prevCursor]="collectionsPager.currentPrevCursor"
+            [nextCursor]="collectionsPager.currentNextCursor"
+            [pageSize]="collectionsPager.pageSize"
+            (pageChange)="onCollectionsNavigate($event)"
+          />
         </div>
-      </mat-tab>
+      }
 
-      <mat-tab label="GST">
+      @if (activeSection() === 'gst') {
         <div class="billing-tab-panel" *ngIf="gst() as r">
           <div class="billing-reports-kpi billing-reports-kpi--compact">
             <div class="billing-stat-card"><span>Taxable Value</span><strong>₹{{ r.summary.taxableValue | number:'1.0-0' }}</strong></div>
@@ -81,18 +126,26 @@
             <div class="billing-stat-card"><span>SGST</span><strong>₹{{ r.summary.sgstAmount | number:'1.0-0' }}</strong></div>
             <div class="billing-stat-card"><span>IGST</span><strong>₹{{ r.summary.igstAmount | number:'1.0-0' }}</strong></div>
           </div>
-          <div class="table-scroll" *ngIf="r.byClient.length">
-            <table mat-table [dataSource]="r.byClient" class="data-table">
-              <ng-container matColumnDef="client"><th mat-header-cell *matHeaderCellDef>Client</th><td mat-cell *matCellDef="let row">{{ row.clientName }}</td></ng-container>
-              <ng-container matColumnDef="invoices"><th mat-header-cell *matHeaderCellDef>Invoices</th><td mat-cell *matCellDef="let row">{{ row.invoiceCount }}</td></ng-container>
-              <ng-container matColumnDef="gst"><th mat-header-cell *matHeaderCellDef>GST</th><td mat-cell *matCellDef="let row">₹{{ row.totalGst | number:'1.0-0' }}</td></ng-container>
-              <ng-container matColumnDef="total"><th mat-header-cell *matHeaderCellDef>Grand Total</th><td mat-cell *matCellDef="let row">₹{{ row.grandTotal | number:'1.0-0' }}</td></ng-container>
-              <tr mat-header-row *matHeaderRowDef="['client','invoices','gst','total']"></tr>
-              <tr mat-row *matRowDef="let row; columns: ['client','invoices','gst','total']"></tr>
-            </table>
+          <div class="data-list-scroll" *ngIf="r.byClient.length">
+            <div class="data-list data-list--gst">
+              <div class="data-list__header">
+                <div class="data-list__cell">Client</div>
+                <div class="data-list__cell">Invoices</div>
+                <div class="data-list__cell">GST</div>
+                <div class="data-list__cell">Grand Total</div>
+              </div>
+              @for (row of r.byClient; track row.clientId) {
+                <div class="data-list__row">
+                  <div class="data-list__cell">{{ row.clientName }}</div>
+                  <div class="data-list__cell">{{ row.invoiceCount }}</div>
+                  <div class="data-list__cell">₹{{ row.totalGst | number:'1.0-0' }}</div>
+                  <div class="data-list__cell">₹{{ row.grandTotal | number:'1.0-0' }}</div>
+                </div>
+              }
+            </div>
           </div>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      }
+    </div>
   </div>
 </div>

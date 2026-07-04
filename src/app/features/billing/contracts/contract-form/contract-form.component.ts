@@ -1,15 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf, NgFor, TitleCasePipe } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { NgIf } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
 import { ContractService } from '../../../../core/services/contract.service';
@@ -19,9 +11,7 @@ import { BillingFilterService } from '../../../../core/services/billing-filter.s
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ClientListItem } from '../../../../core/models/client.models';
 import { SiteListItem } from '../../../../core/models/sites.models';
-import { BillingSubnavComponent } from '../../shared/billing-subnav.component';
-import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-
+import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
 function firstOfMonth(year: number, month: number): Date {
   return new Date(year, month - 1, 1);
 }
@@ -37,19 +27,12 @@ function toIsoDate(value: Date | string | null | undefined): string | null {
 
 @Component({
   selector: 'app-contract-form',
-  standalone: true,
-  imports: [
-    NgIf, NgFor, TitleCasePipe, RouterLink, ReactiveFormsModule,
-    MatFormFieldModule, MatSelectModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatCheckboxModule, MatDatepickerModule, MatNativeDateModule,
-    MatTooltipModule, BillingSubnavComponent, SkeletonLoaderComponent,
-  ],
-  templateUrl: './contract-form.component.html',
+    templateUrl: './contract-form.component.html',
   styleUrl: './contract-form.component.less',
 })
 export class ContractFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  readonly router = inject(Router);
   private readonly service = inject(ContractService);
   private readonly clientsService = inject(ClientsService);
   private readonly sitesService = inject(SitesService);
@@ -65,7 +48,33 @@ export class ContractFormComponent implements OnInit {
   private contractId: string | null = null;
   private autoFields = { name: true, code: true, prefix: true };
 
-  readonly statusOptions = ['draft', 'active', 'expired', 'terminated', 'cancelled'];
+  readonly statusOptions = computed(() =>
+    ['draft', 'active', 'expired', 'terminated', 'cancelled'].map(s => ({
+      key: s,
+      value: s.charAt(0).toUpperCase() + s.slice(1),
+    })),
+  );
+
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
+
+  readonly siteOptions = computed(() => [
+    { key: '', value: 'All sites (client-level)' },
+    ...this.sites().map(s => ({ key: String(s.id), value: s.siteName })),
+  ]);
+
+  readonly billingTypeOptions = computed(() => [
+    { key: 'monthly', value: 'Monthly' },
+    { key: 'daily', value: 'Daily' },
+    { key: 'hourly', value: 'Hourly' },
+  ]);
+
+  readonly invoiceFrequencyOptions = computed(() => [
+    { key: 'monthly', value: 'Monthly' },
+    { key: 'biweekly', value: 'Biweekly' },
+    { key: 'weekly', value: 'Weekly' },
+  ]);
 
   readonly form = new FormGroup({
     clientId: new FormControl('', { nonNullable: true, validators: Validators.required }),
@@ -103,8 +112,8 @@ export class ContractFormComponent implements OnInit {
 
     this.form.controls.clientId.valueChanges.subscribe(clientId => {
       if (!clientId) { this.sites.set([]); return; }
-      this.sitesService.getAll({ clientId, page: 1, pageSize: 100, isActive: true }).subscribe(r => {
-        this.sites.set(r.items);
+      this.sitesService.getAllForSelect({ clientId, isActive: true }).subscribe(r => {
+        this.sites.set(r);
         if (!this.isEdit()) this.loadSuggestions();
       });
     });
@@ -172,6 +181,24 @@ export class ContractFormComponent implements OnInit {
   regenerateField(field: 'name' | 'code' | 'prefix') {
     this.autoFields[field] = true;
     this.loadSuggestions();
+  }
+
+  dateFieldValue(controlName: 'startDate' | 'endDate'): { startDate?: string } {
+    const value = this.form.controls[controlName].value;
+    if (!value) return {};
+    const iso = toIsoDate(value instanceof Date ? value : new Date(value));
+    return iso ? { startDate: `${iso}T00:00:00` } : {};
+  }
+
+  onDateChange(controlName: 'startDate' | 'endDate', event: { startDate?: string }): void {
+    if (!event.startDate) {
+      if (controlName === 'endDate') {
+        this.form.controls.endDate.setValue(null);
+      }
+      return;
+    }
+    const [y, m, d] = event.startDate.split('T')[0].split('-').map(Number);
+    this.form.controls[controlName].setValue(new Date(y, m - 1, d));
   }
 
   save() {
