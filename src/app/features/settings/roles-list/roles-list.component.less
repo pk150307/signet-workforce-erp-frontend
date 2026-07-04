@@ -1,5 +1,4 @@
-@import '../../../shared/styles/page-layout.less';
-@import '../../../shared/styles/module-layout.less';
+@import '../shared/settings-layout.less';
 
 .roles-list__container,
 .roles-list__drawer {
@@ -11,3 +10,8 @@
 }
 
 .list-page-responsive(900);
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 696) * 110) calc(calc(100% / 696) * 160) calc(calc(100% / 696) * 64) calc(calc(100% / 696) * 88) calc(calc(100% / 696) * 64) calc(calc(100% / 696) * 100) calc(calc(100% / 696) * 110);
+  --data-list-min-width: 696px;
+}

@@ -1,0 +1,12 @@
+<nav class="settings-subnav" aria-label="Settings navigation">
+  <signet-sections-navigator
+    class="settings-subnav__navigator"
+    [navigationItems]="navigationItems()"
+    [selectedItem]="selectedNavPath()"
+    [activeBackgroundColour]="'var(--color-primary)'"
+    [borderColor]="'var(--color-border)'"
+    [backgroundColor]="'var(--color-surface)'"
+    height="48px"
+    (selectedItemChange)="onNavSelect($event)"
+  />
+</nav>

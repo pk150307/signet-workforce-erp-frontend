@@ -7,15 +7,13 @@
       icon="location_off"
       title="Site not found"
       description="The requested site could not be loaded.">
-      <button mat-stroked-button routerLink="/sites">Back to Sites</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back to Sites" (clicked)="router.navigate(['sites'])" />
     </app-empty-state>
   }
 
   @if (!loading() && site(); as s) {
     <div class="detail-nav">
-      <button mat-stroked-button type="button" routerLink="/sites">
-        <mat-icon>arrow_back</mat-icon> Back
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="router.navigate(['sites'])" />
     </div>
 
     <section class="site-profile">
@@ -26,9 +24,7 @@
           <div class="site-profile__info">
             <div class="site-profile__title-row">
               <h1 class="site-profile__name">{{ s.siteName }}</h1>
-              <span class="badge" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">
-                {{ s.isActive ? 'Active' : 'Inactive' }}
-              </span>
+              <signet-status-button [label]="s.isActive ? 'Active' : 'Inactive'" [status]="s.isActive" />
             </div>
             <div class="site-profile__chips">
               <span class="meta-chip mono">{{ s.siteCode }}</span>
@@ -45,16 +41,10 @@
         </div>
         <div class="site-profile__actions">
           @if (s.clientId) {
-            <a mat-stroked-button [routerLink]="['/clients', s.clientId]">
-              <mat-icon>business</mat-icon> Client
-            </a>
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Client" (clicked)="router.navigate(['/clients', s.clientId])" />
           }
-          <a mat-stroked-button routerLink="/attendance">
-            <mat-icon>event_available</mat-icon> Attendance
-          </a>
-          <a mat-raised-button color="primary" [routerLink]="['/sites', s.id, 'edit']">
-            <mat-icon>edit</mat-icon> Edit
-          </a>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Attendance" (clicked)="router.navigate(['attendance'])" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Edit" (clicked)="router.navigate(['/sites', s.id, 'edit'])" />
         </div>
       </div>
     </section>
@@ -113,9 +103,7 @@
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value">
-            <span class="badge badge--sm" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">
-              {{ s.isActive ? 'Active' : 'Inactive' }}
-            </span>
+            <signet-status-button size="sm" [label]="s.isActive ? 'Active' : 'Inactive'" [status]="s.isActive" />
           </span>
         </div>
         <div class="info-row info-row--stack">

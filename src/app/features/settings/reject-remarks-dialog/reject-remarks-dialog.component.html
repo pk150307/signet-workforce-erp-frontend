@@ -1,0 +1,9 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+<mat-dialog-content>
+  <p *ngIf="data.entityLabel">Rejecting delete request for <strong>{{ data.entityLabel }}</strong>.</p>
+  <signet-custom-text-area-field class="full-width" fieldTitle="Rejection remarks" [formControl]="remarksCtrl" [required]="true" [height]="100" />
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="hollow" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button [width]="100" [widthUnit]="'%'" type="error" displayText="Reject" [disabled]="remarksCtrl.invalid" (clicked)="submit()" />
+</mat-dialog-actions>

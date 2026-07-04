@@ -1,56 +1,89 @@
-<div class="page-container">
+<div class="page-container settings-page">
+  <app-settings-subnav></app-settings-subnav>
+
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Delete Approvals</h1>
-      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} requests</p>
+      <p class="page-header__subtitle">{{ data()?.items?.length ?? 0 }} shown</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon></button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="load()" />
     </div>
   </div>
 
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-bar__search">
-      <mat-label>Search</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl">
-    </mat-form-field>
-    <mat-form-field appearance="outline">
-      <mat-label>Status</mat-label>
-      <mat-select [formControl]="statusCtrl">
-        <mat-option value="">All</mat-option>
-        <mat-option value="pending">Pending</mat-option>
-        <mat-option value="approved">Approved</mat-option>
-        <mat-option value="rejected">Rejected</mat-option>
-      </mat-select>
-    </mat-form-field>
+  <div class="filters-card card settings-filters">
+    <signet-custom-text-field
+      class="settings-filters__search"
+      fieldTitle="Search"
+      [formControl]="searchCtrl"
+      placeholder="Search..."
+      [required]="false"
+    />
+    <signet-search-select-dropdown
+      class="settings-filters__field"
+      [formControl]="statusCtrl"
+      fieldTitle="Status"
+      placeholder="All"
+      [options]="statusOptions"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+      [required]="false"
+    />
   </div>
 
   <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
 
   <div class="card card--flush" *ngIf="!loading()">
-    <app-empty-state *ngIf="data()?.items?.length === 0" icon="delete_sweep" title="No delete requests" description="Pending delete approval requests will appear here."></app-empty-state>
-    <div class="table-scroll" *ngIf="(data()?.items?.length ?? 0) > 0">
-      <mat-table [dataSource]="data()?.items ?? []">
-        <ng-container matColumnDef="entityLabel"><mat-header-cell *matHeaderCellDef>Record</mat-header-cell><mat-cell *matCellDef="let row">{{ row.entityLabel || row.entityType }}</mat-cell></ng-container>
-        <ng-container matColumnDef="module"><mat-header-cell *matHeaderCellDef>Module</mat-header-cell><mat-cell *matCellDef="let row">{{ row.module }}</mat-cell></ng-container>
-        <ng-container matColumnDef="reason"><mat-header-cell *matHeaderCellDef>Reason</mat-header-cell><mat-cell *matCellDef="let row">{{ row.reason }}</mat-cell></ng-container>
-        <ng-container matColumnDef="requestedByName"><mat-header-cell *matHeaderCellDef>Requested By</mat-header-cell><mat-cell *matCellDef="let row">{{ row.requestedByName || '—' }}</mat-cell></ng-container>
-        <ng-container matColumnDef="status"><mat-header-cell *matHeaderCellDef>Status</mat-header-cell><mat-cell *matCellDef="let row"><span class="status-chip status-chip--{{ row.status }}">{{ row.status }}</span></mat-cell></ng-container>
-        <ng-container matColumnDef="createdAt"><mat-header-cell *matHeaderCellDef>Submitted</mat-header-cell><mat-cell *matCellDef="let row">{{ row.createdAt | date:'medium' }}</mat-cell></ng-container>
-        <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef></mat-header-cell>
-          <mat-cell *matCellDef="let row">
-            <ng-container *ngIf="row.status === 'pending' && canApprove">
-              <button mat-stroked-button color="primary" type="button" (click)="approve(row)">Approve</button>
-              <button mat-stroked-button color="warn" type="button" (click)="reject(row)">Reject</button>
-            </ng-container>
-          </mat-cell>
-        </ng-container>
-        <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-      </mat-table>
+    <app-empty-state
+      *ngIf="!hasItems()"
+      icon="delete_sweep"
+      title="No delete requests"
+      description="Delete approval requests will appear here.">
+    </app-empty-state>
+
+    <div class="data-list-scroll" *ngIf="hasItems()">
+      <div class="data-list">
+        <div class="data-list__header">
+          <div class="data-list__cell">Record</div>
+          <div class="data-list__cell">Module</div>
+          <div class="data-list__cell">Reason</div>
+          <div class="data-list__cell">Requested By</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell">Submitted</div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
+        @for (row of items(); track row.id || $index) {
+          <div class="data-list__row">
+            <div class="data-list__cell">{{ row.entityLabel || row.entityType || '—' }}</div>
+            <div class="data-list__cell">{{ row.module || '—' }}</div>
+            <div class="data-list__cell">{{ row.reason || '—' }}</div>
+            <div class="data-list__cell">{{ row.requestedByName || '—' }}</div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="statusLabel(row.status)" [status]="row.status" />
+            </div>
+            <div class="data-list__cell">{{ row.createdAt | date:'medium' }}</div>
+            <div class="data-list__cell data-list__cell--center">
+              @if (isPending(row) && canApprove) {
+                <div class="delete-approvals-list__actions">
+                  <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Approve" (clicked)="approve(row)" />
+                  <signet-button [width]="100" [widthUnit]="'%'" type="error" displayText="Reject" (clicked)="reject(row)" />
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
     </div>
-    <mat-paginator *ngIf="(data()?.totalCount ?? 0) > 0" [length]="data()?.totalCount ?? 0" [pageSize]="pageSize" [pageIndex]="page - 1" [pageSizeOptions]="[10,20,50]" (page)="onPageChange($event)"></mat-paginator>
+
+<signet-pagination
+      *ngIf="data()"
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
   </div>
 </div>

@@ -4,12 +4,12 @@
       <h2>Permission Matrix</h2>
       <p *ngIf="role() as r">{{ r.name }}</p>
     </div>
-    <button mat-icon-button type="button" (click)="close()" aria-label="Close">
+    <button mat-icon-button (click)="close()" aria-label="Close">
       <mat-icon>close</mat-icon>
     </button>
   </div>
 
-  <app-skeleton-loader *ngIf="loading()" type="form" [rows]="8"></app-skeleton-loader>
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="8"></app-skeleton-loader>
 
   <div *ngIf="!loading()" class="role-permissions-drawer__body">
     <mat-accordion multi>
@@ -20,28 +20,22 @@
         </mat-expansion-panel-header>
 
         <div class="role-permissions-drawer__module-actions">
-          <button mat-button type="button" (click)="toggleModule(group, true)">Select all</button>
-          <button mat-button type="button" (click)="toggleModule(group, false)">Clear</button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="hollow" displayText="Select all" (clicked)="toggleModule(group, true)" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="hollow" displayText="Clear" (clicked)="toggleModule(group, false)" />
         </div>
 
         <div class="role-permissions-drawer__permission" *ngFor="let perm of group.permissions">
-          <mat-checkbox
-            [checked]="isChecked(perm.id)"
-            [disabled]="!canUpdate || role()?.isSystem"
-            (change)="toggle(perm.id, $event.checked)">
-            <span class="role-permissions-drawer__perm-key">{{ perm.key }}</span>
+          <div class="role-permissions-drawer__permission-row">
+            <signet-custom-checkbox [checked]="isChecked(perm.id)" [disabled]="!canUpdate || (role()?.isSystem ?? false)" (permissionToggled)="toggle(perm.id, $event.checked)" [label]="perm.key" permissionKey="perm" groupName="permissions" />
             <span class="role-permissions-drawer__perm-desc" *ngIf="perm.description">{{ perm.description }}</span>
-          </mat-checkbox>
+          </div>
         </div>
       </mat-expansion-panel>
     </mat-accordion>
   </div>
 
   <div class="role-permissions-drawer__actions">
-    <button mat-stroked-button type="button" (click)="close()">Cancel</button>
-    <button mat-raised-button color="primary" type="button" [disabled]="saving() || !canUpdate || role()?.isSystem" (click)="save()">
-      <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
-      <span *ngIf="!saving()">Save Permissions</span>
-    </button>
+    <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="close()" />
+    <signet-button [width]="100" [widthUnit]="'%'" type="primary" [displayText]="saving() ? 'Saving…' : 'Save Permissions'" [disabled]="saving() || !canUpdate || (role()?.isSystem ?? false)" (clicked)="save()" />
   </div>
 </div>

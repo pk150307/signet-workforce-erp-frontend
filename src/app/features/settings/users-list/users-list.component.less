@@ -1,5 +1,4 @@
-@import '../../../shared/styles/page-layout.less';
-@import '../../../shared/styles/module-layout.less';
+@import '../shared/settings-layout.less';
 
 .users-list__container,
 .users-list__drawer {
@@ -10,13 +9,17 @@
   width: min(480px, 100vw);
 }
 
-.status--inactive {
-  color: var(--color-text-muted);
+.users-list__status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
 
-.status--locked {
-  color: #c62828;
-  font-size: 12px;
-}
+.list-page-responsive(900px);
 
-.list-page-responsive(900);
+.data-list {
+  /* Name | Email (wider) | Roles | Status | Last Login | Actions */
+  --data-list-cols: 16% 28% 14% 14% 18% 10%;
+  --data-list-min-width: 100%;
+}

@@ -1,14 +1,15 @@
-@import '../../../shared/styles/page-layout.less';
-@import '../../../shared/styles/module-layout.less';
+@import '../shared/settings-layout.less';
 
-.status-chip {
-  text-transform: capitalize;
-  font-size: 12px;
-  font-weight: 600;
+.list-page-responsive(900);
 
-  &--pending { color: #e65100; }
-  &--approved { color: #2e7d32; }
-  &--rejected { color: #c62828; }
+.data-list {
+  --data-list-cols: calc(calc(100% / 820) * 140) calc(calc(100% / 820) * 100) calc(calc(100% / 820) * 160) calc(calc(100% / 820) * 120) calc(calc(100% / 820) * 100) calc(calc(100% / 820) * 120) calc(calc(100% / 820) * 80);
+  --data-list-min-width: 820px;
 }
 
-.list-page-responsive(1000);
+.delete-approvals-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}

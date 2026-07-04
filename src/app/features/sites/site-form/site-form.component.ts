@@ -1,15 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { catchError, forkJoin, of } from 'rxjs';
 import { SitesService } from '../../../core/services/sites.service';
 import { ClientsService } from '../../../core/services/clients.service';
@@ -17,17 +9,10 @@ import { NotificationService } from '../../../core/services/notification.service
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { ClientListItem } from '../../../core/models/client.models';
 import { SiteDetail } from '../../../core/models/sites.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-site-form',
-  standalone: true,
-  imports: [
-    NgIf, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatButtonModule, MatIconModule, MatTooltipModule, MatProgressSpinnerModule,
-    MatSlideToggleModule, SkeletonLoaderComponent,
-  ],
-  templateUrl: './site-form.component.html',
+    templateUrl: './site-form.component.html',
   styleUrl: './site-form.component.less',
 })
 export class SiteFormComponent implements OnInit {
@@ -45,6 +30,10 @@ export class SiteFormComponent implements OnInit {
   readonly clients = signal<ClientListItem[]>([]);
   private siteId: string | null = null;
   private preservedBilling: { day: number | null; month: number | null } = { day: null, month: null };
+
+  readonly clientOptions = computed(() =>
+    this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
+  );
 
   readonly form = this.fb.group({
     clientId: ['', Validators.required],

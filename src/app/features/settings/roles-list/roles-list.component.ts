@@ -1,13 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe, NgIf } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
+import { DatePipe, } from '@angular/common';
+import { FormControl } from '@angular/forms';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
@@ -15,32 +8,20 @@ import { RolesService } from '../../../core/services/roles.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IAM_PERMISSIONS } from '../../../core/constants/iam-permissions.constants';
-import { PaginatedResult } from '../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../core/models/api.models';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { IamRoleListItem } from '../../../core/models/iam.models';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { RolePermissionsDrawerComponent } from '../role-permissions-drawer/role-permissions-drawer.component';
 
 @Component({
   selector: 'app-roles-list',
-  standalone: true,
-  imports: [
-    NgIf,
-    DatePipe,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatSidenavModule,
-    EmptyStateComponent,
-    SkeletonLoaderComponent,
-    RolePermissionsDrawerComponent,
-  ],
-  templateUrl: './roles-list.component.html',
+    templateUrl: './roles-list.component.html',
   styleUrl: './roles-list.component.less',
 })
 export class RolesListComponent implements OnInit {
@@ -51,28 +32,29 @@ export class RolesListComponent implements OnInit {
   readonly loading = signal(true);
   readonly drawerOpen = signal(false);
   readonly selectedRoleId = signal<string | null>(null);
-  readonly data = signal<PaginatedResult<IamRoleListItem> | null>(null);
+  readonly data = signal<CursorPaginatedResult<IamRoleListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
   readonly searchCtrl = new FormControl('');
   readonly cols = ['name', 'description', 'userCount', 'permissionCount', 'isSystem', 'isActive', 'actions'];
 
   readonly canUpdate = this.authService.hasPermission(IAM_PERMISSIONS.roles.update);
 
-  page = 1;
-  pageSize = 20;
 
   ngOnInit(): void {
     this.load();
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.pager.reset();
+      this.load(this.pager.firstPageParams());
     });
   }
 
-  load(): void {
+  load(params?: CursorPageParams) {
     this.loading.set(true);
-    this.rolesService.list({ page: this.page, pageSize: this.pageSize, search: this.searchCtrl.value || undefined }).subscribe({
+    const pageParams = params ?? this.pager.firstPageParams();
+    this.rolesService.list({ ...pageParams, search: this.searchCtrl.value || undefined }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.loading.set(false);
       },
       error: (err) => {
@@ -97,9 +79,13 @@ export class RolesListComponent implements OnInit {
     this.load();
   }
 
-  onPageChange(event: PageEvent): void {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.load();
+  onPaginationNavigate(event: PaginationNavigateEvent) {
+    if (event.direction === 'next') {
+      const p = this.pager.nextPageParams();
+      if (p) this.load(p);
+    } else {
+      const p = this.pager.prevPageParams();
+      if (p) this.load(p);
+    }
   }
 }

@@ -1,14 +1,30 @@
-@import '../../../shared/styles/page-layout.less';
-@import '../../../shared/styles/module-layout.less';
+@import '../shared/settings-layout.less';
 
 .mock-badge {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 12px;
   font-size: 11px;
-  background: var(--color-divider);
-  color: var(--color-text-muted);
+  font-weight: 600;
+  background: rgba(245, 127, 23, 0.12);
+  color: var(--color-warning);
+  vertical-align: middle;
 }
 
-.list-page-responsive(720);
+.code-chip {
+  font-size: 12px;
+  font-family: ProximaNova-Medium, sans-serif;
+  background: var(--color-divider);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.list-page-responsive(720px);
+
+.data-list {
+  --data-list-cols: 20% 24% 36% 20%;
+  --data-list-min-width: 100%;
+}

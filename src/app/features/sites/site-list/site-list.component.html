@@ -2,41 +2,46 @@
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Sites</h1>
-      <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} locations across clients</p>
+      <p class="page-header__subtitle">{{ data()?.items?.length ?? 0 }} locations across clients</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon></button>
-      <button mat-stroked-button routerLink="/sites/dashboard"><mat-icon>dashboard</mat-icon> Dashboard</button>
-      <button mat-raised-button color="primary" routerLink="/sites/new"><mat-icon>add</mat-icon> Add Site</button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Action" (clicked)="load()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Dashboard" (clicked)="router.navigate(['/sites/dashboard'])" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Site" (clicked)="router.navigate(['/sites/new'])" />
     </div>
   </div>
 
   <div class="filters-card card">
-    <mat-form-field appearance="outline" class="filters-card__search" subscriptSizing="dynamic">
-      <mat-label>Search sites</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="searchCtrl" placeholder="Name, code, or client">
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="filters-card__client" subscriptSizing="dynamic">
-      <mat-label>Client</mat-label>
-      <mat-select [formControl]="clientCtrl">
-        <mat-option [value]="null">All clients</mat-option>
-        @for (c of clients(); track c.id) {
-          <mat-option [value]="c.id">{{ c.companyName }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="filters-card__status" subscriptSizing="dynamic">
-      <mat-label>Status</mat-label>
-      <mat-select [formControl]="statusCtrl">
-        <mat-option [value]="null">All</mat-option>
-        <mat-option [value]="true">Active</mat-option>
-        <mat-option [value]="false">Inactive</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <button mat-stroked-button type="button" class="filters-card__clear" (click)="clearFilters()">
-      Clear filters
-    </button>
+    <signet-custom-text-field
+      class="filters-card__search"
+      [formControl]="searchCtrl"
+      fieldTitle="Search sites"
+      placeholder="Name, code, or client"
+      [required]="false"
+    />
+    <signet-search-select-dropdown
+      class="filters-card__client"
+      [formControl]="clientCtrl"
+      fieldTitle="Client"
+      placeholder="All clients"
+      [options]="clientOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="true"
+      [required]="false"
+    />
+    <signet-search-select-dropdown
+      class="filters-card__status"
+      [formControl]="statusCtrl"
+      fieldTitle="Status"
+      placeholder="All"
+      [options]="statusOptions()"
+      [width]="100"
+      widthUnit="%"
+      [searchFunctionality]="false"
+      [required]="false"
+    />
+    <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Clear filters" class="filters-card__clear" (clicked)="clearFilters()" />
   </div>
 
   <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
@@ -49,65 +54,55 @@
       description="Try adjusting your search or client filter.">
     </app-empty-state>
 
-    <div class="table-scroll">
-    <mat-table [dataSource]="data()?.items ?? []" *ngIf="(data()?.items?.length ?? 0) > 0">
-      <ng-container matColumnDef="siteCode">
-        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-        <mat-cell *matCellDef="let s"><span class="code-chip">{{ s.siteCode }}</span></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="siteName">
-        <mat-header-cell *matHeaderCellDef>Site</mat-header-cell>
-        <mat-cell *matCellDef="let s"><strong>{{ s.siteName }}</strong></mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="clientCompanyName">
-        <mat-header-cell *matHeaderCellDef>Client</mat-header-cell>
-        <mat-cell *matCellDef="let s">{{ s.clientCompanyName }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="city">
-        <mat-header-cell *matHeaderCellDef>City</mat-header-cell>
-        <mat-cell *matCellDef="let s">{{ s.city }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="requiredHeadcount">
-        <mat-header-cell *matHeaderCellDef>Required</mat-header-cell>
-        <mat-cell *matCellDef="let s">{{ s.requiredHeadcount }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="deployedHeadcount">
-        <mat-header-cell *matHeaderCellDef>Deployed</mat-header-cell>
-        <mat-cell *matCellDef="let s">{{ s.deployedHeadcount }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="isActive">
-        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <span class="badge" [class.badge--active]="s.isActive" [class.badge--inactive]="!s.isActive">
-            {{ s.isActive ? 'Active' : 'Inactive' }}
-          </span>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let s">
-          <button mat-icon-button [matMenuTriggerFor]="siteMenu" aria-label="More actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #siteMenu="matMenu">
-            <button mat-menu-item (click)="viewSite(s.id)"><mat-icon>visibility</mat-icon> View</button>
-            <button mat-menu-item [routerLink]="['/sites', s.id, 'edit']"><mat-icon>edit</mat-icon> Edit</button>
-            <button mat-menu-item (click)="deleteSite(s)"><mat-icon>delete</mat-icon> Delete</button>
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-    </mat-table>
+    <div class="data-list-scroll" *ngIf="(data()?.items?.length ?? 0) > 0">
+      <div class="data-list">
+        <div class="data-list__header">
+          <div class="data-list__cell">Code</div>
+          <div class="data-list__cell">Site</div>
+          <div class="data-list__cell">Client</div>
+          <div class="data-list__cell">City</div>
+          <div class="data-list__cell">Required</div>
+          <div class="data-list__cell">Deployed</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
+        @for (s of data()?.items ?? []; track s.id) {
+          <div class="data-list__row">
+            <div class="data-list__cell"><span class="code-chip">{{ s.siteCode }}</span></div>
+            <div class="data-list__cell"><strong>{{ s.siteName }}</strong></div>
+            <div class="data-list__cell">{{ s.clientCompanyName }}</div>
+            <div class="data-list__cell">{{ s.city }}</div>
+            <div class="data-list__cell">{{ s.requiredHeadcount }}</div>
+            <div class="data-list__cell">{{ s.deployedHeadcount }}</div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="s.isActive ? 'Active' : 'Inactive'" [status]="s.isActive" />
+            </div>
+            <div class="data-list__cell data-list__cell--center">
+              <signet-action-menu ariaLabel="More actions">
+                <button type="button" actionMenuItem (click)="viewSite(s.id)">
+                  <mat-icon>visibility</mat-icon><span>View</span>
+                </button>
+                <a actionMenuItem [routerLink]="['/sites', s.id, 'edit']">
+                  <mat-icon>edit</mat-icon><span>Edit</span>
+                </a>
+                <button type="button" actionMenuItem class="action-menu__item--danger" (click)="deleteSite(s)">
+                  <mat-icon>delete</mat-icon><span>Delete</span>
+                </button>
+              </signet-action-menu>
+            </div>
+          </div>
+        }
+      </div>
     </div>
 
-    <mat-paginator
-      *ngIf="(data()?.totalCount ?? 0) > 0"
-      [length]="data()?.totalCount ?? 0"
-      [pageSize]="pageSize"
-      [pageIndex]="page - 1"
-      [pageSizeOptions]="[10, 20, 50]"
-      (page)="onPageChange($event)">
-    </mat-paginator>
+<signet-pagination
+      *ngIf="data()"
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
   </div>
 </div>

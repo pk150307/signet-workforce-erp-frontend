@@ -1,20 +1,28 @@
-@import '../../../shared/styles/page-layout.less';
+@import '../shared/settings-layout.less';
 
 .config-form {
-  max-width: 800px;
+  width: 100%;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 8px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+
+  signet-search-select-dropdown,
+  signet-custom-text-field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .toggle-row {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 24px;
-  padding-top: 24px;
+  gap: 14px;
+  margin-top: 20px;
+  padding-top: 20px;
   border-top: 1px solid var(--color-border);
 }

@@ -1,32 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { SettingsService } from '../../../core/services/settings.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-
 @Component({
   selector: 'app-system-config',
-  standalone: true,
-  imports: [
-    NgIf,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSlideToggleModule,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './system-config.component.html',
+    templateUrl: './system-config.component.html',
   styleUrl: './system-config.component.less',
 })
 export class SystemConfigComponent implements OnInit {
@@ -37,6 +17,25 @@ export class SystemConfigComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly saving = signal(false);
+
+  readonly timezoneOptions = computed(() => [
+    { key: 'Asia/Kolkata', value: 'Asia/Kolkata (IST)' },
+    { key: 'Asia/Dubai', value: 'Asia/Dubai (GST)' },
+  ]);
+
+  readonly dateFormatOptions = computed(() => [
+    { key: 'DD/MM/YYYY', value: 'DD/MM/YYYY' },
+    { key: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
+  ]);
+
+  readonly currencyOptions = computed(() => [
+    { key: 'INR', value: 'INR (₹)' },
+  ]);
+
+  readonly fiscalYearStartOptions = computed(() => [
+    { key: 'April', value: 'April' },
+    { key: 'January', value: 'January' },
+  ]);
 
   readonly form = this.fb.group({
     companyName: ['', Validators.required],

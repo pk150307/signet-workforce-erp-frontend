@@ -1,25 +1,21 @@
 <mat-sidenav-container class="users-list__container">
   <mat-sidenav-content>
-    <div class="page-container">
+    <div class="page-container settings-page">
+      <app-settings-subnav></app-settings-subnav>
+
       <div class="page-header">
         <div>
           <h1 class="page-header__title">Users</h1>
-          <p class="page-header__subtitle">{{ data()?.totalCount ?? 0 }} records</p>
+          <p class="page-header__subtitle">{{ data()?.items?.length ?? 0 }} records</p>
         </div>
         <div class="page-header__actions">
-          <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon></button>
-          <button mat-raised-button color="primary" type="button" *ngIf="canCreate" (click)="openCreate()">
-            <mat-icon>person_add</mat-icon> Add User
-          </button>
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="load()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add User" (clicked)="openCreate()" />
         </div>
       </div>
 
-      <div class="filter-bar">
-        <mat-form-field appearance="outline" class="filter-bar__search">
-          <mat-label>Search users</mat-label>
-          <mat-icon matPrefix>search</mat-icon>
-          <input matInput [formControl]="searchCtrl">
-        </mat-form-field>
+      <div class="filters-card card settings-filters">
+        <signet-custom-text-field class="settings-filters__search" fieldTitle="Search users" [formControl]="searchCtrl" placeholder="Search users..." [required]="false" />
       </div>
 
       <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
@@ -32,64 +28,58 @@
           description="Create a user or adjust your search criteria.">
         </app-empty-state>
 
-        <div class="table-scroll" *ngIf="(data()?.items?.length ?? 0) > 0">
-          <mat-table [dataSource]="data()?.items ?? []">
-            <ng-container matColumnDef="fullName">
-              <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.fullName || row.username || '—' }}</mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="email">
-              <mat-header-cell *matHeaderCellDef>Email</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.email }}</mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="roles">
-              <mat-header-cell *matHeaderCellDef>Roles</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.roles?.join(', ') || '—' }}</mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="status">
-              <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-              <mat-cell *matCellDef="let row">
-                <span [class.status--inactive]="!row.isActive">{{ row.isActive ? 'Active' : 'Inactive' }}</span>
-                <span class="status--locked" *ngIf="row.accountLocked"> · Locked</span>
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="lastLoginAt">
-              <mat-header-cell *matHeaderCellDef>Last Login</mat-header-cell>
-              <mat-cell *matCellDef="let row">{{ row.lastLoginAt ? (row.lastLoginAt | date:'medium') : '—' }}</mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <mat-header-cell *matHeaderCellDef></mat-header-cell>
-              <mat-cell *matCellDef="let row">
-                <button mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="User actions">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #menu="matMenu">
-                  <button mat-menu-item type="button" *ngIf="canUpdate" (click)="openEdit(row)">
-                    <mat-icon>edit</mat-icon><span>Edit</span>
-                  </button>
-                  <button mat-menu-item type="button" *ngIf="canUpdate" (click)="toggleStatus(row)">
-                    <mat-icon>{{ row.isActive ? 'person_off' : 'person' }}</mat-icon>
-                    <span>{{ row.isActive ? 'Deactivate' : 'Activate' }}</span>
-                  </button>
-                  <button mat-menu-item type="button" *ngIf="canApprove" (click)="resetPassword(row)">
-                    <mat-icon>lock_reset</mat-icon><span>Reset Password</span>
-                  </button>
-                </mat-menu>
-              </mat-cell>
-            </ng-container>
-            <mat-header-row *matHeaderRowDef="cols"></mat-header-row>
-            <mat-row *matRowDef="let row; columns: cols;"></mat-row>
-          </mat-table>
+        <div class="data-list-scroll" *ngIf="(data()?.items?.length ?? 0) > 0">
+          <div class="data-list">
+            <div class="data-list__header">
+              <div class="data-list__cell">Name</div>
+              <div class="data-list__cell">Email</div>
+              <div class="data-list__cell">Roles</div>
+              <div class="data-list__cell">Status</div>
+              <div class="data-list__cell">Last Login</div>
+              <div class="data-list__cell data-list__cell--center"></div>
+            </div>
+            @for (row of data()?.items ?? []; track row.id) {
+              <div class="data-list__row">
+                <div class="data-list__cell">{{ row.fullName || row.username || '—' }}</div>
+                <div class="data-list__cell">{{ row.email }}</div>
+                <div class="data-list__cell">{{ row.roles?.join(', ') || '—' }}</div>
+                <div class="data-list__cell">
+                  <div class="users-list__status">
+                    <signet-status-button [label]="row.isActive ? 'Active' : 'Inactive'" [status]="row.isActive" />
+                    @if (row.accountLocked) {
+                      <signet-status-button label="Locked" status="locked" />
+                    }
+                  </div>
+                </div>
+                <div class="data-list__cell">{{ row.lastLoginAt ? (row.lastLoginAt | date:'medium') : '—' }}</div>
+                <div class="data-list__cell data-list__cell--center">
+                  <signet-action-menu ariaLabel="User actions">
+                    <button type="button" actionMenuItem *ngIf="canUpdate" (click)="openEdit(row)">
+                      <mat-icon>edit</mat-icon><span>Edit</span>
+                    </button>
+                    <button type="button" actionMenuItem *ngIf="canUpdate" (click)="toggleStatus(row)">
+                      <mat-icon>{{ row.isActive ? 'person_off' : 'person' }}</mat-icon>
+                      <span>{{ row.isActive ? 'Deactivate' : 'Activate' }}</span>
+                    </button>
+                    <button type="button" actionMenuItem *ngIf="canApprove" (click)="resetPassword(row)">
+                      <mat-icon>lock_reset</mat-icon><span>Reset Password</span>
+                    </button>
+                  </signet-action-menu>
+                </div>
+              </div>
+            }
+          </div>
         </div>
 
-        <mat-paginator
-          *ngIf="(data()?.totalCount ?? 0) > 0"
-          [length]="data()?.totalCount ?? 0"
-          [pageSize]="pageSize"
-          [pageIndex]="page - 1"
-          [pageSizeOptions]="[10, 20, 50]"
-          (page)="onPageChange($event)">
-        </mat-paginator>
+<signet-pagination
+      *ngIf="data()"
+      [hasPrev]="pager.hasPrev"
+      [hasNext]="pager.hasNext"
+      [prevCursor]="pager.currentPrevCursor"
+      [nextCursor]="pager.currentNextCursor"
+      [pageSize]="pager.pageSize"
+      (pageChange)="onPaginationNavigate($event)"
+    />
       </div>
     </div>
   </mat-sidenav-content>

@@ -1,17 +1,19 @@
-<div class="page-container">
+<div class="page-container settings-page">
+      <app-settings-subnav></app-settings-subnav>
+
   <div class="page-header">
     <div>
       <h1 class="page-header__title">Permission Matrix</h1>
       <p class="page-header__subtitle">All system permissions grouped by module. Assign permissions to roles from the Roles page.</p>
     </div>
     <div class="page-header__actions">
-      <button mat-stroked-button type="button" (click)="load()"><mat-icon>refresh</mat-icon></button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="load()" />
     </div>
   </div>
 
   <app-skeleton-loader *ngIf="loading()" type="table" [rows]="6"></app-skeleton-loader>
 
-  <div *ngIf="!loading()">
+  <div class="card permissions-panel" *ngIf="!loading()">
     <app-empty-state *ngIf="groups().length === 0" icon="lock" title="No permissions found" description="Permissions will appear here once configured."></app-empty-state>
 
     <mat-accordion multi class="permissions-matrix" *ngIf="groups().length > 0">

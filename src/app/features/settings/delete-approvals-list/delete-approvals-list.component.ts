@@ -1,15 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe, NgIf } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatChipsModule } from '@angular/material/chips';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { DeleteRequestsService } from '../../../core/services/delete-requests.service';
@@ -18,30 +9,20 @@ import { AuthService } from '../../../core/services/auth.service';
 import { IAM_PERMISSIONS } from '../../../core/constants/iam-permissions.constants';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { confirmDialogConfig, featureDialogConfig } from '../../../core/utils/dialog.util';
-import { PaginatedResult } from '../../../core/models/api.models';
+import { CursorPageParams, CursorPaginatedResult } from '../../../core/models/api.models';
 import { DeleteRequestListItem } from '../../../core/models/iam.models';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { RejectRemarksDialogComponent } from '../reject-remarks-dialog/reject-remarks-dialog.component';
+import {
+  CursorPaginationState,
+  emptyCursorPage,
+  isInvalidCursorError,
+} from '../../../core/utils/cursor-pagination.util';
+import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
+
+const STATUS_ALL = 'all';
 
 @Component({
   selector: 'app-delete-approvals-list',
-  standalone: true,
-  imports: [
-    NgIf,
-    DatePipe,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    EmptyStateComponent,
-    SkeletonLoaderComponent,
-  ],
   templateUrl: './delete-approvals-list.component.html',
   styleUrl: './delete-approvals-list.component.less',
 })
@@ -52,45 +33,74 @@ export class DeleteApprovalsListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
-  readonly data = signal<PaginatedResult<DeleteRequestListItem> | null>(null);
-  readonly searchCtrl = new FormControl('');
-  readonly statusCtrl = new FormControl('pending');
-  readonly cols = ['entityLabel', 'module', 'reason', 'requestedByName', 'status', 'createdAt', 'actions'];
+  readonly data = signal<CursorPaginatedResult<DeleteRequestListItem> | null>(null);
+  readonly pager = new CursorPaginationState();
+  readonly searchCtrl = new FormControl('', { nonNullable: true });
+  readonly statusCtrl = new FormControl(STATUS_ALL, { nonNullable: true });
 
+  readonly statusOptions = [
+    { key: STATUS_ALL, value: 'All' },
+    { key: 'pending', value: 'Pending' },
+    { key: 'approved', value: 'Approved' },
+    { key: 'rejected', value: 'Rejected' },
+  ];
+
+  readonly items = computed(() => this.data()?.items ?? []);
+  readonly hasItems = computed(() => this.items().length > 0);
   readonly canApprove = this.authService.hasPermission(IAM_PERMISSIONS.deleteRequests.approve);
-
-  page = 1;
-  pageSize = 20;
 
   ngOnInit(): void {
     this.load();
     this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.page = 1;
-      this.load();
+      this.reloadFirstPage();
     });
-    this.statusCtrl.valueChanges.subscribe(() => {
-      this.page = 1;
-      this.load();
+    this.statusCtrl.valueChanges.pipe(distinctUntilChanged()).subscribe(() => {
+      this.reloadFirstPage();
     });
   }
 
-  load(): void {
+  load(params?: CursorPageParams): void {
     this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
+    const status = this.statusCtrl.value;
+
     this.deleteRequestsService.list({
-      page: this.page,
-      pageSize: this.pageSize,
-      search: this.searchCtrl.value || undefined,
-      status: this.statusCtrl.value || undefined,
+      ...pageParams,
+      search: this.searchCtrl.value?.trim() || undefined,
+      status: status && status !== STATUS_ALL ? status : undefined,
     }).subscribe({
       next: (result) => {
         this.data.set(result);
+        this.pager.apply(result.pagination);
         this.loading.set(false);
       },
       error: (err) => {
+        if (isInvalidCursorError(err)) {
+          this.pager.reset();
+          this.load(this.pager.firstPageParams());
+          return;
+        }
+        this.data.set(emptyCursorPage(this.pager.pageSize));
+        this.pager.reset();
         this.loading.set(false);
-        this.notification.error(err?.error?.message ?? 'Failed to load delete requests.');
+        this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Failed to load delete requests.');
       },
     });
+  }
+
+  onPaginationNavigate(event: PaginationNavigateEvent): void {
+    if (event.direction === 'next') {
+      const params = this.pager.nextPageParams();
+      if (params) this.load(params);
+      return;
+    }
+    const params = this.pager.prevPageParams();
+    if (params) this.load(params);
+  }
+
+  private reloadFirstPage(): void {
+    this.pager.reset();
+    this.load(this.pager.firstPageParams());
   }
 
   approve(row: DeleteRequestListItem): void {
@@ -104,9 +114,9 @@ export class DeleteApprovalsListComponent implements OnInit {
       this.deleteRequestsService.approve(row.id).subscribe({
         next: () => {
           this.notification.success('Delete request approved.');
-          this.load();
+          this.load(this.pager.currentPageParams());
         },
-        error: (err) => this.notification.error(err?.error?.message ?? 'Failed to approve request.'),
+        error: (err) => this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Failed to approve request.'),
       });
     });
   }
@@ -123,16 +133,20 @@ export class DeleteApprovalsListComponent implements OnInit {
       this.deleteRequestsService.reject(row.id, remarks).subscribe({
         next: () => {
           this.notification.success('Delete request rejected.');
-          this.load();
+          this.load(this.pager.currentPageParams());
         },
-        error: (err) => this.notification.error(err?.error?.message ?? 'Failed to reject request.'),
+        error: (err) => this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Failed to reject request.'),
       });
     });
   }
 
-  onPageChange(event: PageEvent): void {
-    this.page = event.pageIndex + 1;
-    this.pageSize = event.pageSize;
-    this.load();
+  isPending(row: DeleteRequestListItem): boolean {
+    return String(row.status ?? '').toLowerCase() === 'pending';
+  }
+
+  statusLabel(status: string | null | undefined): string {
+    const value = String(status ?? '').toLowerCase();
+    if (!value) return '—';
+    return value.charAt(0).toUpperCase() + value.slice(1);
   }
 }

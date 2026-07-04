@@ -1,0 +1,228 @@
+@import '../../../shared/styles/page-layout.less';
+@import '../../../shared/styles/breakpoints.less';
+@import '../../../shared/styles/module-layout.less';
+
+.responsive-page-actions();
+
+// page-container already provides flex column + gap — only constrain width here
+.settings-page {
+  max-width: 1280px;
+}
+
+.settings-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: var(--hero-gradient-compact);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    max-width: 560px;
+    line-height: 1.5;
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: var(--color-primary-soft);
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 26px;
+      width: 26px;
+      height: 26px;
+      color: var(--color-primary);
+    }
+  }
+
+  .tablet-down({
+    padding: 18px 16px;
+  });
+
+  .mobile-down({
+    padding: 16px;
+
+    h1 {
+      font-size: 20px;
+    }
+
+    &__content {
+      gap: 12px;
+    }
+  });
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.settings-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  min-height: 84px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    text-decoration: none;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+
+    h3 {
+      margin: 0 0 2px;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--color-text-primary);
+    }
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--color-text-muted);
+    }
+  }
+
+  &__arrow {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.settings-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+
+  signet-search-select-dropdown,
+  signet-custom-text-field,
+  signet-search-input {
+    flex: 1 1 0;
+    min-width: 0;
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+
+  signet-button {
+    flex: 0 0 auto;
+    align-self: center;
+  }
+
+  .mobile-down({
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+
+    signet-search-select-dropdown,
+    signet-custom-text-field,
+    signet-search-input,
+    signet-button {
+      width: 100%;
+    }
+  });
+}
+
+.settings-form-card {
+  max-width: 900px;
+  width: 100%;
+  padding: 20px 24px;
+  box-sizing: border-box;
+}
+
+.permissions-panel {
+  padding: 16px 20px;
+}
+
+.permissions-matrix {
+  display: block;
+
+  .mat-expansion-panel {
+    border: 1px solid var(--color-border);
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    margin-bottom: 10px;
+    background: var(--color-surface);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.mock-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--color-divider);
+  color: var(--color-text-muted);
+  vertical-align: middle;
+}

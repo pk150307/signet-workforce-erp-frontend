@@ -1,23 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SitesService } from '../../../core/services/sites.service';
 import { BreadcrumbService } from '../../../core/services/breadcrumb.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SiteDetail } from '../../../core/models/sites.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-site-detail',
-  standalone: true,
-  imports: [
-    NgIf, RouterLink, MatButtonModule, MatIconModule,
-    SkeletonLoaderComponent, EmptyStateComponent,
-  ],
-  templateUrl: './site-detail.component.html',
+    templateUrl: './site-detail.component.html',
   styleUrl: './site-detail.component.less',
 })
 export class SiteDetailComponent implements OnInit {
@@ -25,6 +17,7 @@ export class SiteDetailComponent implements OnInit {
   private readonly breadcrumbService = inject(BreadcrumbService);
   private readonly notification = inject(NotificationService);
   private readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
 
   readonly loading = signal(true);
   readonly site = signal<SiteDetail | null>(null);

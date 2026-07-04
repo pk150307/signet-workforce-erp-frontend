@@ -1,34 +1,22 @@
 <div class="user-drawer">
   <div class="user-drawer__header">
     <h2>{{ isEditMode ? 'Edit User' : 'Create User' }}</h2>
-    <button mat-icon-button type="button" (click)="close()" aria-label="Close">
+    <button mat-icon-button (click)="close()" aria-label="Close">
       <mat-icon>close</mat-icon>
     </button>
   </div>
 
-  <app-skeleton-loader *ngIf="loading()" type="form" [rows]="6"></app-skeleton-loader>
+  <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
 
   <form *ngIf="!loading()" class="user-drawer__form" [formGroup]="form" (ngSubmit)="save()">
-    <mat-form-field appearance="outline">
-      <mat-label>Email</mat-label>
-      <input matInput formControlName="email" type="email" autocomplete="off">
-    </mat-form-field>
+    <signet-custom-text-field fieldTitle="Email" formControlName="email" type="email" [required]="false" />
 
     <div class="user-drawer__row">
-      <mat-form-field appearance="outline">
-        <mat-label>First Name</mat-label>
-        <input matInput formControlName="firstName">
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Last Name</mat-label>
-        <input matInput formControlName="lastName">
-      </mat-form-field>
+      <signet-custom-text-field fieldTitle="First Name" formControlName="firstName" [required]="false" />
+      <signet-custom-text-field fieldTitle="Last Name" formControlName="lastName" [required]="false" />
     </div>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Mobile</mat-label>
-      <input matInput formControlName="mobile">
-    </mat-form-field>
+    <signet-custom-text-field fieldTitle="Mobile" formControlName="mobile" [required]="false" />
 
     <mat-form-field appearance="outline">
       <mat-label>Roles</mat-label>
@@ -37,8 +25,8 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-checkbox formControlName="isActive">Active</mat-checkbox>
-    <mat-checkbox *ngIf="!isEditMode" formControlName="forcePasswordReset">Force password reset on first login</mat-checkbox>
+    <signet-custom-checkbox formControlName="isActive" label="Active" permissionKey="isActive" groupName="form" />
+    <signet-custom-checkbox *ngIf="!isEditMode" formControlName="forcePasswordReset" label="Force password reset on first login" permissionKey="forcePasswordReset" groupName="form" />
 
     <div class="user-drawer__meta" *ngIf="detail() as user">
       <mat-divider></mat-divider>
@@ -48,15 +36,8 @@
     </div>
 
     <div class="user-drawer__actions">
-      <button mat-stroked-button type="button" (click)="close()">Cancel</button>
-      <button
-        mat-raised-button
-        color="primary"
-        type="submit"
-        [disabled]="saving() || (isEditMode ? !canUpdate : !canCreate)">
-        <mat-spinner *ngIf="saving()" diameter="18"></mat-spinner>
-        <span *ngIf="!saving()">{{ isEditMode ? 'Save Changes' : 'Create User' }}</span>
-      </button>
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="close()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" [displayText]="saving() ? 'Saving…' : (isEditMode ? 'Save Changes' : 'Create User')" [disabled]="saving() || (isEditMode ? !canUpdate : !canCreate)" (clicked)="save()" />
     </div>
   </form>
 </div>

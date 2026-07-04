@@ -1,32 +1,14 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { RolesService } from '../../../core/services/roles.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IAM_PERMISSIONS } from '../../../core/constants/iam-permissions.constants';
 import { IamPermissionModuleGroup, IamRoleDetail } from '../../../core/models/iam.models';
-import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
-
 @Component({
   selector: 'app-role-permissions-drawer',
-  standalone: true,
-  imports: [
-    NgIf,
-    NgFor,
-    MatButtonModule,
-    MatIconModule,
-    MatCheckboxModule,
-    MatExpansionModule,
-    MatProgressSpinnerModule,
-    SkeletonLoaderComponent,
-  ],
-  templateUrl: './role-permissions-drawer.component.html',
+    templateUrl: './role-permissions-drawer.component.html',
   styleUrl: './role-permissions-drawer.component.less',
 })
 export class RolePermissionsDrawerComponent implements OnChanges {
