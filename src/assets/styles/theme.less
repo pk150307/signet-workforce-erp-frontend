@@ -1,0 +1,251 @@
+// ============================================================
+// Signet theme — CSS custom properties (dark default + light)
+// All UI should consume these vars, not hardcoded hex values.
+// ============================================================
+@import './variables.less';
+
+// ── Dark theme (default — matches bol-website) ────────────────
+:root,
+[data-theme='dark'] {
+  // Brand
+  --color-primary: @signet-gold;
+  --color-primary-hover: @signet-gold-hover;
+  --color-primary-light: #e8c078;
+  --color-primary-dark: @signet-gold-hover;
+  --color-primary-soft: @signet-gold-soft;
+  --color-primary-action-bg: @signet-gold-action-bg;
+  --color-primary-disabled-bg: @signet-gold-disabled-bg;
+  --color-accent: @signet-gold;
+
+  // Semantic
+  --color-success: @signet-success;
+  --color-success-soft: @signet-success-soft;
+  --color-warning: @signet-warning;
+  --color-danger: @signet-danger;
+  --color-danger-soft: @signet-danger-soft;
+  --color-danger-border: @signet-danger-border;
+  --color-info: @signet-info;
+
+  // Canvas & surfaces
+  --color-bg: @signet-bg-base;
+  --color-bg-alt: @signet-bg-alt;
+  --color-bg-subtle: rgba(255, 255, 255, 0.04);
+  --color-surface: @signet-surface;
+  --color-surface-raised: @signet-bg-alt;
+  --color-surface-hover: @signet-surface-hover;
+  --color-surface-elevated: @signet-surface-elevated;
+  --color-surface-alt: @signet-surface-hover;
+
+  // Inputs
+  --color-input-bg: @signet-input-bg;
+  --color-input-border: @signet-input-border;
+  --color-input-disabled-bg: @signet-input-disabled-bg;
+  --color-input-shadow: @signet-input-shadow;
+
+  // Borders & dividers
+  --color-border: @signet-border;
+  --color-border-subtle: @signet-border-subtle;
+  --color-border-strong: @signet-border-strong;
+  --color-divider: @signet-border-subtle;
+
+  // Text
+  --color-text-primary: @signet-text-primary;
+  --color-text-secondary: @signet-text-secondary;
+  --color-text-muted: @signet-text-muted;
+  --color-text-tertiary: @signet-text-tertiary;
+  --color-text-inverse: @signet-text-inverse;
+  --color-text-on-gold: @signet-text-primary;
+
+  // Layout chrome
+  --sidebar-bg: @signet-sidebar-bg;
+  --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --topbar-bg: @signet-topbar-bg;
+
+  // Overlay
+  --color-overlay: @signet-overlay;
+  --color-overlay-light: @signet-overlay-light;
+
+  // Hero
+  --hero-gradient: @signet-hero-gradient;
+  --hero-gradient-compact: @signet-hero-gradient-compact;
+
+  // Shadows
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  // Badge / status (dark-optimized)
+  --badge-success-bg: rgba(102, 187, 106, 0.18);
+  --badge-success-fg: #81c784;
+  --badge-danger-bg: rgba(239, 83, 80, 0.18);
+  --badge-danger-fg: #ef9a9a;
+  --badge-warning-bg: rgba(255, 183, 77, 0.18);
+  --badge-warning-fg: #ffcc80;
+  --badge-info-bg: rgba(41, 182, 246, 0.18);
+  --badge-info-fg: #81d4fa;
+  --badge-purple-bg: rgba(186, 104, 200, 0.18);
+  --badge-purple-fg: #ce93d8;
+  --badge-neutral-bg: rgba(158, 158, 158, 0.18);
+  --badge-neutral-fg: #bdbdbd;
+  --badge-gold-bg: @signet-gold-soft;
+  --badge-gold-fg: @signet-gold;
+
+  // Stat icon tints
+  --stat-blue-bg: rgba(222, 171, 85, 0.15);
+  --stat-blue-fg: @signet-gold;
+  --stat-green-bg: rgba(102, 187, 106, 0.18);
+  --stat-green-fg: #81c784;
+  --stat-orange-bg: rgba(255, 183, 77, 0.18);
+  --stat-orange-fg: #ffcc80;
+  --stat-red-bg: rgba(239, 83, 80, 0.18);
+  --stat-red-fg: #ef9a9a;
+  --stat-purple-bg: rgba(186, 104, 200, 0.18);
+  --stat-purple-fg: #ce93d8;
+  --stat-teal-bg: rgba(77, 182, 172, 0.18);
+  --stat-teal-fg: #80cbc4;
+
+  // Attendance cells
+  --att-present-bg: rgba(76, 175, 80, 0.15);
+  --att-present-fg: #81c784;
+  --att-absent-bg: rgba(251, 55, 72, 0.15);
+  --att-absent-fg: #ff6875;
+  --att-leave-bg: rgba(255, 183, 77, 0.15);
+  --att-leave-fg: #ffcc80;
+  --att-half-bg: rgba(222, 171, 85, 0.15);
+  --att-half-fg: @signet-gold;
+  --att-holiday-bg: rgba(186, 104, 200, 0.15);
+  --att-holiday-fg: #ce93d8;
+  --att-weekoff-bg: rgba(144, 164, 174, 0.15);
+  --att-weekoff-fg: #b0bec5;
+  --att-empty-bg: rgba(255, 255, 255, 0.04);
+  --att-empty-fg: @signet-text-muted;
+
+  // Focus ring
+  --focus-ring: rgba(222, 171, 85, 0.25);
+
+  color-scheme: dark;
+}
+
+// ── Light theme (contrasting values for future toggle) ────────
+[data-theme='light'] {
+  --color-primary: #c9923f;
+  --color-primary-hover: #a87a2f;
+  --color-primary-light: @signet-gold;
+  --color-primary-dark: #a87a2f;
+  --color-primary-soft: rgba(201, 146, 63, 0.12);
+  --color-primary-action-bg: #faf6ef;
+  --color-primary-disabled-bg: #f0e8d8;
+  --color-accent: @signet-gold;
+
+  --color-success: #2e7d32;
+  --color-success-soft: #43a047;
+  --color-warning: #f57f17;
+  --color-danger: #c62828;
+  --color-danger-soft: #e53935;
+  --color-danger-border: #b71c1c;
+  --color-info: #0277bd;
+
+  --color-bg: #f4f2ee;
+  --color-bg-alt: #faf9f7;
+  --color-bg-subtle: #f0ede8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #faf9f7;
+  --color-surface-hover: #f0ede8;
+  --color-surface-elevated: #ffffff;
+  --color-surface-alt: #f4f2ee;
+
+  --color-input-bg: #ffffff;
+  --color-input-border: #d8d4cc;
+  --color-input-disabled-bg: #f0ede8;
+  --color-input-shadow: rgba(0, 0, 0, 0.04);
+
+  --color-border: rgba(0, 0, 0, 0.10);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-strong: rgba(0, 0, 0, 0.14);
+  --color-divider: #f0ede8;
+
+  --color-text-primary: @signet-text-inverse;
+  --color-text-secondary: #5a5f6a;
+  --color-text-muted: @signet-text-muted;
+  --color-text-tertiary: #8d929d;
+  --color-text-inverse: @signet-text-primary;
+  --color-text-on-gold: @signet-text-inverse;
+
+  --sidebar-bg: #ffffff;
+  --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.14);
+  --topbar-bg: #ffffff;
+
+  --color-overlay: rgba(0, 0, 0, 0.45);
+  --color-overlay-light: rgba(0, 0, 0, 0.06);
+
+  --hero-gradient: linear-gradient(135deg, #faf9f7 0%, #f4f2ee 55%, #ede8df 100%);
+  --hero-gradient-compact: linear-gradient(135deg, #f4f2ee 0%, #ede8df 100%);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  --badge-success-bg: rgba(46, 125, 50, 0.12);
+  --badge-success-fg: #2e7d32;
+  --badge-danger-bg: rgba(198, 40, 40, 0.12);
+  --badge-danger-fg: #c62828;
+  --badge-warning-bg: rgba(245, 127, 23, 0.14);
+  --badge-warning-fg: #ef6c00;
+  --badge-info-bg: rgba(2, 119, 189, 0.12);
+  --badge-info-fg: #0277bd;
+  --badge-purple-bg: rgba(106, 27, 154, 0.12);
+  --badge-purple-fg: #6a1b9a;
+  --badge-neutral-bg: rgba(66, 66, 66, 0.1);
+  --badge-neutral-fg: #424242;
+  --badge-gold-bg: rgba(201, 146, 63, 0.12);
+  --badge-gold-fg: #c9923f;
+
+  --stat-blue-bg: rgba(201, 146, 63, 0.12);
+  --stat-blue-fg: #c9923f;
+  --stat-green-bg: rgba(46, 125, 50, 0.12);
+  --stat-green-fg: #2e7d32;
+  --stat-orange-bg: rgba(230, 81, 0, 0.12);
+  --stat-orange-fg: #e65100;
+  --stat-red-bg: rgba(198, 40, 40, 0.12);
+  --stat-red-fg: #c62828;
+  --stat-purple-bg: rgba(81, 45, 168, 0.12);
+  --stat-purple-fg: #512da8;
+  --stat-teal-bg: rgba(0, 121, 107, 0.12);
+  --stat-teal-fg: #00796b;
+
+  --att-present-bg: rgba(46, 125, 50, 0.12);
+  --att-present-fg: #2e7d32;
+  --att-absent-bg: rgba(198, 40, 40, 0.12);
+  --att-absent-fg: #c62828;
+  --att-leave-bg: rgba(245, 127, 23, 0.14);
+  --att-leave-fg: #ef6c00;
+  --att-half-bg: rgba(201, 146, 63, 0.12);
+  --att-half-fg: #c9923f;
+  --att-holiday-bg: rgba(106, 27, 154, 0.12);
+  --att-holiday-fg: #6a1b9a;
+  --att-weekoff-bg: rgba(84, 110, 122, 0.12);
+  --att-weekoff-fg: #546e7a;
+  --att-empty-bg: rgba(0, 0, 0, 0.04);
+  --att-empty-fg: @signet-text-muted;
+
+  --focus-ring: rgba(201, 146, 63, 0.25);
+
+  color-scheme: light;
+}
+
+// ── Layout tokens (theme-independent) ───────────────────────
+:root {
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --topbar-height: 64px;
+  --bp-mobile-min: 330px;
+  --bp-mobile-max: 659px;
+  --bp-tablet-min: 660px;
+  --bp-tablet-max: 1149px;
+  --bp-desktop-min: 1050px;
+  --radius-sm: @signet-radius-sm;
+  --radius-md: @signet-radius;
+  --radius-lg: @signet-radius-lg;
+  --radius-xl: @signet-radius-xl;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
