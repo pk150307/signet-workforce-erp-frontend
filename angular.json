@@ -8,7 +8,7 @@
       "schematics": {
         "@schematics/angular:component": {
           "style": "less",
-          "standalone": true
+          "standalone": false
         }
       },
       "root": "",
@@ -25,18 +25,31 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "less",
             "stylePreprocessorOptions": {
-              "includePaths": ["src/app/shared/styles"]
+              "includePaths": ["src/app/shared/styles", "src/assets/styles"]
             },
             "assets": [
-              { "glob": "**/*", "input": "public" },
-              "src/assets"
+              {
+                "glob": "favicon.ico",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "public",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
+              }
             ],
             "styles": [
               "@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.less"
             ],
             "scripts": [],
-            "allowedCommonJsDependencies": ["highcharts"]
+            "allowedCommonJsDependencies": ["highcharts", "dayjs", "ngx-daterangepicker-material"]
           },
           "configurations": {
             "production": {
@@ -86,9 +99,25 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "less",
             "stylePreprocessorOptions": {
-              "includePaths": ["src/app/shared/styles"]
+              "includePaths": ["src/app/shared/styles", "src/assets/styles"]
             },
-            "assets": [{ "glob": "**/*", "input": "public" }, "src/assets"],
+            "assets": [
+              {
+                "glob": "favicon.ico",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "public",
+                "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
+              }
+            ],
             "styles": ["@angular/material/prebuilt-themes/indigo-pink.css", "src/styles.less"],
             "scripts": []
           }
