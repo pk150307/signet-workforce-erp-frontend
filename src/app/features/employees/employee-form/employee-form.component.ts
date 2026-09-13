@@ -1,10 +1,6 @@
-import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
-import { DecimalPipe, UpperCasePipe } from '@angular/common';
-import { SafeDatePipe } from '../../../shared/pipes/safe-date.pipe';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { MatStepper } from '@angular/material/stepper';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of, Observable } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 
@@ -14,7 +10,6 @@ import { EmployeeDocumentService } from '../../../core/services/employee-documen
 import { NotificationService } from '../../../core/services/notification.service';
 import { DepartmentService } from '../../../core/services/department.service';
 import { DesignationService } from '../../../core/services/designation.service';
-import { DesignationGradeService } from '../../../core/services/designation-grade.service';
 import { SitesService } from '../../../core/services/sites.service';
 import { ClientsService } from '../../../core/services/clients.service';
 import { PfEsicService } from '../../../core/services/pf-esic.service';
@@ -22,22 +17,18 @@ import {
   CreateEmployeeDraftRequest,
   EMPLOYEE_DOCUMENT_LABELS,
   EMPLOYEE_STATUS_LABELS,
-  EMPLOYMENT_TYPE_LABELS,
   EmployeeDocumentType,
   EmployeeStatus,
   EmployeeSubmitResult,
   EmploymentType,
   GENDER_LABELS,
   Gender,
-  EmployeeListItem,
 } from '../../../core/models/employee.models';
 import { DepartmentListItem } from '../../../core/models/department.models';
 import { DesignationListItem } from '../../../core/models/designation.models';
-import { DesignationGradeListItem } from '../../../core/models/designation-grade.models';
 import { SiteListItem } from '../../../core/models/sites.models';
 import { ClientListItem } from '../../../core/models/client.models';
 import {
-  DocumentUploadComponent,
   DocumentUploadEvent,
 } from '../components/document-upload/document-upload.component';
 import dayjs from 'dayjs';
@@ -55,12 +46,10 @@ interface StoredDocument {
 
 @Component({
   selector: 'app-employee-form',
-    templateUrl: './employee-form.component.html',
+  templateUrl: './employee-form.component.html',
   styleUrl: './employee-form.component.less',
 })
 export class EmployeeFormComponent implements OnInit {
-  @ViewChild('stepper') stepper!: MatStepper;
-
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
@@ -69,11 +58,9 @@ export class EmployeeFormComponent implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly departmentService = inject(DepartmentService);
   private readonly designationService = inject(DesignationService);
-  private readonly designationGradeService = inject(DesignationGradeService);
   private readonly sitesService = inject(SitesService);
   private readonly clientsService = inject(ClientsService);
   private readonly pfEsicService = inject(PfEsicService);
-  private readonly breakpointObserver = inject(BreakpointObserver);
 
   readonly loading = signal(false);
   readonly lookupsLoading = signal(true);
@@ -81,20 +68,14 @@ export class EmployeeFormComponent implements OnInit {
   readonly savingDraft = signal(false);
   readonly isEdit = signal(false);
   readonly submitted = signal<EmployeeSubmitResult | null>(null);
-  readonly stepperOrientation = signal<'horizontal' | 'vertical'>('horizontal');
   readonly documents = signal<StoredDocument[]>([]);
   readonly uploadingDocKey = signal<string | null>(null);
 
   readonly departments = signal<DepartmentListItem[]>([]);
   readonly designations = signal<DesignationListItem[]>([]);
   readonly designationsLoading = signal(false);
-  readonly gradesLoading = signal(false);
-  readonly designationGrades = signal<DesignationGradeListItem[]>([]);
-  readonly selectedGrade = signal<DesignationGradeListItem | null>(null);
-  readonly selectedGradeGross = signal<number | null>(null);
   readonly clients = signal<ClientListItem[]>([]);
   readonly filteredSites = signal<SiteListItem[]>([]);
-  readonly managers = signal<EmployeeListItem[]>([]);
   readonly employmentClientId = signal('');
   readonly employmentDepartmentId = signal('');
   readonly employmentDesignationId = signal('');
@@ -139,40 +120,8 @@ export class EmployeeFormComponent implements OnInit {
       ...this.designations().map(d => ({ key: String(d.id), value: d.designationName })),
     ];
   });
-  readonly designationGradeOptions = computed(() => {
-    const designationId = this.employmentDesignationId();
-    const placeholder = this.gradesLoading()
-      ? { key: '', value: 'Loading…' }
-      : designationId
-        ? { key: '', value: 'Select pay grade (optional)' }
-        : { key: '', value: 'Select designation first' };
-    return [
-      placeholder,
-      ...this.designationGrades().map(g => ({
-        key: String(g.id),
-        value: `${g.gradeCode} — ${g.gradeName}`,
-      })),
-    ];
-  });
-  readonly managerOptions = computed(() => [
-    { key: '', value: 'None' },
-    ...this.managers().map(m => ({
-      key: String(m.id),
-      value: `${m.fullName} (${m.employeeCode})`,
-    })),
-  ]);
-  readonly employmentTypeSelectOptions = computed(() => [
-    { value: EmploymentType.FullTime, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.FullTime] },
-    { value: EmploymentType.PartTime, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.PartTime] },
-    { value: EmploymentType.Contract, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Contract] },
-    { value: EmploymentType.Freelance, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Freelance] },
-    { value: EmploymentType.Internship, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Internship] },
-    { value: EmploymentType.Temporary, label: EMPLOYMENT_TYPE_LABELS[EmploymentType.Temporary] },
-  ].map(opt => ({ key: String(opt.value), value: opt.label })));
   readonly dobDatePickerConfig: Partial<DatePickerPayload> = { maxDate: dayjs() };
   readonly statusLabels = EMPLOYEE_STATUS_LABELS;
-  readonly genderLabels = GENDER_LABELS;
-  readonly employmentLabels = EMPLOYMENT_TYPE_LABELS;
 
   readonly requiredDocTypes: EmployeeDocumentType[] = [];
   readonly optionalDocTypes: EmployeeDocumentType[] = [
@@ -187,6 +136,7 @@ export class EmployeeFormComponent implements OnInit {
   readonly personalForm = this.fb.group({
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', Validators.maxLength(100)],
+    fatherName: ['', Validators.maxLength(100)],
     email: ['', Validators.email],
     phone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
     dateOfBirth: [null as Date | null],
@@ -204,20 +154,32 @@ export class EmployeeFormComponent implements OnInit {
   readonly employmentForm = this.fb.group({
     employeeCode: [''],
     clientId: ['', Validators.required],
+    clientSoftCode: ['', Validators.maxLength(50)],
     siteId: ['', Validators.required],
     departmentId: [''],
     designationId: [''],
-    designationGradeId: [''],
-    reportingManagerId: [''],
     joiningDate: [null as Date | null],
-    employmentType: [null as EmploymentType | null],
+  });
+
+  readonly salaryForm = this.fb.group({
+    basicSalary: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    houseRentAllowance: [0, [Validators.required, Validators.min(0)]],
+    specialAllowance: [0, [Validators.required, Validators.min(0)]],
+    isPfApplicable: [true],
+    isEsiApplicable: [true],
+    isLwfApplicable: [true],
+    employeePfPercentage: [12, [Validators.min(0), Validators.max(100)]],
+    employeeEsiPercentage: [0.75, [Validators.min(0), Validators.max(100)]],
+    employeeLwfPercentage: [0.2, [Validators.min(0), Validators.max(100)]],
+    employeePfMaxAmount: [1800, [Validators.min(0)]],
+    employeeEsiMaxAmount: [0, [Validators.min(0)]],
+    employeeLwfMaxAmount: [35, [Validators.min(0)]],
   });
 
   readonly statutoryForm = this.fb.group({
     aadhaarNumber: ['', Validators.pattern(/^\d{12}$/)],
     panNumber: ['', Validators.pattern(/^[A-Z]{5}\d{4}[A-Z]$/i)],
     uanNumber: ['', Validators.pattern(/^\d{12}$/)],
-    pfNumber: [''],
     esicNumber: [''],
     bankName: [''],
     accountHolderName: [''],
@@ -228,10 +190,6 @@ export class EmployeeFormComponent implements OnInit {
   ngOnInit() {
     this.employeeId = this.route.snapshot.params['id'] ?? null;
     this.isEdit.set(!!this.employeeId);
-
-    this.breakpointObserver.observe('(max-width: 768px)').subscribe(result => {
-      this.stepperOrientation.set(result.matches ? 'vertical' : 'horizontal');
-    });
 
     if (this.isEdit()) {
       this.loading.set(true);
@@ -255,26 +213,14 @@ export class EmployeeFormComponent implements OnInit {
 
     this.employmentForm.get('designationId')?.valueChanges.subscribe(designationId => {
       this.employmentDesignationId.set(designationId ?? '');
-      this.onDesignationChange(designationId ?? '');
-    });
-
-    this.employmentForm.get('designationGradeId')?.valueChanges.subscribe(gradeId => {
-      this.onGradeChange(gradeId ?? '');
     });
   }
 
-  private onDepartmentChange(
-    departmentId: string,
-    preferredDesignationId?: string,
-    preferredGradeId?: string,
-  ) {
+  private onDepartmentChange(departmentId: string, preferredDesignationId?: string) {
     const isPrefill = arguments.length > 1;
 
     if (!isPrefill) {
-      this.employmentForm.patchValue({ designationId: '', designationGradeId: '' }, { emitEvent: false });
-      this.designationGrades.set([]);
-      this.selectedGrade.set(null);
-      this.selectedGradeGross.set(null);
+      this.employmentForm.patchValue({ designationId: '' }, { emitEvent: false });
     }
 
     if (!departmentId?.trim()) {
@@ -295,7 +241,6 @@ export class EmployeeFormComponent implements OnInit {
 
         if (preferredDesignationId) {
           this.employmentForm.patchValue({ designationId: preferredDesignationId }, { emitEvent: false });
-          this.onDesignationChange(preferredDesignationId, preferredGradeId);
           return;
         }
 
@@ -306,8 +251,7 @@ export class EmployeeFormComponent implements OnInit {
             d => this.compareSelectValue(d.designationCode, current) || this.compareSelectValue(d.id, current),
           )
         ) {
-          this.employmentForm.patchValue({ designationId: '', designationGradeId: '' }, { emitEvent: false });
-          this.designationGrades.set([]);
+          this.employmentForm.patchValue({ designationId: '' }, { emitEvent: false });
         }
       },
       error: () => {
@@ -318,80 +262,23 @@ export class EmployeeFormComponent implements OnInit {
     });
   }
 
-  private onDesignationChange(designationId: string, preferredGradeId?: string) {
-    const isPrefill = arguments.length > 1;
-
-    if (!isPrefill) {
-      this.employmentForm.patchValue({ designationGradeId: '' }, { emitEvent: false });
-      this.selectedGrade.set(null);
-      this.selectedGradeGross.set(null);
-    }
-
-    if (!designationId?.trim()) {
-      this.designationGrades.set([]);
-      return;
-    }
-
-    this.gradesLoading.set(true);
-    this.designationGradeService.getByDesignation(designationId).subscribe({
-      next: grades => {
-        this.designationGrades.set(grades.filter(g => g.isActive));
-        this.gradesLoading.set(false);
-        const gradeId = preferredGradeId ?? this.employmentForm.get('designationGradeId')?.value ?? '';
-        if (
-          gradeId &&
-          grades.some(
-            g => this.compareSelectValue(g.gradeCode, gradeId) || this.compareSelectValue(g.id, gradeId),
-          )
-        ) {
-          this.employmentForm.patchValue({ designationGradeId: gradeId }, { emitEvent: false });
-          this.onGradeChange(gradeId);
-        } else if (!isPrefill) {
-          this.employmentForm.patchValue({ designationGradeId: '' }, { emitEvent: false });
-        }
-      },
-      error: () => {
-        this.designationGrades.set([]);
-        this.gradesLoading.set(false);
-        this.notification.error('Failed to load pay grades for the selected designation.');
-      },
-    });
-  }
-
-  private onGradeChange(gradeId: string) {
-    if (!gradeId) {
-      this.selectedGrade.set(null);
-      this.selectedGradeGross.set(null);
-      return;
-    }
-    const grade = this.designationGrades().find(
-      g => this.compareSelectValue(g.id, gradeId) || this.compareSelectValue(g.gradeCode, gradeId),
-    ) ?? null;
-    this.selectedGrade.set(grade);
-    this.selectedGradeGross.set(grade?.grossSalary ?? null);
-  }
-
   private onClientChange(clientId: string, preferredSiteId?: string) {
     if (!clientId) {
       this.filteredSites.set([]);
       this.departments.set([]);
       this.designations.set([]);
-      this.designationGrades.set([]);
       this.employmentForm.patchValue(
-        { siteId: '', departmentId: '', designationId: '', designationGradeId: '' },
+        { siteId: '', departmentId: '', designationId: '' },
         { emitEvent: false },
       );
       return;
     }
 
     this.employmentForm.patchValue(
-      { departmentId: '', designationId: '', designationGradeId: '' },
+      { departmentId: '', designationId: '' },
       { emitEvent: false },
     );
     this.designations.set([]);
-    this.designationGrades.set([]);
-    this.selectedGrade.set(null);
-    this.selectedGradeGross.set(null);
 
     this.departmentService.getAllForSelect({ clientId, isActive: true }).subscribe({
       next: departments => {
@@ -422,7 +309,6 @@ export class EmployeeFormComponent implements OnInit {
 
     forkJoin({
       clients: this.clientsService.getAllForSelect(),
-      managers: this.employeeService.getAllForSelect({ status: EmployeeStatus.Active }),
       code: this.isEdit()
         ? of({ code: '' })
         : this.employeeService.generateEmployeeCode(),
@@ -439,14 +325,10 @@ export class EmployeeFormComponent implements OnInit {
   private applyLookups(
     data: {
       clients: ClientListItem[];
-      managers: EmployeeListItem[];
       code: { code: string };
     },
   ) {
     this.clients.set(data.clients.filter(c => c.id && c.companyName));
-    this.managers.set(
-      data.managers.filter(m => m.id && m.fullName && m.id !== this.employeeId)
-    );
 
     if (!this.isEdit()) {
       this.draftEmployeeCode = data.code.code;
@@ -467,6 +349,7 @@ export class EmployeeFormComponent implements OnInit {
         this.personalForm.patchValue({
           firstName: emp.firstName,
           lastName: emp.lastName,
+          fatherName: emp.fatherName ?? '',
           email: emp.email,
           phone: emp.phone,
           dateOfBirth: parseApiDate(emp.dateOfBirth),
@@ -483,17 +366,30 @@ export class EmployeeFormComponent implements OnInit {
         this.employmentForm.patchValue({
           employeeCode: emp.employeeCode,
           clientId: emp.clientId ?? '',
+          clientSoftCode: emp.clientSoftCode ?? '',
           siteId: emp.siteId ?? '',
           departmentId: emp.departmentId,
           designationId: emp.designationId,
-          designationGradeId: emp.designationGradeId ?? '',
-          reportingManagerId: emp.reportingManagerId ?? '',
           joiningDate: parseApiDate(emp.joiningDate),
-          employmentType: emp.employmentType,
         }, { emitEvent: false });
         this.employmentClientId.set(emp.clientId ?? '');
         this.employmentDepartmentId.set(emp.departmentId ?? '');
         this.employmentDesignationId.set(emp.designationId ?? '');
+
+        this.salaryForm.patchValue({
+          basicSalary: emp.basicSalary ?? null,
+          houseRentAllowance: emp.houseRentAllowance ?? 0,
+          specialAllowance: emp.specialAllowance ?? 0,
+          isPfApplicable: emp.isPfApplicable ?? true,
+          isEsiApplicable: emp.isEsiApplicable ?? true,
+          isLwfApplicable: emp.isLwfApplicable ?? true,
+          employeePfPercentage: emp.employeePfPercentage ?? 12,
+          employeeEsiPercentage: emp.employeeEsiPercentage ?? 0.75,
+          employeeLwfPercentage: emp.employeeLwfPercentage ?? 0.2,
+          employeePfMaxAmount: emp.employeePfMaxAmount ?? 1800,
+          employeeEsiMaxAmount: emp.employeeEsiMaxAmount ?? 0,
+          employeeLwfMaxAmount: emp.employeeLwfMaxAmount ?? 35,
+        });
 
         if (emp.clientId && emp.departmentId) {
           forkJoin({
@@ -513,34 +409,22 @@ export class EmployeeFormComponent implements OnInit {
                 this.employmentForm.patchValue({ siteId }, { emitEvent: false });
               }
               this.designations.set(designations.filter(d => d.designationCode && d.designationName));
-              if (emp.designationId) {
-                this.onDesignationChange(emp.designationId, emp.designationGradeId ?? undefined);
-              }
             },
             error: () => this.notification.error('Failed to load employment options for this employee.'),
           });
         } else if (emp.clientId) {
           this.onClientChange(emp.clientId, emp.siteId ?? undefined);
           if (emp.departmentId) {
-            this.onDepartmentChange(
-              emp.departmentId,
-              emp.designationId || undefined,
-              emp.designationGradeId || undefined,
-            );
+            this.onDepartmentChange(emp.departmentId, emp.designationId || undefined);
           }
         } else if (emp.departmentId) {
-          this.onDepartmentChange(
-            emp.departmentId,
-            emp.designationId || undefined,
-            emp.designationGradeId || undefined,
-          );
+          this.onDepartmentChange(emp.departmentId, emp.designationId || undefined);
         }
 
         this.statutoryForm.patchValue({
           aadhaarNumber: emp.aadhaarNumber ?? '',
           panNumber: emp.panNumber ?? '',
           uanNumber: emp.uanNumber ?? '',
-          pfNumber: emp.pfNumber ?? '',
           esicNumber: emp.esiNumber ?? '',
           bankName: emp.bankName ?? '',
           accountHolderName: emp.accountHolderName ?? '',
@@ -638,33 +522,41 @@ export class EmployeeFormComponent implements OnInit {
     return this.documents().find(d => d.key === key);
   }
 
-  get uploadedDocuments(): StoredDocument[] {
-    return this.documents().filter(d => d.fileName);
-  }
-
   get additionalDocuments(): StoredDocument[] {
     return this.documents().filter(d => d.type === 'other');
   }
 
-  goToStep(index: number) {
-    this.stepper.selectedIndex = index;
-  }
-
-  validateAllSteps(): boolean {
+  validateAllForms(): boolean {
     this.personalForm.markAllAsTouched();
+    this.employmentForm.markAllAsTouched();
+    this.salaryForm.markAllAsTouched();
+    this.statutoryForm.markAllAsTouched();
 
     if (!this.isMinimumValid()) {
       this.notification.error('First name and a valid mobile number are required.');
       return false;
     }
 
+    if (this.salaryForm.invalid) {
+      this.notification.error('Please enter valid salary details (Basic, HRA, Special Allowance).');
+      return false;
+    }
+
     if (this.personalForm.invalid || this.employmentForm.invalid || this.statutoryForm.invalid) {
-      this.employmentForm.markAllAsTouched();
       this.notification.error('Please fix invalid field values before submitting.');
       return false;
     }
 
     return true;
+  }
+
+  get computedGrossSalary(): number {
+    const basic = Number(this.salaryForm.get('basicSalary')?.value ?? 0);
+    const hra = Number(this.salaryForm.get('houseRentAllowance')?.value ?? 0);
+    const special = Number(this.salaryForm.get('specialAllowance')?.value ?? 0);
+    return (Number.isFinite(basic) ? basic : 0)
+      + (Number.isFinite(hra) ? hra : 0)
+      + (Number.isFinite(special) ? special : 0);
   }
 
   isMinimumValid(): boolean {
@@ -674,7 +566,7 @@ export class EmployeeFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (!this.validateAllSteps()) return;
+    if (!this.validateAllForms()) return;
 
     this.saving.set(true);
     const payload = this.buildPayload(this.isEdit() ? EmployeeStatus.Active : EmployeeStatus.Active);
@@ -759,7 +651,6 @@ export class EmployeeFormComponent implements OnInit {
     const s = this.statutoryForm.getRawValue();
     this.pfEsicService.update(employeeId, {
       uanNumber: s.uanNumber || undefined,
-      pfNumber: s.pfNumber || undefined,
       esicNumber: s.esicNumber || undefined,
       effectiveDate: this.formatDate(this.employmentForm.value.joiningDate ?? null),
       status: 'Active',
@@ -796,14 +687,20 @@ export class EmployeeFormComponent implements OnInit {
   private buildPayload(status: EmployeeStatus): CreateEmployeeDraftRequest {
     const p = this.personalForm.getRawValue();
     const e = this.employmentForm.getRawValue();
+    const sal = this.salaryForm.getRawValue();
     const s = this.statutoryForm.getRawValue();
+    const basicSalary = Number(sal.basicSalary ?? 0);
+    const houseRentAllowance = Number(sal.houseRentAllowance ?? 0);
+    const specialAllowance = Number(sal.specialAllowance ?? 0);
+    const grossSalary = basicSalary + houseRentAllowance + specialAllowance;
 
     return {
       id: this.employeeId ?? undefined,
       employeeCode: e.employeeCode ?? this.draftEmployeeCode,
       firstName: p.firstName!.trim(),
       lastName: p.lastName?.trim() || '',
-      email: p.email?.trim() || '',
+      fatherName: p.fatherName?.trim() || undefined,
+      email: p.email?.trim() ?? '',
       phone: p.phone!.trim(),
       dateOfBirth: this.formatDate(p.dateOfBirth ?? null),
       gender: p.gender ?? Gender.PreferNotToSay,
@@ -816,19 +713,28 @@ export class EmployeeFormComponent implements OnInit {
       emergencyContactRelationship: p.emergencyContactRelationship?.trim() || undefined,
       emergencyContactPhone: p.emergencyContactPhone?.trim() || undefined,
       clientId: e.clientId!,
+      clientSoftCode: e.clientSoftCode?.trim() || undefined,
       siteId: e.siteId!,
       departmentId: e.departmentId || '',
       designationId: e.designationId || '',
-      designationGradeId: e.designationGradeId || undefined,
-      reportingManagerId: e.reportingManagerId || undefined,
       joiningDate: this.formatDate(e.joiningDate ?? null),
-      employmentType: e.employmentType ?? EmploymentType.FullTime,
-      basicSalary: this.selectedGrade()?.basicSalary ?? 0,
-      grossSalary: this.selectedGrade()?.grossSalary ?? this.selectedGradeGross() ?? 0,
+      employmentType: EmploymentType.FullTime,
+      basicSalary,
+      houseRentAllowance,
+      specialAllowance,
+      grossSalary,
+      isPfApplicable: sal.isPfApplicable ?? true,
+      isEsiApplicable: sal.isEsiApplicable ?? true,
+      isLwfApplicable: sal.isLwfApplicable ?? true,
+      employeePfPercentage: Number(sal.employeePfPercentage ?? 12),
+      employeeEsiPercentage: Number(sal.employeeEsiPercentage ?? 0.75),
+      employeeLwfPercentage: Number(sal.employeeLwfPercentage ?? 0.2),
+      employeePfMaxAmount: Number(sal.employeePfMaxAmount ?? 1800),
+      employeeEsiMaxAmount: Number(sal.employeeEsiMaxAmount ?? 0),
+      employeeLwfMaxAmount: Number(sal.employeeLwfMaxAmount ?? 35),
       aadhaarNumber: s.aadhaarNumber ?? undefined,
       panNumber: s.panNumber?.toUpperCase() ?? undefined,
       uanNumber: s.uanNumber ?? undefined,
-      pfNumber: s.pfNumber ?? undefined,
       esicNumber: s.esicNumber ?? undefined,
       bankName: s.bankName ?? undefined,
       accountHolderName: s.accountHolderName ?? undefined,
@@ -879,45 +785,6 @@ export class EmployeeFormComponent implements OnInit {
     if (a == null || b == null) return false;
     return String(a).toLowerCase() === String(b).toLowerCase();
   };
-
-  getDepartmentName(ref: string): string {
-    return this.departments().find(
-      d => this.compareSelectValue(d.departmentCode, ref) || this.compareSelectValue(d.id, ref),
-    )?.departmentName ?? '—';
-  }
-
-  getDesignationName(ref: string): string {
-    return this.designations().find(
-      d => this.compareSelectValue(d.designationCode, ref) || this.compareSelectValue(d.id, ref),
-    )?.designationName ?? '—';
-  }
-
-  getGradeLabel(id: string): string {
-    const grade = this.designationGrades().find(
-      g => this.compareSelectValue(g.id, id) || this.compareSelectValue(g.gradeCode, id),
-    );
-    return grade ? `${grade.gradeCode} — ${grade.gradeName}` : '—';
-  }
-
-  getClientName(id: string): string {
-    return this.clients().find(c => this.compareSelectValue(c.id, id))?.companyName ?? '—';
-  }
-
-  getSiteName(id: string): string {
-    return this.filteredSites().find(s => this.compareSelectValue(s.id, id))?.siteName
-      ?? '—';
-  }
-
-  getManagerName(id: string): string {
-    return this.managers().find(m => this.compareSelectValue(m.id, id))?.fullName ?? '—';
-  }
-
-  isStepValid(stepIndex: number): boolean {
-    if (stepIndex === 0) {
-      return this.isMinimumValid();
-    }
-    return true;
-  }
 
   addAnother() {
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {

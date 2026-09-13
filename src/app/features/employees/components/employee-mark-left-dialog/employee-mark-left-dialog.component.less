@@ -2,13 +2,27 @@
   margin: 0 0 16px;
   color: var(--color-text-secondary);
   font-size: 14px;
+  line-height: 1.45;
 }
 
 .dialog-form {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 14px;
   min-width: min(420px, 100%);
+}
+
+.mark-left-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 24px 20px;
+  margin: 0;
+}
+
+.mark-left-dialog__actions signet-button {
+  flex: 0 0 auto;
 }
 
 .full-width {

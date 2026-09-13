@@ -39,7 +39,7 @@
       </button>
       <div class="form-page-header__text">
         <h1>{{ isEdit() ? 'Edit Employee' : 'Add Employee' }}</h1>
-        <p>{{ isEdit() ? 'Update employee information across all sections' : 'Complete the 5-step onboarding wizard to create a new employee record' }}</p>
+        <p>{{ isEdit() ? 'Update employee information across all sections' : 'Fill in the employee details below' }}</p>
       </div>
       <div class="form-page-header__actions">
         @if (!isEdit()) {
@@ -50,17 +50,10 @@
     </header>
 
     <div class="employee-form__body">
-      <div class="wizard-card">
-      <mat-stepper
-        #stepper
-        class="employee-stepper"
-        [linear]="!isEdit()"
-        [orientation]="stepperOrientation()"
-        animationDuration="0">
+      <div class="form-card">
 
-        <!-- Step 1: Personal Details -->
-        <mat-step label="Personal Details">
-          <ng-template matStepContent>
+        <!-- Personal Details -->
+        <section class="form-section">
           <form [formGroup]="personalForm" class="step-form">
             <div class="step-panel__header">
               <div class="step-panel__icon"><mat-icon>person</mat-icon></div>
@@ -84,6 +77,16 @@
                 fieldTitle="Last Name"
                 [required]="false"
               />
+            </div>
+
+            <div class="form-row">
+              <signet-custom-text-field
+                formControlName="fatherName"
+                fieldTitle="Father's Name"
+                [required]="false"
+                [maxLength]="100"
+              />
+              <div class="form-row__spacer" aria-hidden="true"></div>
             </div>
 
             <div class="form-row form-row--dob">
@@ -188,21 +191,11 @@
             </div>
             </div>
             </div>
-
-            <div class="step-footer">
-              @if (!isEdit()) {
-                <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Save Draft" (clicked)="saveDraft()" [disabled]="savingDraft()" />
-              }
-              <span class="step-actions__spacer"></span>
-              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" [disabled]="!isMinimumValid()" />
-            </div>
           </form>
-          </ng-template>
-        </mat-step>
+        </section>
 
-        <!-- Step 2: Employment Details -->
-        <mat-step label="Employment">
-          <ng-template matStepContent>
+        <!-- Employment -->
+        <section class="form-section">
           <form [formGroup]="employmentForm" class="step-form">
             <div class="step-panel__header">
               <div class="step-panel__icon"><mat-icon>work</mat-icon></div>
@@ -219,6 +212,15 @@
                 fieldTitle="Employee ID"
                 [required]="false" [readOnly]="true"
               />
+              <signet-custom-text-field
+                formControlName="clientSoftCode"
+                fieldTitle="Client Soft Code"
+                placeholder="Optional client soft code"
+                [required]="false"
+              />
+            </div>
+
+            <div class="form-row">
               <signet-date-input-field
                 fieldTitle="Joining Date"
                 placeholder="Select joining date"
@@ -228,9 +230,6 @@
                 [width]="100"
                 widthUnit="%"
               />
-            </div>
-
-            <div class="form-row">
               <signet-search-select-dropdown
                 formControlName="clientId"
                 fieldTitle="Client"
@@ -240,6 +239,9 @@
                 widthUnit="%"
                 [searchFunctionality]="true"
               />
+            </div>
+
+            <div class="form-row">
               <signet-search-select-dropdown
                 formControlName="siteId"
                 fieldTitle="Site"
@@ -250,9 +252,6 @@
                 widthUnit="%"
                 [searchFunctionality]="true"
               />
-            </div>
-
-            <div class="form-row">
               <signet-search-select-dropdown
                 formControlName="departmentId"
                 fieldTitle="Department"
@@ -277,70 +276,23 @@
                 [width]="100"
                 widthUnit="%"
                 [searchFunctionality]="true"
+                dropdownPlacement="top"
+                dropdownOptionMaxHeight="240px"
               />
-              <div class="grade-field">
-                <signet-search-select-dropdown
-                  formControlName="designationGradeId"
-                  fieldTitle="Pay Grade"
-                  placeholder="Select pay grade (optional)"
-                  [options]="designationGradeOptions()"
-                  [disabled]="!employmentForm.value.designationId || gradesLoading()"
-                  [required]="false"
-                  [width]="100"
-                  widthUnit="%"
-                  [searchFunctionality]="true"
-                />
-                @if (selectedGradeGross() != null) {
-                  <p class="field-hint">Gross from grade: ₹{{ selectedGradeGross() | number:'1.0-0' }}</p>
-                }
-              </div>
+              <div class="form-row__spacer" aria-hidden="true"></div>
             </div>
-
-            <div class="form-row">
-              <signet-search-select-dropdown
-                formControlName="reportingManagerId"
-                fieldTitle="Reporting Manager"
-                placeholder="None"
-                [options]="managerOptions()"
-                [required]="false"
-                [width]="100"
-                widthUnit="%"
-                [searchFunctionality]="true"
-              />
-            </div>
-
-            <div class="form-row">
-              <signet-search-select-dropdown
-                formControlName="employmentType"
-                fieldTitle="Employment Type"
-                placeholder="Select employment type"
-                [options]="employmentTypeSelectOptions()"
-                [required]="false"
-                [width]="100"
-                widthUnit="%"
-                [searchFunctionality]="false"
-              />
-            </div>
-            </div>
-
-            <div class="step-footer">
-              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
-              <span class="step-actions__spacer"></span>
-              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" />
             </div>
           </form>
-          </ng-template>
-        </mat-step>
+        </section>
 
-        <!-- Step 3: Statutory & Bank -->
-        <mat-step label="Statutory & Bank">
-          <ng-template matStepContent>
+        <!-- Statutory & Bank -->
+        <section class="form-section">
           <form [formGroup]="statutoryForm" class="step-form">
             <div class="step-panel__header">
               <div class="step-panel__icon"><mat-icon>account_balance</mat-icon></div>
               <div>
                 <h2 class="step-panel__title">Statutory & Bank</h2>
-                <p class="step-hint">Enter Aadhaar, PAN, UAN/PF/ESIC numbers and bank details for payroll integration.</p>
+                <p class="step-hint">Enter Aadhaar, PAN, UAN/ESIC numbers and bank details for payroll integration.</p>
               </div>
             </div>
 
@@ -372,11 +324,6 @@
                 formControlName="uanNumber"
                 fieldTitle="UAN Number"
                 [required]="false" [maxLength]="12"
-              />
-              <signet-custom-text-field
-                formControlName="pfNumber"
-                fieldTitle="PF Number"
-                [required]="false"
               />
               <signet-custom-text-field
                 formControlName="esicNumber"
@@ -428,19 +375,124 @@
               Statutory details will sync with PF/ESIC module and lock after final submission.
             </div>
             </div>
+          </form>
+        </section>
 
-            <div class="step-footer">
-              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
-              <span class="step-actions__spacer"></span>
-              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" />
+        <!-- Salary -->
+        <section class="form-section">
+          <form [formGroup]="salaryForm" class="step-form">
+            <div class="step-panel__header">
+              <div class="step-panel__icon"><mat-icon>payments</mat-icon></div>
+              <div>
+                <h2 class="step-panel__title">Salary Information</h2>
+                <p class="step-hint">Capture basic pay, allowances, and statutory applicability for this employee.</p>
+              </div>
+            </div>
+
+            <div class="step-panel__body">
+              <div class="form-row">
+                <signet-custom-text-field
+                  formControlName="basicSalary"
+                  fieldTitle="Basic Salary"
+                  type="number"
+                  [required]="true"
+                  [showError]="!!(salaryForm.get('basicSalary')?.invalid && salaryForm.get('basicSalary')?.touched)"
+                  errorMessage="Basic salary must be greater than 0"
+                />
+                <signet-custom-text-field
+                  formControlName="houseRentAllowance"
+                  fieldTitle="HRA"
+                  type="number"
+                  [required]="true"
+                  [showError]="!!(salaryForm.get('houseRentAllowance')?.invalid && salaryForm.get('houseRentAllowance')?.touched)"
+                  errorMessage="HRA must be 0 or greater"
+                />
+              </div>
+
+              <div class="form-row">
+                <signet-custom-text-field
+                  formControlName="specialAllowance"
+                  fieldTitle="Special Allowance"
+                  type="number"
+                  [required]="true"
+                  [showError]="!!(salaryForm.get('specialAllowance')?.invalid && salaryForm.get('specialAllowance')?.touched)"
+                  errorMessage="Special allowance must be 0 or greater"
+                />
+                <div class="salary-gross">
+                  <span class="salary-gross__label">Gross Salary</span>
+                  <strong class="salary-gross__value">₹{{ computedGrossSalary | number:'1.0-0' }}</strong>
+                  <span class="salary-gross__hint">Basic + HRA + Special Allowance</span>
+                </div>
+              </div>
+
+              <div class="step-subsection">
+                <div class="step-subsection__head">
+                  <mat-icon>gavel</mat-icon>
+                  <h3 class="section-label">Statutory Deductions</h3>
+                </div>
+                <p class="step-hint salary-statutory-hint">
+                  Used in payroll. PF: % of basic (max ₹1,800). ESIC &amp; LWF: % of gross earned (LWF max amount applies).
+                </p>
+                <div class="salary-statutory-rows">
+                  <div class="salary-statutory-row">
+                    <mat-slide-toggle formControlName="isPfApplicable" color="primary">PF Applicable</mat-slide-toggle>
+                    @if (salaryForm.value.isPfApplicable) {
+                      <signet-custom-text-field
+                        formControlName="employeePfPercentage"
+                        fieldTitle="Employee PF %"
+                        type="number"
+                        [required]="false"
+                      />
+                      <signet-custom-text-field
+                        formControlName="employeePfMaxAmount"
+                        fieldTitle="PF Max Amount"
+                        type="number"
+                        [required]="false"
+                      />
+                    }
+                  </div>
+                  <div class="salary-statutory-row">
+                    <mat-slide-toggle formControlName="isEsiApplicable" color="primary">ESIC Applicable</mat-slide-toggle>
+                    @if (salaryForm.value.isEsiApplicable) {
+                      <signet-custom-text-field
+                        formControlName="employeeEsiPercentage"
+                        fieldTitle="Employee ESIC %"
+                        type="number"
+                        [required]="false"
+                      />
+                      <signet-custom-text-field
+                        formControlName="employeeEsiMaxAmount"
+                        fieldTitle="ESIC Max Amount"
+                        type="number"
+                        [required]="false"
+                      />
+                    }
+                  </div>
+                  <div class="salary-statutory-row">
+                    <mat-slide-toggle formControlName="isLwfApplicable" color="primary">LWF Applicable</mat-slide-toggle>
+                    @if (salaryForm.value.isLwfApplicable) {
+                      <signet-custom-text-field
+                        formControlName="employeeLwfPercentage"
+                        fieldTitle="Employee LWF %"
+                        type="number"
+                        [required]="false"
+                      />
+                      <signet-custom-text-field
+                        formControlName="employeeLwfMaxAmount"
+                        fieldTitle="LWF Max Amount"
+                        type="number"
+                        [required]="false"
+                      />
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
-          </ng-template>
-        </mat-step>
+        </section>
 
-        <!-- Step 4: Documents -->
-        <mat-step label="Documents">
-          <ng-template matStepContent>
+        <!-- Documents -->
+        <section class="form-section">
           <div class="step-form">
             <div class="step-panel__header">
               <div class="step-panel__icon"><mat-icon>folder</mat-icon></div>
@@ -489,122 +541,26 @@
 
             <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Add Another Document" (clicked)="addAdditionalDocument()" />
             </div>
-
-            <div class="step-footer">
-              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
-              <span class="step-actions__spacer"></span>
-              <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Next" (clicked)="stepper.next()" />
-            </div>
           </div>
-          </ng-template>
-        </mat-step>
+        </section>
 
-        <!-- Step 5: Review & Submit -->
-        <mat-step label="Review">
-          <ng-template matStepContent>
-          <div class="step-form review-step">
-            <div class="step-panel__header">
-              <div class="step-panel__icon"><mat-icon>fact_check</mat-icon></div>
-              <div>
-                <h2 class="step-panel__title">Review & Submit</h2>
-                <p class="step-hint">Review all details before submitting. Use Edit to jump back to any section.</p>
-              </div>
-            </div>
+        <!-- Bottom actions -->
+        <div class="form-actions">
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
+          @if (!isEdit()) {
+            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Save Draft" (clicked)="saveDraft()" [disabled]="savingDraft()" />
+          }
+          <span class="form-actions__spacer"></span>
+          <signet-button
+            [width]="100"
+            [widthUnit]="'%'"
+            type="primary"
+            [displayText]="isEdit() ? 'Update Employee' : 'Submit Employee'"
+            (clicked)="onSubmit()"
+            [disabled]="saving()"
+          />
+        </div>
 
-            <div class="step-panel__body">
-            <div class="warning-banner">
-              <mat-icon>warning</mat-icon>
-              Statutory fields (Aadhaar, PAN, UAN, PF, ESIC) will be locked after submission and cannot be changed without admin approval.
-            </div>
-
-            <!-- Personal -->
-            <div class="review-section" [class.review-section--invalid]="!isStepValid(0)">
-              <div class="review-section__header">
-                <h3>Personal Details</h3>
-                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(0)" />
-              </div>
-              <div class="review-grid">
-                <div><span>Name</span><strong>{{ personalForm.value.firstName }} {{ personalForm.value.lastName }}</strong></div>
-                <div><span>DOB</span><strong>{{ personalForm.value.dateOfBirth | safeDate:'dd MMM yyyy' }}</strong></div>
-                <div><span>Gender</span><strong>{{ personalForm.value.gender ? genderLabels[personalForm.value.gender] : '—' }}</strong></div>
-                <div><span>Mobile</span><strong>{{ personalForm.value.phone }}</strong></div>
-                <div><span>Email</span><strong>{{ personalForm.value.email }}</strong></div>
-                <div><span>City</span><strong>{{ personalForm.value.city }}, {{ personalForm.value.state }}</strong></div>
-                <div class="review-grid__full"><span>Address</span><strong>{{ personalForm.value.presentAddress }}</strong></div>
-                <div><span>Emergency</span><strong>{{ personalForm.value.emergencyContactName }} ({{ personalForm.value.emergencyContactRelationship }}) — {{ personalForm.value.emergencyContactPhone }}</strong></div>
-              </div>
-            </div>
-
-            <!-- Employment -->
-            <div class="review-section">
-              <div class="review-section__header">
-                <h3>Employment Details</h3>
-                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(1)" />
-              </div>
-              <div class="review-grid">
-                <div><span>Employee ID</span><strong>{{ employmentForm.value.employeeCode }}</strong></div>
-                <div><span>Joining Date</span><strong>{{ employmentForm.value.joiningDate | safeDate:'dd MMM yyyy' }}</strong></div>
-                <div><span>Client</span><strong>{{ getClientName(employmentForm.value.clientId!) }}</strong></div>
-                <div><span>Site</span><strong>{{ getSiteName(employmentForm.value.siteId!) }}</strong></div>
-                <div><span>Department</span><strong>{{ getDepartmentName(employmentForm.value.departmentId!) }}</strong></div>
-                <div><span>Designation</span><strong>{{ getDesignationName(employmentForm.value.designationId!) }}</strong></div>
-                <div><span>Pay Grade</span><strong>{{ employmentForm.value.designationGradeId ? getGradeLabel(employmentForm.value.designationGradeId) : '—' }}</strong></div>
-                <div><span>Manager</span><strong>{{ employmentForm.value.reportingManagerId ? getManagerName(employmentForm.value.reportingManagerId) : '—' }}</strong></div>
-                <div><span>Employment Type</span><strong>{{ employmentLabels[employmentForm.value.employmentType!] }}</strong></div>
-              </div>
-            </div>
-
-            <!-- Statutory -->
-            <div class="review-section">
-              <div class="review-section__header">
-                <h3>Statutory & Bank Details</h3>
-                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(2)" />
-              </div>
-              <div class="review-grid">
-                <div><span>Aadhaar</span><strong>{{ statutoryForm.value.aadhaarNumber }}</strong></div>
-                <div><span>PAN</span><strong>{{ statutoryForm.value.panNumber | uppercase }}</strong></div>
-                <div><span>UAN</span><strong>{{ statutoryForm.value.uanNumber || '—' }}</strong></div>
-                <div><span>PF</span><strong>{{ statutoryForm.value.pfNumber || '—' }}</strong></div>
-                <div><span>ESIC</span><strong>{{ statutoryForm.value.esicNumber || '—' }}</strong></div>
-                <div><span>Bank</span><strong>{{ statutoryForm.value.bankName }}</strong></div>
-                <div><span>Account</span><strong>{{ statutoryForm.value.accountNumber }}</strong></div>
-                <div><span>IFSC</span><strong>{{ statutoryForm.value.ifscCode | uppercase }}</strong></div>
-              </div>
-            </div>
-
-            <!-- Documents -->
-            <div class="review-section">
-              <div class="review-section__header">
-                <h3>Documents</h3>
-                <signet-button [width]="100" [widthUnit]="'%'" type="secondary" displayText="Edit" (clicked)="goToStep(3)" />
-              </div>
-              <div class="review-docs">
-                @for (doc of uploadedDocuments; track doc.key) {
-                  <div class="review-doc-item">
-                    <mat-icon>check_circle</mat-icon>
-                    <span>{{ doc.label }} — {{ doc.fileName }}</span>
-                  </div>
-                }
-                @if (uploadedDocuments.length === 0) {
-                  <div class="review-doc-item">
-                    <mat-icon>info</mat-icon>
-                    <span>No documents uploaded</span>
-                  </div>
-                }
-              </div>
-            </div>
-            </div>
-
-            <div class="step-footer">
-              <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" (clicked)="stepper.previous()" />
-              <span class="step-actions__spacer"></span>
-              <signet-button [width]="100" [widthUnit]="'%'" type="primary" [displayText]="isEdit() ? 'Save Changes' : 'Submit Employee'" (clicked)="onSubmit()" [disabled]="saving()" />
-            </div>
-          </div>
-          </ng-template>
-        </mat-step>
-
-      </mat-stepper>
       </div>
     </div>
   }

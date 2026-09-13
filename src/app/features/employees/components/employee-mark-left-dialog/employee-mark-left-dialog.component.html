@@ -38,7 +38,7 @@
   </form>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
-  <signet-button [width]="100" [widthUnit]="'%'" type="error" [displayText]="saving() ? 'Saving…' : 'Mark as Left'" (clicked)="submit()" [disabled]="saving()" />
+<mat-dialog-actions align="end" class="mark-left-dialog__actions">
+  <signet-button type="stroke" displayText="Cancel" (clicked)="cancel()" [disabled]="saving()" />
+  <signet-button type="error" [displayText]="saving() ? 'Saving…' : 'Mark as Left'" (clicked)="submit()" [disabled]="saving()" />
 </mat-dialog-actions>

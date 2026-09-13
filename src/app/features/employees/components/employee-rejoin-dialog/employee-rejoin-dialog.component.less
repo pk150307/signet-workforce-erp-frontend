@@ -1,22 +1,50 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.rejoin-dialog__content {
+  width: 100%;
+  max-width: 100%;
+  padding-top: 4px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
 .dialog-intro {
-  margin: 0 0 16px;
-  color: var(--color-text-secondary);
+  margin: 0 0 20px;
+  color: var(--color-text-secondary, #5f6b7a);
   font-size: 14px;
+  line-height: 1.45;
 }
 
 .dialog-form {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: min(420px, 100%);
-}
-
-.dialog-loading {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0;
-}
-
-.full-width {
+  gap: 14px;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.dialog-form > * {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.rejoin-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 0 0;
+  margin: 0;
+}
+
+.rejoin-dialog__actions signet-button {
+  flex: 0 0 auto;
 }

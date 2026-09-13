@@ -57,48 +57,22 @@
   }
 }
 
-// ── Wizard shell ─────────────────────────────────────────────────────────────
-.wizard-card {
+// ── Form card (stacked sections) ─────────────────────────────────────────────
+.form-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  overflow: visible;
 }
 
-.employee-stepper {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  overflow: visible;
+.form-section {
+  &:not(:last-of-type) {
+    border-bottom: 1px solid var(--color-divider);
+  }
 
-  ::ng-deep {
-    .mat-horizontal-stepper-header-container {
-      padding: 20px 24px;
-      background: var(--color-bg-subtle);
-      border-bottom: 1px solid var(--color-divider);
-    }
-
-    .mat-step-header {
-      padding: 0px;
-      border-radius: 10px;
-      transition: background 0.15s;
-      height: 36px;
-
-      &:hover:not([aria-disabled='true']) {
-        background: rgba(0, 137, 123, 0.06);
-      }
-    }
-
-    .mat-step-label {
-      font-size: 0.8125rem !important;
-      font-weight: 500;
-    }
-
-    .mat-horizontal-content-container {
-      padding: 0;
-    }
+  .step-panel__header {
+    padding-top: 28px;
   }
 }
 
@@ -148,10 +122,17 @@
 }
 
 .step-panel__body {
-  padding: 20px 28px 8px 86px;
+  padding: 20px 28px 24px 86px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: visible;
+}
+
+/* Give the last employment dropdown room to open upward without clipping */
+.employee-form__body {
+  overflow: visible;
+  padding-bottom: 24px;
 }
 
 .step-subsection {
@@ -177,6 +158,57 @@
   }
 }
 
+.salary-gross {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-divider);
+  border-radius: 10px;
+  background: var(--color-bg-subtle);
+
+  &__label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  &__value {
+    font-size: 1.25rem;
+    color: var(--color-text);
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+}
+
+.salary-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  align-items: center;
+}
+
+.salary-statutory-hint {
+  margin: 0;
+}
+
+.salary-statutory-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.salary-statutory-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px 16px;
+  align-items: center;
+}
+
 .section-label {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -188,12 +220,16 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: @form-gap;
   align-items: start;
 
   &--dob {
     align-items: end;
+  }
+
+  &__spacer {
+    min-height: 1px;
   }
 }
 
@@ -245,16 +281,16 @@
   line-height: 1.4;
 }
 
-// ── Step footer ──────────────────────────────────────────────────────────────
-.step-footer {
+// ── Form actions ─────────────────────────────────────────────────────────────
+.form-actions {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px 28px;
-  margin-top: 8px;
   background: var(--color-bg-subtle);
   border-top: 1px solid var(--color-divider);
   flex-wrap: wrap;
+  border-radius: 0 0 16px 16px;
 
   button {
     display: inline-flex;
@@ -263,7 +299,7 @@
     min-width: 100px;
   }
 
-  .step-actions__spacer {
+  &__spacer {
     flex: 1;
   }
 }
@@ -511,10 +547,6 @@
     }
   }
 
-  .employee-stepper ::ng-deep .mat-horizontal-stepper-header-container {
-    padding: 12px 8px 0;
-  }
-
   .step-panel__header {
     padding: 20px 16px 0;
   }
@@ -523,7 +555,7 @@
     padding: 16px 16px 8px;
   }
 
-  .step-footer {
+  .form-actions {
     padding: 14px 16px;
     flex-direction: column-reverse;
 
@@ -532,7 +564,7 @@
       justify-content: center;
     }
 
-    .step-actions__spacer {
+    &__spacer {
       display: none;
     }
   }

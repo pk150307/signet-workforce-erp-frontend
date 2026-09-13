@@ -13,6 +13,7 @@ import { EmployeeListItem } from '../../../../core/models/employee.models';
 import { DepartmentListItem } from '../../../../core/models/department.models';
 import { DesignationListItem } from '../../../../core/models/designation.models';
 import { SiteListItem } from '../../../../core/models/sites.models';
+import { invalidateLookupCache } from '../../../../core/utils/lookup-cache.util';
 
 export interface EmployeeRejoinDialogData {
   employee: EmployeeListItem;
@@ -35,21 +36,25 @@ export class EmployeeRejoinDialogComponent implements OnInit {
 
   readonly saving = signal(false);
   readonly loading = signal(true);
+  readonly designationsLoading = signal(false);
   readonly departments = signal<DepartmentListItem[]>([]);
   readonly designations = signal<DesignationListItem[]>([]);
   readonly sites = signal<SiteListItem[]>([]);
   readonly selectedDepartmentId = signal('');
   private clientId = '';
 
-  readonly departmentOptions = computed(() =>
-    this.departments().map(d => ({ key: String(d.id), value: d.departmentName })),
-  );
+  readonly departmentOptions = computed(() => [
+    { key: '', value: 'Select department' },
+    ...this.departments().map(d => ({ key: String(d.id), value: d.departmentName })),
+  ]);
 
   readonly designationOptions = computed(() => {
     const departmentId = this.selectedDepartmentId();
-    const placeholder = departmentId
-      ? { key: '', value: 'Select designation' }
-      : { key: '', value: 'Select department first' };
+    const placeholder = this.designationsLoading()
+      ? { key: '', value: 'Loading…' }
+      : departmentId
+        ? { key: '', value: this.designations().length ? 'Select designation' : 'No designations found' }
+        : { key: '', value: 'Select department first' };
     return [
       placeholder,
       ...this.designations().map(d => ({ key: String(d.id), value: d.designationName })),
@@ -73,31 +78,52 @@ export class EmployeeRejoinDialogComponent implements OnInit {
     this.selectedDepartmentId.set(this.form.controls.departmentId.value ?? '');
 
     this.form.controls.departmentId.valueChanges.subscribe(departmentId => {
-      this.selectedDepartmentId.set(departmentId ?? '');
+      const id = String(departmentId ?? '').trim();
+      this.selectedDepartmentId.set(id);
       this.form.patchValue({ designationId: '' }, { emitEvent: false });
-      this.loadDesignations(departmentId ?? '');
+      this.loadDesignations(id);
     });
 
     forkJoin({
-      departments: this.departmentService.getAllForSelect(),
-      sites: this.sitesService.getAllForSelect(),
       employee: this.employeeService.getById(this.data.employee.id),
-    }).pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: ({ departments, sites, employee }) => {
+    }).subscribe({
+      next: ({ employee }) => {
         this.clientId = employee.clientId ?? '';
-        this.departments.set(departments.filter(d => d.id && d.departmentName));
-        this.sites.set(sites.filter(s => s.id && s.siteName));
-        this.form.patchValue({
-          departmentId: employee.departmentId ?? '',
-          siteId: employee.siteId ?? '',
-        }, { emitEvent: false });
-        this.selectedDepartmentId.set(employee.departmentId ?? '');
 
-        if (employee.departmentId) {
-          this.loadDesignations(employee.departmentId, employee.designationId ?? undefined);
-        }
+        forkJoin({
+          departments: this.departmentService.getAllForSelect({
+            clientId: this.clientId || undefined,
+            isActive: true,
+          }),
+          sites: this.sitesService.getAllForSelect({
+            clientId: this.clientId || undefined,
+          }),
+        }).pipe(finalize(() => this.loading.set(false))).subscribe({
+          next: ({ departments, sites }) => {
+            this.departments.set(departments.filter(d => d.id && d.departmentName));
+            this.sites.set(sites.filter(s => s.id && s.siteName));
+
+            const departmentId = employee.departmentId ?? '';
+            this.form.patchValue({
+              departmentId,
+              siteId: employee.siteId ?? '',
+            }, { emitEvent: false });
+            this.selectedDepartmentId.set(departmentId);
+
+            if (departmentId) {
+              this.loadDesignations(departmentId, employee.designationId ?? undefined);
+            }
+          },
+          error: () => {
+            this.loading.set(false);
+            this.notification.error('Failed to load rejoin options.');
+          },
+        });
       },
-      error: () => this.notification.error('Failed to load rejoin options.'),
+      error: () => {
+        this.loading.set(false);
+        this.notification.error('Failed to load employee details.');
+      },
     });
   }
 
@@ -107,18 +133,29 @@ export class EmployeeRejoinDialogComponent implements OnInit {
       return;
     }
 
-    this.designationService.getAllForSelect({
-      clientId: this.clientId || undefined,
+    this.designationsLoading.set(true);
+    // Bypass stale lookup cache and avoid clientId filter mismatches —
+    // department already scopes the designations.
+    invalidateLookupCache('designations');
+    this.designationService.getAll({
       departmentId,
       isActive: true,
-    }).subscribe({
-      next: items => {
-        this.designations.set(items.filter(d => d.id && d.designationName));
-        if (preferredDesignationId) {
+      pageSize: 500,
+    }).pipe(finalize(() => this.designationsLoading.set(false))).subscribe({
+      next: result => {
+        const items = result.items.filter(d => d.id && d.designationName);
+        this.designations.set(items);
+
+        if (preferredDesignationId && items.some(d => d.id === preferredDesignationId)) {
           this.form.patchValue({ designationId: preferredDesignationId }, { emitEvent: false });
+        } else if (preferredDesignationId && items.length === 1) {
+          this.form.patchValue({ designationId: items[0].id }, { emitEvent: false });
         }
       },
-      error: () => this.designations.set([]),
+      error: () => {
+        this.designations.set([]);
+        this.notification.error('Failed to load designations for the selected department.');
+      },
     });
   }
 
@@ -149,6 +186,9 @@ export class EmployeeRejoinDialogComponent implements OnInit {
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      if (!this.form.controls.designationId.value) {
+        this.notification.warning('Please select a designation.');
+      }
       return;
     }
 
@@ -157,8 +197,8 @@ export class EmployeeRejoinDialogComponent implements OnInit {
 
     this.employeeService.rejoin(this.data.employee.id, {
       joiningDate: raw.joiningDate!.toISOString(),
-      departmentId: raw.departmentId!,
-      designationId: raw.designationId!,
+      departmentId: String(raw.departmentId!),
+      designationId: String(raw.designationId!),
       siteId: raw.siteId || undefined,
       reuseEmployeeCode: raw.reuseEmployeeCode ?? true,
     }).subscribe({
@@ -168,8 +208,16 @@ export class EmployeeRejoinDialogComponent implements OnInit {
       },
       error: (err) => {
         this.saving.set(false);
-        const message = err?.error?.message ?? 'Failed to rejoin employee.';
-        this.notification.error(message);
+        const apiErr = err?.error;
+        const message =
+          apiErr?.detail
+          || apiErr?.title
+          || apiErr?.message
+          || (typeof apiErr?.errors === 'object'
+            ? Object.values(apiErr.errors).flat().find(Boolean)
+            : null)
+          || 'Failed to rejoin employee.';
+        this.notification.error(String(message));
       },
     });
   }

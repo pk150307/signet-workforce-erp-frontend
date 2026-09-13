@@ -10,6 +10,8 @@
     </div>
     <div class="page-header__actions">
       <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadData()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export Excel" (clicked)="exportExcel()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export PDF" (clicked)="exportPdf()" />
       <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Add Employee" (clicked)="router.navigate(['/employees/new'])" />
     </div>
   </div>

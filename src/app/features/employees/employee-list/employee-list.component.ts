@@ -20,7 +20,7 @@ import {
   resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
-import { featureDialogConfig } from '../../../core/utils/dialog.util';
+import { featureDropdownDialogConfig } from '../../../core/utils/dialog.util';
 import { EmployeeMarkLeftDialogComponent } from '../components/employee-mark-left-dialog/employee-mark-left-dialog.component';
 import { EmployeeRejoinDialogComponent } from '../components/employee-rejoin-dialog/employee-rejoin-dialog.component';
 
@@ -153,6 +153,36 @@ export class EmployeeListComponent implements OnInit {
     this.router.navigate(['/employees', id]);
   }
 
+  exportExcel() {
+    this.employeeService.exportExcel().subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'employees-export.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.notification.success('Excel export downloaded.');
+      },
+      error: () => this.notification.error('Export failed.'),
+    });
+  }
+
+  exportPdf() {
+    this.employeeService.exportPdf().subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'employees-export.pdf';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.notification.success('PDF export downloaded.');
+      },
+      error: () => this.notification.error('Export failed.'),
+    });
+  }
+
   editEmployee(id: string) {
     this.router.navigate(['/employees', id, 'edit']);
   }
@@ -166,7 +196,7 @@ export class EmployeeListComponent implements OnInit {
   }
 
   openMarkLeftDialog(emp: EmployeeListItem) {
-    this.dialog.open(EmployeeMarkLeftDialogComponent, featureDialogConfig({
+    this.dialog.open(EmployeeMarkLeftDialogComponent, featureDropdownDialogConfig({
       width: '480px',
       data: { employee: emp },
     })).afterClosed().subscribe(changed => {
@@ -175,7 +205,7 @@ export class EmployeeListComponent implements OnInit {
   }
 
   openRejoinDialog(emp: EmployeeListItem) {
-    this.dialog.open(EmployeeRejoinDialogComponent, featureDialogConfig({
+    this.dialog.open(EmployeeRejoinDialogComponent, featureDropdownDialogConfig({
       width: '480px',
       data: { employee: emp },
     })).afterClosed().subscribe(changed => {
