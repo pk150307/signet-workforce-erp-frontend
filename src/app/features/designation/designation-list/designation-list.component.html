@@ -13,8 +13,6 @@
   <div class="filters-card card designation-list__filters">
     <signet-custom-text-field class="designation-list__search" [width]="100" widthUnit="%" fieldTitle="Search designations" [formControl]="searchCtrl" placeholder="Name or code" [required]="false" />
 
-    <signet-custom-text-field class="designation-list__grade" [width]="100" widthUnit="%" fieldTitle="Grade Code" [formControl]="gradeCtrl" placeholder="e.g. HK1" [required]="false" />
-
     <signet-search-select-dropdown
       class="designation-list__status"
       [formControl]="clientCtrl"
@@ -82,7 +80,6 @@
               <div class="data-list__cell">Designation</div>
               <div class="data-list__cell">Reports To</div>
               <div class="data-list__cell">Department</div>
-              <div class="data-list__cell">Grades</div>
               <div class="data-list__cell">Employees</div>
               <div class="data-list__cell">Status</div>
               <div class="data-list__cell data-list__cell--center"></div>
@@ -98,7 +95,6 @@
                 </div>
                 <div class="data-list__cell">{{ d.parentDesignationName || '—' }}</div>
                 <div class="data-list__cell">{{ d.departmentName || '—' }}</div>
-                <div class="data-list__cell"><span class="designation-list__grade">{{ d.gradeCount }}</span></div>
                 <div class="data-list__cell"><span class="designation-list__count">{{ d.employeeCount }}</span></div>
                 <div class="data-list__cell">
                   <signet-status-button [label]="d.isActive ? 'Active' : 'Inactive'" [status]="d.isActive" />

@@ -44,9 +44,8 @@ export class DesignationListComponent implements OnInit {
   readonly viewMode = signal<'table' | 'hierarchy'>('table');
   readonly searchCtrl = new FormControl('');
   readonly statusCtrl = new FormControl<string>('');
-  readonly gradeCtrl = new FormControl<string>('');
   readonly clientCtrl = new FormControl<string>('');
-  readonly cols = ['designationCode', 'designationName', 'departmentName', 'gradeCount', 'employeeCount', 'status', 'actions'];
+  readonly cols = ['designationCode', 'designationName', 'departmentName', 'employeeCount', 'status', 'actions'];
 
   readonly clientOptions = computed(() => [
     { key: '', value: 'Select client' },
@@ -82,10 +81,6 @@ export class DesignationListComponent implements OnInit {
       this.load(this.pager.firstPageParams());
     });
     this.statusCtrl.valueChanges.subscribe(() => { this.pager.reset(); this.load(this.pager.firstPageParams()); });
-    this.gradeCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
-      this.pager.reset();
-      this.load(this.pager.firstPageParams());
-    });
     this.clientCtrl.valueChanges.subscribe(() => {
       this.pager.reset();
       this.load(this.pager.firstPageParams());
@@ -107,7 +102,6 @@ export class DesignationListComponent implements OnInit {
       clientId,
       search: this.searchCtrl.value || undefined,
       isActive: this.parseBoolFilter(this.statusCtrl.value),
-      gradeCode: this.gradeCtrl.value?.trim() || undefined,
     }).subscribe({
       next: (result) => {
         this.data.set(result);
@@ -158,13 +152,12 @@ export class DesignationListComponent implements OnInit {
   }
 
   hasActiveFilters(): boolean {
-    return !!(this.searchCtrl.value?.trim() || this.statusCtrl.value || this.gradeCtrl.value?.trim());
+    return !!(this.searchCtrl.value?.trim() || this.statusCtrl.value);
   }
 
   clearFilters() {
     this.searchCtrl.setValue('');
     this.statusCtrl.setValue('');
-    this.gradeCtrl.setValue('');
   }
 
   private parseBoolFilter(value: string | null): boolean | undefined {
