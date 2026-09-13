@@ -20,6 +20,7 @@
     <div class="info-col">
       <div class="info-row"><span>Employee Name</span><strong>{{ ps.employeeName }}</strong></div>
       <div class="info-row"><span>Employee Code</span><strong>{{ ps.employeeCode }}</strong></div>
+      <div class="info-row"><span>Soft Code</span><strong>{{ ps.softCode || '—' }}</strong></div>
       <div class="info-row"><span>Designation</span><strong>{{ ps.designation }}</strong></div>
       <div class="info-row"><span>Department</span><strong>{{ ps.department }}</strong></div>
     </div>
@@ -27,7 +28,7 @@
       <div class="info-row"><span>Bank Account</span><strong>{{ ps.bankAccount || '—' }}</strong></div>
       <div class="info-row"><span>PAN</span><strong>{{ ps.panNumber || '—' }}</strong></div>
       <div class="info-row"><span>UAN</span><strong>{{ ps.uanNumber || '—' }}</strong></div>
-      <div class="info-row"><span>Generated</span><strong>{{ ps.generatedAt | apiDate }}</strong></div>
+      <div class="info-row"><span>ESIC</span><strong>{{ ps.esicNumber || '—' }}</strong></div>
     </div>
     <div class="info-col">
       <div class="info-row"><span>Working Days</span><strong>{{ ps.workingDays }}</strong></div>

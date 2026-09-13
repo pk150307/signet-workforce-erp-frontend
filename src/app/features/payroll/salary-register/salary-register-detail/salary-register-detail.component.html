@@ -1,0 +1,200 @@
+<div class="page-container salary-register-page" *ngIf="!loading() && register() as reg; else loadingOrNotFound">
+  <section class="detail-hero">
+    <div class="detail-hero__main">
+      <button mat-icon-button routerLink="/payroll/salary-register" class="back-btn" aria-label="Back to salary registers">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Salary Register</p>
+        <h1>{{ reg.clientName }}</h1>
+        <p>
+          {{ monthLabel(reg.month) }} {{ reg.year }}
+          · Run #{{ reg.runNumber }}
+          <span *ngIf="reg.clientCode"> · {{ reg.clientCode }}</span>
+          · {{ reg.monthDays }} month days
+        </p>
+      </div>
+      <signet-status-button [label]="statusLabel(reg.status)" [status]="reg.status" />
+    </div>
+    <div class="detail-hero__actions">
+      <signet-button
+        [width]="100"
+        [widthUnit]="'%'"
+        type="stroke"
+        displayText="Export Excel"
+        [disabled]="exporting()"
+        (clicked)="exportExcel()"
+      />
+      <signet-button
+        [width]="100"
+        [widthUnit]="'%'"
+        type="stroke"
+        displayText="Export PDF"
+        [disabled]="exporting()"
+        (clicked)="exportPdf()"
+      />
+      @if (canEdit(reg.status)) {
+        <signet-button
+          [width]="100"
+          [widthUnit]="'%'"
+          type="stroke"
+          displayText="Recalculate"
+          [disabled]="actionBusy()"
+          (clicked)="recalculate()"
+        />
+        <signet-button
+          [width]="100"
+          [widthUnit]="'%'"
+          type="primary"
+          displayText="Finalize"
+          [disabled]="actionBusy()"
+          (clicked)="finalize()"
+        />
+      }
+      @if (reg.status === 'finalized') {
+        <signet-button
+          [width]="100"
+          [widthUnit]="'%'"
+          type="stroke"
+          displayText="Reopen"
+          [disabled]="actionBusy()"
+          (clicked)="reopen()"
+        />
+      }
+    </div>
+  </section>
+
+  <section class="summary-cards">
+    <div class="summary-card">
+      <span>Employees</span>
+      <strong>{{ reg.summary.totalEmployees | number }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Gross Earnings</span>
+      <strong>₹{{ reg.summary.totalGrossEarnings | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Gross Total</span>
+      <strong>₹{{ reg.summary.totalGross | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Deductions</span>
+      <strong>₹{{ reg.summary.totalDeductions | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card summary-card--accent">
+      <span>Net Pay</span>
+      <strong>₹{{ reg.summary.totalNetPay | number:'1.0-0' }}</strong>
+    </div>
+  </section>
+
+  <div class="card salary-sheet-card">
+    <app-empty-state *ngIf="!reg.employees?.length"
+                     icon="table_chart"
+                     title="No employees"
+                     description="This register has no employee rows.">
+    </app-empty-state>
+
+    <div class="salary-sheet-scroll" *ngIf="reg.employees?.length">
+      <table class="salary-sheet">
+        <thead>
+          <tr>
+            <th class="sticky-1">Soft Code</th>
+            <th class="sticky-2">Emp Code</th>
+            <th class="sticky-3">Name</th>
+            <th>Designation</th>
+            <th class="num">Month Days</th>
+            <th class="num">Pay Days</th>
+            <th class="num">OT Hours</th>
+            <th class="num">Basic</th>
+            <th class="num">HRA</th>
+            <th class="num">Fixed Total</th>
+            <th class="num">Earn. Basic</th>
+            <th class="num">Earn. HRA</th>
+            <th class="num">
+              OT Amount
+              <span class="ot-source">Source: Attendance</span>
+            </th>
+            <th class="num">N.ALL</th>
+            <th class="num">Gross Earn.</th>
+            <th class="num">ATT/AW AFD</th>
+            <th class="num">Gross Total</th>
+            <th class="num">ESIC</th>
+            <th class="num">EPF</th>
+            <th class="num">LWF</th>
+            <th class="num">T.DED</th>
+            <th class="num">NET.PAY</th>
+            <th class="center">Val</th>
+            <th class="center"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of reg.employees; track row.id) {
+            <tr>
+              <td class="sticky-1"><span class="emp-code">{{ row.softCode || '—' }}</span></td>
+              <td class="sticky-2"><span class="emp-code">{{ row.employeeCode }}</span></td>
+              <td class="sticky-3">
+                <span class="emp-name">{{ row.employeeName }}</span>
+                <span class="emp-sub" *ngIf="row.fatherName">S/O {{ row.fatherName }}</span>
+              </td>
+              <td>{{ row.designation || '—' }}</td>
+              <td class="num">{{ row.monthDays }}</td>
+              <td class="num">{{ row.payDays | number:'1.0-2' }}</td>
+              <td class="num">{{ row.otHours != null ? (row.otHours | number:'1.0-2') : '—' }}</td>
+              <td class="num">{{ row.basicSalary | number:'1.0-0' }}</td>
+              <td class="num">{{ row.hra | number:'1.0-0' }}</td>
+              <td class="num">{{ row.fixedTotal | number:'1.0-0' }}</td>
+              <td class="num">{{ row.earningBasic | number:'1.0-0' }}</td>
+              <td class="num">{{ row.earningHra | number:'1.0-0' }}</td>
+              <td class="num">{{ row.otAmount | number:'1.0-0' }}</td>
+              <td class="num">{{ row.nAll | number:'1.0-0' }}</td>
+              <td class="num">{{ row.grossEarnings | number:'1.0-0' }}</td>
+              <td class="num">{{ row.attAwAfd | number:'1.0-0' }}</td>
+              <td class="num">{{ row.grossTotal | number:'1.0-0' }}</td>
+              <td class="num">{{ row.esic | number:'1.0-0' }}</td>
+              <td class="num">{{ row.epf | number:'1.0-0' }}</td>
+              <td class="num">{{ row.lwf | number:'1.0-0' }}</td>
+              <td class="num">{{ row.totalDeduction | number:'1.0-0' }}</td>
+              <td class="num"><strong>{{ row.netPay | number:'1.0-0' }}</strong></td>
+              <td class="center">
+                <mat-icon
+                  class="validation-icon"
+                  [class.validation-icon--ok]="row.validationStatus === 'ok'"
+                  [class.validation-icon--warning]="row.validationStatus === 'warning'"
+                  [class.validation-icon--error]="row.validationStatus === 'error'"
+                  [matTooltip]="validationTooltip(row)"
+                >
+                  {{ row.validationStatus === 'ok' ? 'check_circle' : (row.validationStatus === 'error' ? 'error' : 'warning') }}
+                </mat-icon>
+              </td>
+              <td class="center">
+                @if (canEdit(reg.status)) {
+                  <button mat-icon-button aria-label="Edit row" [disabled]="actionBusy()" (click)="editRow(row)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingOrNotFound>
+  <div class="page-container">
+    <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
+    <app-empty-state *ngIf="!loading() && notFound()"
+                     icon="search_off"
+                     title="Register not found"
+                     description="This salary register may have been removed or the link is invalid.">
+      <signet-button
+        [width]="100"
+        [widthUnit]="'%'"
+        type="stroke"
+        displayText="Back to list"
+        (clicked)="router.navigate(['/payroll/salary-register'])"
+      />
+    </app-empty-state>
+  </div>
+</ng-template>

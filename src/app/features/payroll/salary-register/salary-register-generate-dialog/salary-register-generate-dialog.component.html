@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>Generate Salary Register</h2>
+<mat-dialog-content>
+  <p class="dialog-hint">Creates a register from attendance and employee salary components for the selected client and period.</p>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-search-select-dropdown
+      formControlName="clientId"
+      fieldTitle="Client"
+      placeholder="Select client"
+      [options]="clientOptions()"
+      [required]="true"
+      [width]="100"
+      widthUnit="%"
+    />
+    <signet-search-select-dropdown
+      formControlName="month"
+      fieldTitle="Month"
+      placeholder="Select month"
+      [options]="monthOptions()"
+      [searchFunctionality]="false"
+      [required]="true"
+      [width]="100"
+      widthUnit="%"
+    />
+    <signet-search-select-dropdown
+      formControlName="year"
+      fieldTitle="Year"
+      placeholder="Select year"
+      [options]="yearOptions()"
+      [searchFunctionality]="false"
+      [required]="true"
+      [width]="100"
+      widthUnit="%"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button
+    [width]="100"
+    [widthUnit]="'%'"
+    type="primary"
+    displayText="Generate"
+    [disabled]="form.invalid"
+    (clicked)="submit()"
+  />
+</mat-dialog-actions>

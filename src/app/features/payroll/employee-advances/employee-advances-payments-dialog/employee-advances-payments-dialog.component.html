@@ -1,0 +1,88 @@
+<h2 mat-dialog-title>Advance Payments</h2>
+<mat-dialog-content class="payments-dialog-content">
+  <p class="dialog-hint">
+    {{ entry().employeeName }}
+    <span *ngIf="entry().softCode"> · Soft Code {{ entry().softCode }}</span>
+    · Total ₹{{ entry().advanceAmount | number:'1.0-0' }}
+  </p>
+  <p class="dialog-note" *ngIf="entry().salaryNetPay != null">
+    Salary net ₹{{ entry().salaryNetPay | number:'1.0-0' }}
+    → Payable ₹{{ entry().payableAmount != null ? (entry().payableAmount | number:'1.0-0') : '—' }}
+  </p>
+
+  <div class="payments-table" *ngIf="payments.length; else noPayments">
+    <div class="payments-table__head">
+      <span>Date</span>
+      <span class="num">Amount</span>
+      <span>Notes</span>
+      <span></span>
+    </div>
+    @for (p of payments; track p.id) {
+      <div class="payments-table__row">
+        <span>{{ p.paidOn | date:'dd MMM yyyy' }}</span>
+        <span class="num">₹{{ p.amount | number:'1.0-0' }}</span>
+        <span class="notes">{{ p.notes || '—' }}</span>
+        <span class="payments-table__actions" *ngIf="data.canEdit">
+          <button mat-icon-button type="button" aria-label="Edit payment" (click)="startEdit(p)" [disabled]="busy()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button type="button" aria-label="Delete payment" (click)="remove(p)" [disabled]="busy()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </span>
+      </div>
+    }
+  </div>
+  <ng-template #noPayments>
+    <p class="empty-payments">No advances recorded yet for this employee.</p>
+  </ng-template>
+
+  <form *ngIf="data.canEdit" [formGroup]="form" class="dialog-form">
+    <h3 class="form-title">{{ editingPaymentId() ? 'Edit payment' : 'Add payment' }}</h3>
+    <signet-date-input-field
+      fieldTitle="Paid On"
+      placeholder="Select payment date"
+      [value]="paidOnSignetValue()"
+      (valueChange)="onPaidOnChange($event)"
+      [config]="paidOnDatePickerConfig"
+      [required]="true"
+      [width]="100"
+      widthUnit="%"
+      [showError]="!!(form.controls.paidOn.invalid && form.controls.paidOn.touched)"
+      errorMessage="Select a valid payment date"
+    />
+    <signet-custom-text-field
+      formControlName="amount"
+      fieldTitle="Amount"
+      type="number"
+      [required]="true"
+    />
+    <signet-custom-text-field
+      formControlName="notes"
+      fieldTitle="Notes"
+      type="text"
+      [required]="false"
+    />
+    <div class="form-actions">
+      <signet-button
+        *ngIf="editingPaymentId()"
+        [width]="100"
+        [widthUnit]="'%'"
+        type="plane"
+        displayText="Cancel edit"
+        (clicked)="cancelEdit()"
+      />
+      <signet-button
+        [width]="100"
+        [widthUnit]="'%'"
+        type="primary"
+        [displayText]="editingPaymentId() ? 'Update' : 'Add'"
+        [disabled]="form.invalid || busy()"
+        (clicked)="submit()"
+      />
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Done" (clicked)="close()" />
+</mat-dialog-actions>

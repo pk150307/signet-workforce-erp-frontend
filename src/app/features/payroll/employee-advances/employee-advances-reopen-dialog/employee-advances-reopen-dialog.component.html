@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Reopen Advance Register</h2>
+<mat-dialog-content>
+  <p class="dialog-hint">Unlocks the register so advances can be edited again.</p>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-custom-text-field
+      formControlName="reason"
+      fieldTitle="Reason (optional)"
+      type="text"
+      [required]="false"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button
+    [width]="100"
+    [widthUnit]="'%'"
+    type="primary"
+    displayText="Reopen"
+    [disabled]="form.invalid"
+    (clicked)="submit()"
+  />
+</mat-dialog-actions>

@@ -1,0 +1,228 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../../../shared/styles/module-layout.less';
+
+.salary-register-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+
+  &__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .eyebrow {
+    margin: 0 0 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0 0 6px;
+    font-size: 26px;
+    color: var(--color-text-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+}
+
+.back-btn {
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+
+  .mobile-down({
+    grid-template-columns: repeat(2, 1fr);
+  });
+}
+
+.summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+
+  span {
+    display: block;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+  }
+
+  strong {
+    font-size: 20px;
+    color: var(--color-text-primary);
+  }
+
+  &--accent {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+
+    strong {
+      color: var(--color-primary);
+    }
+  }
+}
+
+.salary-sheet-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.salary-sheet-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.salary-sheet {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12px;
+  color: var(--color-text-primary);
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--color-bg-subtle);
+    border-bottom: 1px solid var(--color-border);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-divider);
+    background: var(--color-surface);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover td {
+    background: var(--color-bg-subtle);
+  }
+
+  tbody tr:hover .sticky-1,
+  tbody tr:hover .sticky-2,
+  tbody tr:hover .sticky-3 {
+    background: var(--color-bg-subtle);
+  }
+
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .center {
+    text-align: center;
+  }
+
+  .ot-source {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--color-text-muted);
+  }
+
+  .emp-code {
+    display: inline-block;
+    font-size: 12px;
+    font-family: ProximaNova-Medium, sans-serif;
+    background: var(--color-divider);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+  }
+
+  .emp-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .emp-sub {
+    display: block;
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  // Sticky identity columns (Soft Code / Emp Code / Name)
+  .sticky-1,
+  .sticky-2,
+  .sticky-3 {
+    position: sticky;
+    z-index: 2;
+    background: var(--color-surface);
+    box-shadow: 1px 0 0 var(--color-divider);
+  }
+
+  thead .sticky-1,
+  thead .sticky-2,
+  thead .sticky-3 {
+    z-index: 4;
+    background: var(--color-bg-subtle);
+  }
+
+  .sticky-1 { left: 0; min-width: 100px; }
+  .sticky-2 { left: 100px; min-width: 110px; }
+  .sticky-3 { left: 210px; min-width: 180px; }
+}
+
+.validation-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+
+  &--ok { color: var(--badge-success-fg); }
+  &--warning { color: var(--badge-warning-fg); }
+  &--error { color: var(--badge-danger-fg); }
+}

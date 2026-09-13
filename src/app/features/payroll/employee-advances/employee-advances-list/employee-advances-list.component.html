@@ -1,0 +1,128 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Employee Advances</h1>
+      <p class="page-header__subtitle">{{ data()?.items?.length ?? 0 | number }} registers</p>
+    </div>
+    <div class="page-header__actions">
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadData()" />
+      <signet-button
+        [width]="100"
+        [widthUnit]="'%'"
+        type="primary"
+        displayText="Generate"
+        [disabled]="generating() || !clients().length"
+        (clicked)="openGenerateDialog()"
+      />
+    </div>
+  </div>
+
+  <div class="filter-bar card employee-advances-list__filters">
+    <signet-search-input
+      class="employee-advances-list__filter-field"
+      [searchValue]="searchCtrl.value ?? ''"
+      (searchValueChange)="searchCtrl.setValue($event)"
+      placeholder="Search client..."
+      width="100%"
+    />
+    <signet-search-select-dropdown
+      class="employee-advances-list__filter-field"
+      [formControl]="monthCtrl"
+      fieldTitle="Month"
+      placeholder="Select month"
+      [options]="monthOptions()"
+      [searchFunctionality]="false"
+      [width]="100"
+      widthUnit="%"
+    />
+    <signet-search-select-dropdown
+      class="employee-advances-list__filter-field"
+      [formControl]="yearCtrl"
+      fieldTitle="Year"
+      placeholder="Select year"
+      [options]="yearOptions()"
+      [searchFunctionality]="false"
+      [width]="100"
+      widthUnit="%"
+    />
+    <signet-search-select-dropdown
+      class="employee-advances-list__filter-field"
+      [formControl]="clientCtrl"
+      fieldTitle="Client"
+      placeholder="All clients"
+      [options]="clientOptions()"
+      [required]="false"
+      [width]="100"
+      widthUnit="%"
+    />
+    <signet-button
+      class="employee-advances-list__filter-clear"
+      [width]="100"
+      [widthUnit]="'%'"
+      type="stroke"
+      displayText="Clear filters"
+      (clicked)="clearFilters()"
+    />
+  </div>
+
+  <div class="status-chips">
+    <mat-chip-listbox [value]="statusCtrl.value" (change)="setStatusFilter($event.value)">
+      <mat-chip-option [value]="null">All</mat-chip-option>
+      <mat-chip-option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <div class="card card--flush">
+    <app-skeleton-loader *ngIf="loading()" type="table" [rows]="8"></app-skeleton-loader>
+    <app-empty-state *ngIf="!loading() && !data()?.items?.length"
+                     icon="payments"
+                     title="No advance registers found"
+                     description="Generate an advance register for a client and pay period, or adjust your filters.">
+      <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Generate" (clicked)="openGenerateDialog()" />
+    </app-empty-state>
+
+    <div class="data-list-scroll" *ngIf="!loading() && (data()?.items?.length ?? 0) > 0">
+      <div class="data-list">
+        <div class="data-list__header">
+          <div class="data-list__cell">Client</div>
+          <div class="data-list__cell">Period</div>
+          <div class="data-list__cell">Run</div>
+          <div class="data-list__cell">Employees</div>
+          <div class="data-list__cell">Advance</div>
+          <div class="data-list__cell">Salary Net</div>
+          <div class="data-list__cell">Payable</div>
+          <div class="data-list__cell">Status</div>
+          <div class="data-list__cell">Generated</div>
+          <div class="data-list__cell data-list__cell--center"></div>
+        </div>
+        @for (row of data()?.items ?? []; track row.id) {
+          <div class="data-list__row data-list__row--clickable" (click)="viewRegister(row.id)">
+            <div class="data-list__cell">
+              <div>
+                <div class="emp-name">{{ row.clientName }}</div>
+                <small *ngIf="row.clientCode">{{ row.clientCode }}</small>
+              </div>
+            </div>
+            <div class="data-list__cell">{{ monthLabel(row.month) }} {{ row.year }}</div>
+            <div class="data-list__cell"><span class="emp-code">#{{ row.runNumber }}</span></div>
+            <div class="data-list__cell">{{ row.totalEmployees | number }}</div>
+            <div class="data-list__cell">₹{{ row.totalAdvance | number:'1.0-0' }}</div>
+            <div class="data-list__cell">₹{{ row.totalSalaryNetPay | number:'1.0-0' }}</div>
+            <div class="data-list__cell">₹{{ row.totalPayable | number:'1.0-0' }}</div>
+            <div class="data-list__cell">
+              <signet-status-button [label]="statusLabel(row.status)" [status]="row.status" />
+            </div>
+            <div class="data-list__cell">{{ row.generatedAt | date:'dd MMM yyyy' }}</div>
+            <div class="data-list__cell data-list__cell--center" (click)="$event.stopPropagation()">
+              <signet-action-menu ariaLabel="More actions">
+                <button type="button" actionMenuItem (click)="viewRegister(row.id)">
+                  <mat-icon>visibility</mat-icon><span>View</span>
+                </button>
+              </signet-action-menu>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

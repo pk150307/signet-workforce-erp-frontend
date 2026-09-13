@@ -1,0 +1,63 @@
+@import '../../../../shared/styles/page-layout.less';
+@import '../../../../shared/styles/breakpoints.less';
+@import '../../../../shared/styles/module-layout.less';
+
+.employee-advances-list__filters {
+  width: 100%;
+  box-sizing: border-box;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: 16px;
+  margin-bottom: 0;
+
+  .employee-advances-list__filter-field,
+  signet-search-select-dropdown,
+  signet-search-input {
+    flex: 1 1 0;
+    min-width: 0;
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+
+  .employee-advances-list__filter-clear {
+    flex: 0 0 auto;
+    align-self: flex-end;
+    min-width: 120px;
+  }
+
+  .mobile-down({
+    flex-direction: column;
+    align-items: stretch;
+
+    .employee-advances-list__filter-field,
+    signet-search-select-dropdown,
+    signet-search-input {
+      flex: 1 1 100%;
+    }
+  });
+}
+
+.data-list {
+  --data-list-cols: calc(calc(100% / 1100) * 180) calc(calc(100% / 1100) * 110) calc(calc(100% / 1100) * 60) calc(calc(100% / 1100) * 90) calc(calc(100% / 1100) * 100) calc(calc(100% / 1100) * 100) calc(calc(100% / 1100) * 100) calc(calc(100% / 1100) * 110) calc(calc(100% / 1100) * 110) calc(calc(100% / 1100) * 60);
+  --data-list-min-width: 1100px;
+}
+
+.emp-name {
+  font-weight: 600;
+}
+
+.emp-code {
+  display: inline-block;
+  font-size: 12px;
+  font-family: ProximaNova-Medium, sans-serif;
+  background: var(--color-divider);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.status-chips {
+  margin: 12px 0;
+}

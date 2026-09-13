@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Edit Employee Row</h2>
+<mat-dialog-content>
+  <p class="dialog-hint">
+    {{ data.row.employeeName }}
+    <span *ngIf="data.row.softCode"> · Soft Code {{ data.row.softCode }}</span>
+  </p>
+  <p class="dialog-note">
+    OT Amount (₹{{ data.row.otAmount | number:'1.2-2' }}) comes from Attendance and cannot be edited here.
+    Saving recalculates dependent fields on the server.
+  </p>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-custom-text-field
+      formControlName="payDays"
+      fieldTitle="Pay Days"
+      type="number"
+      [required]="true"
+    />
+    <signet-custom-text-field
+      formControlName="nAll"
+      fieldTitle="N.ALL"
+      type="number"
+      [required]="true"
+    />
+    <signet-custom-text-field
+      formControlName="attAwAfd"
+      fieldTitle="ATT/AW AFD"
+      type="number"
+      [required]="true"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button
+    [width]="100"
+    [widthUnit]="'%'"
+    type="primary"
+    displayText="Save"
+    [disabled]="form.invalid"
+    (clicked)="submit()"
+  />
+</mat-dialog-actions>

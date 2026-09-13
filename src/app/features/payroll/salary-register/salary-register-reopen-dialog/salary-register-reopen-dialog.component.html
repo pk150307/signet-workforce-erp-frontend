@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Reopen Register</h2>
+<mat-dialog-content>
+  <p class="dialog-hint">Reopen this finalized salary register so rows can be edited again.</p>
+  <form [formGroup]="form" class="dialog-form">
+    <signet-custom-text-area-field
+      formControlName="reason"
+      fieldTitle="Reason (optional)"
+      [required]="false"
+      [height]="80"
+    />
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <signet-button [width]="100" [widthUnit]="'%'" type="plane" displayText="Cancel" (clicked)="dialogRef.close()" />
+  <signet-button
+    [width]="100"
+    [widthUnit]="'%'"
+    type="primary"
+    displayText="Reopen"
+    [disabled]="form.invalid"
+    (clicked)="submit()"
+  />
+</mat-dialog-actions>

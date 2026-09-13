@@ -13,6 +13,18 @@ const routes: Routes = [
     data: { breadcrumb: { label: 'Salary Slips', route: '/payroll/payslips' } },
     loadChildren: () => import('./payslips/payslips.module').then(m => m.PayslipsModule),
   },
+  {
+    path: 'salary-register',
+    data: { breadcrumb: { label: 'Salary Register', route: '/payroll/salary-register' } },
+    loadChildren: () =>
+      import('./salary-register/salary-register.module').then(m => m.SalaryRegisterModule),
+  },
+  {
+    path: 'employee-advances',
+    data: { breadcrumb: { label: 'Employee Advances', route: '/payroll/employee-advances' } },
+    loadChildren: () =>
+      import('./employee-advances/employee-advances.module').then(m => m.EmployeeAdvancesModule),
+  },
 ];
 
 @NgModule({

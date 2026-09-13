@@ -51,7 +51,6 @@ export function getMockPayslipDetail(id: string): PayslipDetail {
     bankAccount: 'XXXX XXXX 4521',
     panNumber: 'ABCDE1234F',
     uanNumber: '100234567890',
-    pfNumber: 'MH/BAN/1234567',
     esicNumber: '31123456789012345',
     workingDays: 26,
     paidDays: 24,

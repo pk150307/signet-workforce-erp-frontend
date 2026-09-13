@@ -1,0 +1,133 @@
+<div class="page-container employee-advances-page" *ngIf="!loading() && register() as reg; else loadingOrNotFound">
+  <section class="detail-hero">
+    <div class="detail-hero__main">
+      <button mat-icon-button routerLink="/payroll/employee-advances" class="back-btn" aria-label="Back to advances">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Employee Advances</p>
+        <h1>{{ reg.clientName }}</h1>
+        <p>
+          {{ monthLabel(reg.month) }} {{ reg.year }}
+          · Run #{{ reg.runNumber }}
+          <span *ngIf="reg.clientCode"> · {{ reg.clientCode }}</span>
+          <span *ngIf="reg.salaryRegisterId"> · Linked to salary register</span>
+          <span *ngIf="!reg.salaryRegisterId"> · No salary register yet</span>
+        </p>
+      </div>
+      <signet-status-button [label]="statusLabel(reg.status)" [status]="reg.status" />
+    </div>
+    <div class="detail-hero__actions">
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export Excel" [disabled]="exporting()" (clicked)="exportExcel()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export PDF" [disabled]="exporting()" (clicked)="exportPdf()" />
+      @if (canEdit(reg.status)) {
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" [disabled]="actionBusy()" (clicked)="refresh()" />
+        <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Finalize" [disabled]="actionBusy()" (clicked)="finalize()" />
+      }
+      @if (reg.status === 'finalized') {
+        <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Reopen" [disabled]="actionBusy()" (clicked)="reopen()" />
+      }
+    </div>
+  </section>
+
+  <section class="summary-cards">
+    <div class="summary-card">
+      <span>Employees</span>
+      <strong>{{ reg.summary.totalEmployees | number }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Total Advance</span>
+      <strong>₹{{ reg.summary.totalAdvance | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Salary Net Pay</span>
+      <strong>₹{{ reg.summary.totalSalaryNetPay | number:'1.0-0' }}</strong>
+    </div>
+    <div class="summary-card summary-card--accent">
+      <span>Payable (Net − Advance)</span>
+      <strong>₹{{ reg.summary.totalPayable | number:'1.0-0' }}</strong>
+    </div>
+  </section>
+
+  <div class="card advance-sheet-card">
+    <app-empty-state *ngIf="!reg.employees?.length"
+                     icon="payments"
+                     title="No employees"
+                     description="This advance register has no employee rows.">
+    </app-empty-state>
+
+    <div class="advance-sheet-scroll" *ngIf="reg.employees?.length">
+      <table class="advance-sheet">
+        <colgroup>
+          <col class="col-soft" />
+          <col class="col-emp" />
+          <col class="col-name" />
+          <col class="col-desig" />
+          <col class="col-payments" />
+          <col class="col-advance" />
+          <col class="col-net" />
+          <col class="col-payable" />
+          <col class="col-action" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="sticky-1">Soft Code</th>
+            <th class="sticky-2">Emp Code</th>
+            <th class="sticky-3">Name</th>
+            <th>Designation</th>
+            <th class="num">Payments</th>
+            <th class="num">Total Advance</th>
+            <th class="num">Salary Net Pay</th>
+            <th class="num">Payable</th>
+            <th class="center"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of reg.employees; track row.id) {
+            <tr>
+              <td class="sticky-1"><span class="emp-code">{{ row.softCode || '—' }}</span></td>
+              <td class="sticky-2"><span class="emp-code">{{ row.employeeCode }}</span></td>
+              <td class="sticky-3"><span class="emp-name">{{ row.employeeName }}</span></td>
+              <td>{{ row.designation || '—' }}</td>
+              <td class="num">{{ row.paymentCount || row.payments?.length || 0 }}</td>
+              <td class="num"><strong>{{ row.advanceAmount | number:'1.0-0' }}</strong></td>
+              <td class="num">{{ row.salaryNetPay != null ? (row.salaryNetPay | number:'1.0-0') : '—' }}</td>
+              <td class="num">
+                <strong *ngIf="row.payableAmount != null">{{ row.payableAmount | number:'1.0-0' }}</strong>
+                <span *ngIf="row.payableAmount == null">—</span>
+              </td>
+              <td class="center">
+                <button
+                  mat-icon-button
+                  [attr.aria-label]="canEdit(reg.status) ? 'Manage advances' : 'View advances'"
+                  [disabled]="actionBusy()"
+                  (click)="editEntry(row)"
+                >
+                  <mat-icon>{{ canEdit(reg.status) ? 'add_card' : 'visibility' }}</mat-icon>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingOrNotFound>
+  <div class="page-container">
+    <app-skeleton-loader *ngIf="loading()" type="card" [rows]="6"></app-skeleton-loader>
+    <app-empty-state *ngIf="!loading() && notFound()"
+                     icon="search_off"
+                     title="Register not found"
+                     description="This advance register may have been removed or the link is invalid.">
+      <signet-button
+        [width]="100"
+        [widthUnit]="'%'"
+        type="stroke"
+        displayText="Back to list"
+        (clicked)="router.navigate(['/payroll/employee-advances'])"
+      />
+    </app-empty-state>
+  </div>
+</ng-template>
