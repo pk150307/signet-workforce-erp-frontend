@@ -40,7 +40,7 @@ export class PfEsicBulkWizardComponent {
   readonly statusOptions = computed(() =>
     STATUS_VALUES.map(s => ({ key: s, value: s })),
   );
-  readonly previewColumns = ['employeeCode', 'uanNumber', 'pfNumber', 'esicNumber', 'status', 'errors'];
+  readonly previewColumns = ['employeeCode', 'uanNumber', 'esicNumber', 'status', 'errors'];
 
   readonly manualForm = this.fb.group({
     rows: this.fb.array([this.createRowGroup()]),
@@ -66,7 +66,6 @@ export class PfEsicBulkWizardComponent {
     return this.fb.group({
       employeeCode: ['', Validators.required],
       uanNumber: [''],
-      pfNumber: [''],
       esicNumber: [''],
       status: ['Active' as PfEsicStatus],
       effectiveDate: [''],
@@ -123,7 +122,6 @@ export class PfEsicBulkWizardComponent {
       const row: PfEsicBulkUpdateItem = {
         employeeCode: cols[codeIdx] ?? '',
         uanNumber: cols[headers.indexOf('uannumber')] || undefined,
-        pfNumber: cols[headers.indexOf('pfnumber')] || undefined,
         esicNumber: cols[headers.indexOf('esicnumber')] || undefined,
         status: (cols[headers.indexOf('status')] as PfEsicStatus) || undefined,
         effectiveDate: cols[headers.indexOf('effectivedate')] || undefined,

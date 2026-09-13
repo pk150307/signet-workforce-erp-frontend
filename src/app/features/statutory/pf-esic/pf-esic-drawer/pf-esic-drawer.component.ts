@@ -47,7 +47,6 @@ export class PfEsicDrawerComponent implements OnChanges {
 
   readonly form = this.fb.nonNullable.group({
     uanNumber: ['', [Validators.pattern(UAN_PATTERN)]],
-    pfNumber: ['', [Validators.maxLength(22)]],
     esicNumber: ['', [Validators.pattern(ESIC_PATTERN)]],
     pfContributionEmployee: [12, [Validators.min(0), Validators.max(100)]],
     pfContributionEmployer: [12, [Validators.min(0), Validators.max(100)]],
@@ -137,7 +136,6 @@ export class PfEsicDrawerComponent implements OnChanges {
 
     this.pfEsicService.update(this.employeeId, {
       uanNumber: raw.uanNumber || undefined,
-      pfNumber: raw.pfNumber || undefined,
       esicNumber: raw.esicNumber || undefined,
       pfContributionEmployee: raw.pfContributionEmployee,
       pfContributionEmployer: raw.pfContributionEmployer,
@@ -174,7 +172,6 @@ export class PfEsicDrawerComponent implements OnChanges {
   private patchForm(detail: PfEsicDetail): void {
     this.form.patchValue({
       uanNumber: detail.uanNumber ?? '',
-      pfNumber: detail.pfNumber ?? '',
       esicNumber: detail.esicNumber ?? '',
       pfContributionEmployee: detail.pfContributionEmployee ?? 12,
       pfContributionEmployer: detail.pfContributionEmployer ?? 12,
@@ -202,7 +199,6 @@ export class PfEsicDrawerComponent implements OnChanges {
       designation: 'Supervisor',
       siteName: 'Main Site',
       uanNumber: '100012345678',
-      pfNumber: 'MH/BAN/1234567/000/1234567',
       esicNumber: '12345678901234567',
       pfContributionEmployee: 12,
       pfContributionEmployer: 12,

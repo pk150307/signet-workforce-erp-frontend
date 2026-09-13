@@ -13,7 +13,8 @@
         </div>
         <div class="page-header__actions">
           <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="loadData()" />
-          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export CSV" (clicked)="exportCsv()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export Excel" (clicked)="exportExcel()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export PDF" (clicked)="exportPdf()" />
           <!-- <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Bulk Update" (clicked)="openBulkUpdate()" />
           <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Bulk Import" (clicked)="openBulkImport()" /> -->
         </div>
@@ -76,17 +77,6 @@
 
         <signet-search-select-dropdown
           class="pf-esic-list__filter-tri"
-          [formControl]="hasPfCtrl"
-          fieldTitle="Has PF"
-          placeholder="All"
-          [options]="triStateOptions()"
-          [searchFunctionality]="false"
-          [width]="100"
-          widthUnit="%"
-        />
-
-        <signet-search-select-dropdown
-          class="pf-esic-list__filter-tri"
           [formControl]="hasEsicCtrl"
           fieldTitle="Has ESIC"
           placeholder="All"
@@ -140,7 +130,6 @@
                   </button>
                 </div>
                 <div class="data-list__cell">UAN</div>
-                <div class="data-list__cell">PF Number</div>
                 <div class="data-list__cell">ESIC</div>
                 <div class="data-list__cell">Status</div>
                 <div class="data-list__cell">
@@ -166,7 +155,6 @@
                   <div class="data-list__cell">{{ row.clientCompanyName || '—' }}</div>
                   <div class="data-list__cell">{{ row.aadhaarNumber || '—' }}</div>
                   <div class="data-list__cell">{{ row.uanNumber || '—' }}</div>
-                  <div class="data-list__cell">{{ row.pfNumber || '—' }}</div>
                   <div class="data-list__cell">{{ row.esicNumber || '—' }}</div>
                   <div class="data-list__cell">
                     <signet-status-button [label]="row.status" [status]="row.status" />

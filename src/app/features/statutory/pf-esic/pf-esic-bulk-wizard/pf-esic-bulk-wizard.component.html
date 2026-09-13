@@ -12,7 +12,7 @@
 
         <div class="pf-esic-bulk-wizard__step">
           <p class="pf-esic-bulk-wizard__hint">Upload a CSV file or enter records manually.</p>
-          <p id="pf-esic-csv-format-hint" class="pf-esic-bulk-wizard__format">CSV columns: employeeCode, uanNumber, pfNumber, esicNumber, status, effectiveDate</p>
+          <p id="pf-esic-csv-format-hint" class="pf-esic-bulk-wizard__format">CSV columns: employeeCode, uanNumber, esicNumber, status, effectiveDate</p>
 
           <div class="pf-esic-bulk-wizard__upload">
             <input
@@ -38,7 +38,6 @@
                 <div [formGroupName]="i" class="pf-esic-bulk-wizard__manual-row">
                   <signet-custom-text-field fieldTitle="Employee Code" formControlName="employeeCode" [required]="false" />
                   <signet-custom-text-field fieldTitle="UAN" formControlName="uanNumber" [required]="false" />
-                  <signet-custom-text-field fieldTitle="PF Number" formControlName="pfNumber" [required]="false" />
                   <signet-custom-text-field fieldTitle="ESIC" formControlName="esicNumber" [required]="false" />
                   <signet-search-select-dropdown
                     formControlName="status"
@@ -84,7 +83,6 @@
                 <div class="data-list__header">
                   <div class="data-list__cell">Code</div>
                   <div class="data-list__cell">UAN</div>
-                  <div class="data-list__cell">PF</div>
                   <div class="data-list__cell">ESIC</div>
                   <div class="data-list__cell">Status</div>
                   <div class="data-list__cell">Validation</div>
@@ -93,7 +91,6 @@
                   <div class="data-list__row" [class.pf-esic-bulk-wizard__row--invalid]="row.errors.length">
                     <div class="data-list__cell">{{ row.employeeCode || '—' }}</div>
                     <div class="data-list__cell">{{ row.uanNumber || '—' }}</div>
-                    <div class="data-list__cell">{{ row.pfNumber || '—' }}</div>
                     <div class="data-list__cell">{{ row.esicNumber || '—' }}</div>
                     <div class="data-list__cell">{{ row.status || '—' }}</div>
                     <div class="data-list__cell">

@@ -51,7 +51,6 @@ export class PfEsicListComponent implements OnInit {
   readonly statusCtrl = new FormControl<PfEsicStatus | null>(null);
   readonly clientCtrl = new FormControl<string | null>(null);
   readonly hasUanCtrl = new FormControl<TriStateFilter>('all');
-  readonly hasPfCtrl = new FormControl<TriStateFilter>('all');
   readonly hasEsicCtrl = new FormControl<TriStateFilter>('all');
 
   readonly displayedColumns = [
@@ -60,7 +59,6 @@ export class PfEsicListComponent implements OnInit {
     'clientCompanyName',
     'aadhaarNumber',
     'uanNumber',
-    'pfNumber',
     'esicNumber',
     'status',
     'effectiveDate'
@@ -116,7 +114,7 @@ export class PfEsicListComponent implements OnInit {
       this.loadData(this.pager.firstPageParams());
     });
 
-    [this.statusCtrl, this.clientCtrl, this.hasUanCtrl, this.hasPfCtrl, this.hasEsicCtrl].forEach(ctrl => {
+    [this.statusCtrl, this.clientCtrl, this.hasUanCtrl, this.hasEsicCtrl].forEach(ctrl => {
       ctrl.valueChanges.subscribe(() => {
         this.pager.reset();
         this.loadData(this.pager.firstPageParams());
@@ -187,16 +185,25 @@ export class PfEsicListComponent implements OnInit {
     this.loadData();
   }
 
-  exportCsv(): void {
-    this.pfEsicService.export(this.buildQueryParams()).subscribe({
+  exportExcel(): void {
+    this.downloadExport('excel');
+  }
+
+  exportPdf(): void {
+    this.downloadExport('pdf');
+  }
+
+  private downloadExport(format: 'excel' | 'pdf'): void {
+    this.pfEsicService.export({ ...this.buildQueryParams(), format }).subscribe({
       next: blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `pf-esic-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        const ext = format === 'pdf' ? 'pdf' : 'xlsx';
+        a.download = `pf-esic-export-${new Date().toISOString().slice(0, 10)}.${ext}`;
         a.click();
         URL.revokeObjectURL(url);
-        this.notification.success('Export downloaded successfully.');
+        this.notification.success(`${format === 'pdf' ? 'PDF' : 'Excel'} export downloaded successfully.`);
       },
       error: () => this.notification.error('Export failed.'),
     });
@@ -216,7 +223,6 @@ export class PfEsicListComponent implements OnInit {
     this.statusCtrl.setValue(null);
     this.clientCtrl.setValue(null);
     this.hasUanCtrl.setValue('all');
-    this.hasPfCtrl.setValue('all');
     this.hasEsicCtrl.setValue('all');
   }
 
@@ -227,7 +233,6 @@ export class PfEsicListComponent implements OnInit {
       this.statusCtrl.value ||
       this.clientCtrl.value ||
       this.hasUanCtrl.value !== 'all' ||
-      this.hasPfCtrl.value !== 'all' ||
       this.hasEsicCtrl.value !== 'all'
     );
   }
@@ -263,7 +268,6 @@ export class PfEsicListComponent implements OnInit {
       status: (this.statusCtrl.value as PfEsicStatus | '' | null) || undefined,
       clientId: this.clientCtrl.value || undefined,
       hasUan: this.triToBool(this.hasUanCtrl.value),
-      hasPf: this.triToBool(this.hasPfCtrl.value),
       hasEsic: this.triToBool(this.hasEsicCtrl.value),
       sortBy: this.sortBy,
       sortDir: this.sortDir,
@@ -293,7 +297,6 @@ export class PfEsicListComponent implements OnInit {
           e.fullName.toLowerCase().includes(q) ||
           e.employeeCode.toLowerCase().includes(q) ||
           e.uanNumber?.includes(q) ||
-          e.pfNumber?.toLowerCase().includes(q) ||
           e.esicNumber?.includes(q)
       );
     }
@@ -315,8 +318,6 @@ export class PfEsicListComponent implements OnInit {
 
     if (params.hasUan === true) items = items.filter(e => !!e.uanNumber);
     if (params.hasUan === false) items = items.filter(e => !e.uanNumber);
-    if (params.hasPf === true) items = items.filter(e => !!e.pfNumber);
-    if (params.hasPf === false) items = items.filter(e => !e.pfNumber);
     if (params.hasEsic === true) items = items.filter(e => !!e.esicNumber);
     if (params.hasEsic === false) items = items.filter(e => !e.esicNumber);
 
