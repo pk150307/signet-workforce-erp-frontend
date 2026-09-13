@@ -86,7 +86,9 @@ export interface AttendanceRegisterMeta {
   submittedBy: string | null;
   totalEmployees: number;
   totalDays: number;
+  /** Employees with present days entered. */
   markedCells: number;
+  /** Employees missing present days. */
   unmarkedCells: number;
   isComplete: boolean;
 }
@@ -97,17 +99,20 @@ export interface AttendanceEmployeeListItem {
   employeeName: string;
   departmentName: string;
   siteName: string;
-  presentCount: number;
-  absentCount: number;
-  leaveCount: number;
-  halfDayCount: number;
-  holidayCount: number;
-  weekOffCount: number;
-  unmarkedCount: number;
+  presentDays: number | null;
   overtimeHours: number;
   nightAllowance: number;
   punctualityAward: number;
+  bonus: number;
   rowStatus: EmployeeRegisterRowStatus;
+  /** Legacy aliases */
+  presentCount?: number;
+  absentCount?: number;
+  leaveCount?: number;
+  halfDayCount?: number;
+  holidayCount?: number;
+  weekOffCount?: number;
+  unmarkedCount?: number;
 }
 
 export interface AttendanceEmployeeListResponse {
@@ -123,9 +128,11 @@ export interface AttendanceGridEmployee {
   departmentName: string;
   siteName: string;
   cells: Record<string, number | null>;
+  presentDays: number | null;
   overtimeHours: number;
   nightAllowance: number;
   punctualityAward: number;
+  bonus: number;
 }
 
 export interface AttendanceGridResponse {
@@ -153,9 +160,11 @@ export interface EmployeeAttendanceCalendar {
     weekOff: number;
     unmarked: number;
     workingDays: number;
+    presentDays?: number | null;
     overtimeHours: number;
     nightAllowance: number;
     punctualityAward: number;
+    bonus?: number;
   };
   days: Array<{
     date: string;
@@ -169,9 +178,11 @@ export interface EmployeeAttendanceCalendar {
 export interface ImportPreviewEmployeeRow {
   employeeCode: string;
   employeeName?: string;
+  presentDays: number | null;
   overtimeHours: number;
   nightAllowance: number;
   punctualityAward: number;
+  bonus: number;
   cellsUpdated: number;
   error?: string;
 }

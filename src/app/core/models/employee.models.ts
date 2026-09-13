@@ -40,6 +40,7 @@ export interface EmployeeDetail {
   employeeCode: string;
   firstName: string;
   lastName: string;
+  fatherName?: string | null;
   email: string;
   phone: string;
   alternatePhone: string | null;
@@ -64,6 +65,7 @@ export interface EmployeeDetail {
   siteName: string | null;
   clientId: string | null;
   clientName: string | null;
+  clientSoftCode: string | null;
   presentAddress: string | null;
   permanentAddress: string | null;
   city: string | null;
@@ -73,13 +75,23 @@ export interface EmployeeDetail {
   accountNumber: string | null;
   ifscCode: string | null;
   accountHolderName: string | null;
-  pfNumber: string | null;
   esiNumber: string | null;
   panNumber: string | null;
   aadhaarNumber: string | null;
   uanNumber: string | null;
   basicSalary: number;
+  houseRentAllowance: number;
+  specialAllowance: number;
   grossSalary: number;
+  isPfApplicable: boolean;
+  isEsiApplicable: boolean;
+  isLwfApplicable: boolean;
+  employeePfPercentage: number;
+  employeeEsiPercentage: number;
+  employeeLwfPercentage: number;
+  employeePfMaxAmount: number;
+  employeeEsiMaxAmount: number;
+  employeeLwfMaxAmount: number;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -87,7 +99,8 @@ export interface EmployeeDetail {
 export interface CreateEmployeeRequest {
   firstName: string;
   lastName: string;
-  email: string;
+  fatherName?: string;
+  email?: string;
   phone: string;
   alternatePhone?: string;
   dateOfBirth: string;
@@ -99,6 +112,7 @@ export interface CreateEmployeeRequest {
   designationGradeId?: string;
   reportingManagerId?: string;
   clientId?: string;
+  clientSoftCode?: string;
   siteId?: string;
   presentAddress?: string;
   permanentAddress?: string;
@@ -106,7 +120,18 @@ export interface CreateEmployeeRequest {
   state?: string;
   pinCode?: string;
   basicSalary: number;
+  houseRentAllowance: number;
+  specialAllowance: number;
   grossSalary: number;
+  isPfApplicable?: boolean;
+  isEsiApplicable?: boolean;
+  isLwfApplicable?: boolean;
+  employeePfPercentage?: number;
+  employeeEsiPercentage?: number;
+  employeeLwfPercentage?: number;
+  employeePfMaxAmount?: number;
+  employeeEsiMaxAmount?: number;
+  employeeLwfMaxAmount?: number;
 }
 
 export type EmployeeDocumentType =
@@ -149,7 +174,6 @@ export interface CreateEmployeeDraftRequest extends CreateEmployeeRequest {
   aadhaarNumber?: string;
   panNumber?: string;
   uanNumber?: string;
-  pfNumber?: string;
   esicNumber?: string;
   bankName?: string;
   accountHolderName?: string;

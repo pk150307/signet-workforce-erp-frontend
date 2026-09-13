@@ -39,7 +39,11 @@ export class PfEsicService {
 
   export(params: PfEsicQueryParams = {}) {
     return this.http.get(`${this.baseUrl}/export`, {
-      params: toHttpParams({ ...params, pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE }),
+      params: toHttpParams({
+        ...params,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        format: params.format ?? 'excel',
+      }),
       responseType: 'blob',
     });
   }

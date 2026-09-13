@@ -40,10 +40,14 @@ export class AuditLogsService {
     return this.http.get<AuditLogSummary>(`${environment.apiUrl}${API_ENDPOINTS.auditLogs.summary}`, { params });
   }
 
-  exportCsv(query: IamQueryParams = {}): Observable<string> {
+  exportExcel(query: IamQueryParams & { format?: 'excel' | 'pdf' } = {}): Observable<Blob> {
     return this.http.get(`${environment.apiUrl}${API_ENDPOINTS.auditLogs.export}`, {
-      params: toHttpParams({ ...query, pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE }),
-      responseType: 'text',
+      params: toHttpParams({
+        ...query,
+        pageSize: query.pageSize ?? DEFAULT_PAGE_SIZE,
+        format: query.format ?? 'excel',
+      }),
+      responseType: 'blob',
     });
   }
 }

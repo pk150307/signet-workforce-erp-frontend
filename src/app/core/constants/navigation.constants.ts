@@ -13,6 +13,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Employees', icon: 'people', route: '/employees' },
   { label: 'Attendance', icon: 'event_available', route: '/attendance' },
   { label: 'Payslips', icon: 'description', route: '/payroll/payslips' },
+  { label: 'Salary Register', icon: 'table_chart', route: '/payroll/salary-register' },
+  { label: 'Employee Advances', icon: 'payments', route: '/payroll/employee-advances' },
   { label: 'Billing', icon: 'receipt_long', route: '/billing' },
   { label: 'PF/ESIC', icon: 'health_and_safety', route: '/statutory/pf-esic' },
   { label: 'Clients', icon: 'business', route: '/clients' },

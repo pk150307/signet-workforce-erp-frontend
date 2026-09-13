@@ -71,8 +71,8 @@ export interface PfEsicQueryParams extends CursorPageParams {
   department?: string;
   siteId?: string;
   hasUan?: boolean;
-  hasPf?: boolean;
   hasEsic?: boolean;
   sortBy?: string;
   sortDir?: 'asc' | 'desc';
+  format?: 'excel' | 'pdf';
 }

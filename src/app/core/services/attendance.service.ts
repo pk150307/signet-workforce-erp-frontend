@@ -100,10 +100,11 @@ export class AttendanceService {
   submitEmployeeRow(
     employeeId: string,
     body: RegisterPeriod & {
-      cells: Array<{ date: string; status: number | null }>;
+      presentDays: number;
       overtimeHours?: number;
       nightAllowance?: number;
       punctualityAward?: number;
+      bonus?: number;
     },
   ) {
     return this.http.put<SubmitEmployeeRowResponse>(
@@ -141,9 +142,9 @@ export class AttendanceService {
     });
   }
 
-  exportRegister(params: RegisterPeriod) {
+  exportRegister(params: RegisterPeriod, format: 'excel' | 'pdf' = 'excel') {
     return this.http.get(`${this.base}/registers/import/export`, {
-      params: this.periodParams(params),
+      params: this.periodParams(params).set('format', format),
       responseType: 'blob',
     });
   }

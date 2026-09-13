@@ -357,12 +357,22 @@ export function cursorToLegacyPage<T>(
 
 /** Detect invalid-cursor API errors (reload first page). */
 export function isInvalidCursorError(err: unknown): boolean {
-  const error = err as { status?: number; error?: { detail?: string; title?: string; message?: string } };
-  if (error?.status === 400 || error?.status === 422) {
-    const message = `${error.error?.detail ?? ''} ${error.error?.title ?? ''} ${error.error?.message ?? ''}`.toLowerCase();
-    return message.includes('cursor') || message.includes('invalid');
-  }
-  return false;
+  const error = err as {
+    status?: number;
+    error?: {
+      detail?: string;
+      title?: string;
+      message?: string;
+      errors?: Record<string, string[] | string>;
+    };
+  };
+  if (error?.status !== 400 && error?.status !== 422) return false;
+
+  const cursorErrors = error.error?.errors?.cursor;
+  if (cursorErrors != null) return true;
+
+  const message = `${error.error?.detail ?? ''} ${error.error?.title ?? ''} ${error.error?.message ?? ''}`.toLowerCase();
+  return message.includes('cursor') && (message.includes('invalid') || message.includes('expired'));
 }
 
 /**

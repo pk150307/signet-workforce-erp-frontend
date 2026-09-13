@@ -52,14 +52,18 @@ const MOCK_EMPLOYEE_DETAILS: Record<string, EmployeeDetail> = {
     departmentId: '2', departmentName: 'Operations', designationId: '3', designationName: 'Site Supervisor',
     designationGradeId: null, gradeCode: null, gradeName: null,
     reportingManagerId: '5', reportingManagerName: 'Sunita Patel',
-    clientId: '1', clientName: 'Brigade Enterprises',
+    clientId: '1', clientName: 'Brigade Enterprises', clientSoftCode: 'BRG-01',
     siteId: '1', siteName: 'Tech Park Alpha',
     presentAddress: '12 MG Road, Bengaluru', permanentAddress: '12 MG Road, Bengaluru',
     city: 'Bengaluru', state: 'Karnataka', pinCode: '560001',
     bankName: 'HDFC Bank', accountNumber: '50100123456789', ifscCode: 'HDFC0001234',
-    accountHolderName: 'Priya Sharma', pfNumber: 'KN/BN/12345/000/1234567', esiNumber: '12345678901234567',
+    accountHolderName: 'Priya Sharma', esiNumber: '12345678901234567',
     panNumber: 'ABCDE1234F', aadhaarNumber: '123456789012', uanNumber: '100123456789',
-    basicSalary: 180000, grossSalary: 450000, createdAt: '2026-06-10T10:00:00Z', updatedAt: null,
+    basicSalary: 180000, houseRentAllowance: 72000, specialAllowance: 198000, grossSalary: 450000,
+    isPfApplicable: true, isEsiApplicable: true, isLwfApplicable: true,
+    employeePfPercentage: 12, employeeEsiPercentage: 0.75, employeeLwfPercentage: 0.2,
+    employeePfMaxAmount: 1800, employeeEsiMaxAmount: 0, employeeLwfMaxAmount: 35,
+    createdAt: '2026-06-10T10:00:00Z', updatedAt: null,
   },
 };
 
@@ -125,6 +129,7 @@ function buildMockDetail(id: string): EmployeeDetail {
     reportingManagerName: null,
     clientId: '1',
     clientName: null,
+    clientSoftCode: null,
     siteId: '1',
     siteName: item?.siteName ?? null,
     presentAddress: 'Sample Address',
@@ -136,13 +141,23 @@ function buildMockDetail(id: string): EmployeeDetail {
     accountNumber: null,
     ifscCode: null,
     accountHolderName: null,
-    pfNumber: null,
     esiNumber: null,
     panNumber: null,
     aadhaarNumber: null,
     uanNumber: null,
     basicSalary: 200000,
+    houseRentAllowance: 80000,
+    specialAllowance: 220000,
     grossSalary: 500000,
+    isPfApplicable: true,
+    isEsiApplicable: true,
+    isLwfApplicable: true,
+    employeePfPercentage: 12,
+    employeeEsiPercentage: 0.75,
+    employeeLwfPercentage: 0.2,
+    employeePfMaxAmount: 1800,
+    employeeEsiMaxAmount: 0,
+    employeeLwfMaxAmount: 35,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: null,
   };
@@ -155,6 +170,18 @@ function normalizeEmployeeDetail(emp: EmployeeDetail): EmployeeDetail {
     ...emp,
     dateOfBirth: dob ? dob.toISOString() : emp.dateOfBirth,
     joiningDate: joining ? joining.toISOString() : emp.joiningDate,
+    houseRentAllowance: emp.houseRentAllowance ?? 0,
+    specialAllowance: emp.specialAllowance ?? 0,
+    isPfApplicable: emp.isPfApplicable ?? true,
+    isEsiApplicable: emp.isEsiApplicable ?? true,
+    isLwfApplicable: emp.isLwfApplicable ?? true,
+    employeePfPercentage: emp.employeePfPercentage ?? 12,
+    employeeEsiPercentage: emp.employeeEsiPercentage ?? 0.75,
+    employeeLwfPercentage: emp.employeeLwfPercentage ?? 0.2,
+    employeePfMaxAmount: emp.employeePfMaxAmount ?? 1800,
+    employeeEsiMaxAmount: emp.employeeEsiMaxAmount ?? 0,
+    employeeLwfMaxAmount: emp.employeeLwfMaxAmount ?? 35,
+    clientSoftCode: emp.clientSoftCode ?? null,
   };
 }
 
@@ -261,5 +288,19 @@ export class EmployeeService {
     return this.http.post<void>(`${this.base}/${id}/rejoin`, payload).pipe(
       tap(() => invalidateLookupCache('employees-select')),
     );
+  }
+
+  exportExcel() {
+    return this.http.get(`${this.base}/export`, {
+      params: { format: 'excel' },
+      responseType: 'blob',
+    });
+  }
+
+  exportPdf() {
+    return this.http.get(`${this.base}/export`, {
+      params: { format: 'pdf' },
+      responseType: 'blob',
+    });
   }
 }

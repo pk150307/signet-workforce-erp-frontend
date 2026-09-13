@@ -35,8 +35,14 @@ export class DepartmentService {
       const pageSize = 100;
       return this.getAll({ ...params, pageSize, isActive: params.isActive ?? true }).pipe(
         expand(result =>
-          result.pagination.hasNext
-            ? this.getAll({ ...params, pageSize, isActive: params.isActive ?? true, cursor: result.pagination.nextCursor, direction: 'next' })
+          result.pagination.hasNext && result.pagination.nextCursor
+            ? this.getAll({
+                ...params,
+                pageSize,
+                isActive: params.isActive ?? true,
+                cursor: result.pagination.nextCursor,
+                direction: 'next',
+              })
             : EMPTY,
         ),
         map(result => result.items),

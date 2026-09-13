@@ -104,6 +104,32 @@ export const API_ENDPOINTS = {
     byId: (id: string) => `/payroll/payslips/${id}`,
     print: (id: string) => `/payroll/payslips/${id}/print`,
   },
+  salaryRegister: {
+    base: '/salary-register',
+    generate: '/salary-register/generate',
+    byId: (id: string) => `/salary-register/${id}`,
+    recalculate: (id: string) => `/salary-register/${id}/recalculate`,
+    employeeRow: (id: string, employeeRowId: string) =>
+      `/salary-register/${id}/employees/${employeeRowId}`,
+    finalize: (id: string) => `/salary-register/${id}/finalize`,
+    reopen: (id: string) => `/salary-register/${id}/reopen`,
+    exportExcel: (id: string) => `/salary-register/${id}/export/excel`,
+    exportPdf: (id: string) => `/salary-register/${id}/export/pdf`,
+  },
+  employeeAdvances: {
+    base: '/employee-advances',
+    generate: '/employee-advances/generate',
+    byId: (id: string) => `/employee-advances/${id}`,
+    refresh: (id: string) => `/employee-advances/${id}/refresh`,
+    payments: (id: string, entryId: string) =>
+      `/employee-advances/${id}/entries/${entryId}/payments`,
+    payment: (id: string, entryId: string, paymentId: string) =>
+      `/employee-advances/${id}/entries/${entryId}/payments/${paymentId}`,
+    finalize: (id: string) => `/employee-advances/${id}/finalize`,
+    reopen: (id: string) => `/employee-advances/${id}/reopen`,
+    exportExcel: (id: string) => `/employee-advances/${id}/export/excel`,
+    exportPdf: (id: string) => `/employee-advances/${id}/export/pdf`,
+  },
   statutory: {
     pfEsic: '/statutory/pf-esic',
     pfEsicByEmployee: (employeeId: string) => `/statutory/pf-esic/${employeeId}`,

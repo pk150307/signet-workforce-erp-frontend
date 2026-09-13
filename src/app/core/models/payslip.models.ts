@@ -31,10 +31,10 @@ export interface PayslipDetail extends PayslipListItem {
   slipNumber?: string;
   designation: string;
   siteName?: string;
+  softCode?: string;
   bankAccount?: string;
   panNumber?: string;
   uanNumber?: string;
-  pfNumber?: string;
   esicNumber?: string;
   earnings: PayslipLineItem[];
   deductions: PayslipLineItem[];
