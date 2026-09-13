@@ -69,29 +69,21 @@
       <div class="hint-banner card">
         <mat-icon>info</mat-icon>
         <span>
-          Mark each day, enter <strong>OT Hours</strong>, <strong>Night Allowance</strong>, and <strong>Punctuality Award</strong>, then <strong>Submit</strong> the row (or import Excel — data saves immediately).
-          When every cell is marked, use <strong>Submit &amp; Lock</strong>.
+          Enter <strong>Present Days</strong>, <strong>OT (₹)</strong>, <strong>Night Allowance</strong>, <strong>Punctuality Award</strong>, and <strong>Bonus</strong> (if allocated), then <strong>Submit</strong> each row (or import Excel).
+          When every employee has present days, use <strong>Submit &amp; Lock</strong>.
         </span>
       </div>
     }
 
     <div class="toolbar card">
       <div class="legend">
-        <span class="legend-item cell--present">P</span> Present
-        <span class="legend-item cell--absent">A</span> Absent
-        <span class="legend-item cell--leave">L</span> Leave
-        <span class="legend-item cell--half">HD</span> Half Day
-        <span class="legend-item cell--holiday">H</span> Holiday
-        <span class="legend-item cell--weekoff">WO</span> Week Off
-        <span class="legend-item cell--empty">-</span> Not Marked
+        One present-days total per employee — same register layout as before.
       </div>
       @if (!isLocked()) {
         <div class="toolbar-actions">
-          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Mark Sundays" (clicked)="bulk('mark_sundays')" />
-          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="All Present" (clicked)="bulk('mark_all_present')" />
-          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Clear All" (clicked)="bulk('clear_unmarked')" />
           <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Template" (clicked)="downloadTemplate()" />
-          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export" (clicked)="exportRegister()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export Excel" (clicked)="exportRegister()" />
+          <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export PDF" (clicked)="exportRegisterPdf()" />
           <label class="upload-btn">
             <mat-icon>upload_file</mat-icon> Import
             <input type="file" accept=".xlsx,.xlsm,.csv" hidden (change)="onFileSelected($event)">
@@ -106,15 +98,15 @@
         <mat-icon>info_outline</mat-icon>
         <span>{{ lockBlockReason() }}</span>
         <span class="lock-hint__stats">
-          {{ g.register.markedCells }} / {{ g.register.totalEmployees * g.register.totalDays }} cells marked
+          {{ g.register.markedCells }} / {{ g.register.totalEmployees }} employees entered
         </span>
       </div>
     }
 
     @if (showImportPanel() && importPreview(); as prev) {
       <div class="import-panel card">
-        <strong>Import preview:</strong> {{ prev.valid }} employees, {{ prev.cells }} cells, {{ prev.errors }} errors.
-        <span class="import-hint">Format: Emp ID | Emp Name | 01-Apr-26 … | OT Hours | Night Allowance | Punctuality Award</span>
+        <strong>Import preview:</strong> {{ prev.valid }} employees, {{ prev.errors }} errors.
+        <span class="import-hint">Format: Emp ID | Emp Name | Present Days | OT Hours | Night Allowance | Punctuality Award | Bonus</span>
         <div class="import-actions">
           <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showImportPanel.set(false)" />
           <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Apply to Register" [disabled]="prev.valid === 0" (clicked)="applyImport()" />
@@ -138,59 +130,35 @@
           }
         </div>
 
-        <!-- Scrollable day columns -->
-        <div class="register-panel register-panel--days">
-          <div class="register-days-track">
-            <div class="register-cell register-cell--head register-cell--days">
-              @for (date of g.dates; track date) {
-                <div class="register-day register-day--head" [class.register-day--sun]="isSunday(date)" [title]="dayLabel(date)">
-                  <span class="day-num">{{ dayNumber(date) }}</span>
-                  <span class="day-dow">{{ dayWeekday(date) }}</span>
-                </div>
-              }
-            </div>
-            @for (emp of g.employees; track emp.employeeId) {
-              <div class="register-cell register-cell--days" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
-                @for (date of g.dates; track date) {
-                  <div class="register-day" [class.register-day--sun]="isSunday(date)">
-                    @if (isLocked()) {
-                      <div
-                        class="att-chip att-chip--readonly"
-                        [ngClass]="cellClass(getCellValue(emp.employeeId, date))"
-                        [title]="statusTitle(getCellValue(emp.employeeId, date))">
-                        {{ cellShort(getCellValue(emp.employeeId, date)) }}
-                      </div>
-                    } @else {
-                      <div class="att-chip" [ngClass]="cellClass(getCellValue(emp.employeeId, date))">
-                        <select
-                          class="att-select"
-                          [ngModel]="cellSelectValue(getCellValue(emp.employeeId, date))"
-                          (ngModelChange)="onCellChange(emp.employeeId, date, $event)"
-                          [disabled]="isLocked()"
-                          [title]="statusTitle(getCellValue(emp.employeeId, date))">
-                          @for (opt of statusOptions; track opt.label) {
-                            <option [value]="opt.value ?? ''">{{ cellShort(opt.value) }}</option>
-                          }
-                        </select>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Fixed OT / allowances + Save column -->
+        <!-- Present Days + OT / allowances / bonus + Submit (equal-width columns) -->
         <div class="register-panel register-panel--tail">
           <div class="register-cell register-cell--head register-cell--tail">
+            <span class="register-ot-head">Present Days</span>
             <span class="register-ot-head">OT (₹)</span>
             <span class="register-ot-head">Night</span>
             <span class="register-ot-head">PA</span>
-            <span class="register-action-head">Save</span>
+            <span class="register-ot-head">Bonus</span>
+            <span class="register-action-head">Submit</span>
           </div>
           @for (emp of g.employees; track emp.employeeId) {
             <div class="register-cell register-cell--tail" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
+              <div class="register-ot">
+                <signet-custom-text-field
+                  class="register-ot-field"
+                  type="text"
+                  [width]="100"
+                  widthUnit="%"
+                  [required]="true"
+                  [hideTitle]="true"
+                  [isCentreAlign]="true"
+                  [allowNegative]="false"
+                  placeholder="0"
+                  [ngModel]="presentDaysDisplay(emp.employeeId)"
+                  (ngModelChange)="onPresentDaysChange(emp.employeeId, $event)"
+                  [readOnly]="isLocked()"
+                  [disableEdit]="isLocked()"
+                />
+              </div>
               <div class="register-ot">
                 <signet-custom-text-field
                   class="register-ot-field"
@@ -242,6 +210,23 @@
                   [disableEdit]="isLocked()"
                 />
               </div>
+              <div class="register-ot">
+                <signet-custom-text-field
+                  class="register-ot-field"
+                  type="number"
+                  [width]="100"
+                  widthUnit="%"
+                  [required]="false"
+                  [hideTitle]="true"
+                  [isCentreAlign]="true"
+                  [allowNegative]="false"
+                  placeholder="0"
+                  [ngModel]="getExtras(emp.employeeId).bonus"
+                  (ngModelChange)="onExtraChange(emp.employeeId, 'bonus', $event)"
+                  [readOnly]="isLocked()"
+                  [disableEdit]="isLocked()"
+                />
+              </div>
               <div class="register-action">
                 @if (!isLocked()) {
                   <signet-button
@@ -264,31 +249,41 @@
     </div>
 
     @if (showLockDialog()) {
-      <div class="dialog-overlay">
-        <div class="dialog card">
+      <div class="dialog-overlay" (click)="showLockDialog.set(false)">
+        <div class="dialog card register-dialog" (click)="$event.stopPropagation()">
           <h3>Submit & Lock Register</h3>
-          <p>{{ g.register.markedCells }} of {{ g.register.totalEmployees * g.register.totalDays }} cells marked.</p>
+          <p>{{ g.register.markedCells }} of {{ g.register.totalEmployees }} employees have present days entered.</p>
           @if (g.register.unmarkedCells > 0) {
-            <p class="dialog-warn">{{ g.register.unmarkedCells }} cell(s) still unmarked.</p>
+            <p class="dialog-warn">{{ g.register.unmarkedCells }} employee(s) still missing present days.</p>
           }
           <signet-custom-checkbox [formControl]="verified" label="I have verified this register against the client sheet" permissionKey="verified" groupName="form" />
           <div class="dialog-actions">
-            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showLockDialog.set(false)" />
-            <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Lock Register" [disabled]="saving() || !canLockRegister()" (clicked)="confirmLock()" />
+            <signet-button type="stroke" displayText="Cancel" (clicked)="showLockDialog.set(false)" />
+            <signet-button type="primary" displayText="Lock Register" [disabled]="saving() || !canLockRegister()" (clicked)="confirmLock()" />
           </div>
         </div>
       </div>
     }
 
     @if (showUnlockDialog()) {
-      <div class="dialog-overlay">
-        <div class="dialog card">
+      <div class="dialog-overlay" (click)="showUnlockDialog.set(false)">
+        <div class="dialog card register-dialog" (click)="$event.stopPropagation()">
           <h3>Unlock Register</h3>
           <p>A reason is required to unlock this register. This will be logged for audit.</p>
-          <signet-custom-text-area-field class="full-width" fieldTitle="Reason for unlock" [formControl]="unlockReason" [height]="80" [required]="false" />
+          <signet-custom-text-area-field
+            class="register-dialog__field"
+            fieldTitle="Reason for unlock"
+            placeholder="Enter reason for unlock"
+            [formControl]="unlockReason"
+            [width]="100"
+            widthUnit="%"
+            [height]="96"
+            heightUnit="px"
+            [required]="true"
+          />
           <div class="dialog-actions">
-            <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showUnlockDialog.set(false)" />
-            <signet-button [width]="100" [widthUnit]="'%'" type="error" displayText="Unlock" [disabled]="saving()" (clicked)="confirmUnlock()" />
+            <signet-button type="stroke" displayText="Cancel" (clicked)="showUnlockDialog.set(false)" />
+            <signet-button type="error" displayText="Unlock" [disabled]="saving()" (clicked)="confirmUnlock()" />
           </div>
         </div>
       </div>

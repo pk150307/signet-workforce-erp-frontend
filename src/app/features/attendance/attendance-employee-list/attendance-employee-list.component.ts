@@ -39,8 +39,6 @@ export class AttendanceEmployeeListComponent implements OnInit {
   readonly pager = new CursorPaginationState();
   readonly monthNames = MONTH_NAMES;
   readonly rowStatusLabel = rowStatusLabel;
-  readonly cols = ['employee', 'department', 'site', 'present', 'absent', 'leave', 'overtime', 'night', 'punctuality', 'unmarked', 'status', 'actions'];
-
   readonly filters = new FormGroup({
     clientId: new FormControl(this.attendanceFilter.clientIdOrEmpty(), { nonNullable: true, validators: Validators.required }),
     month: new FormControl(this.attendanceFilter.month(), { nonNullable: true }),
@@ -52,6 +50,14 @@ export class AttendanceEmployeeListComponent implements OnInit {
   readonly clientOptions = computed(() =>
     this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
   );
+
+  readonly selectedClientName = computed(() => {
+    const fromRegister = this.register()?.clientName?.trim();
+    if (fromRegister) return fromRegister;
+    const clientId = this.filters.value.clientId;
+    if (!clientId) return '—';
+    return this.clients().find(c => c.id === clientId)?.companyName ?? '—';
+  });
 
   readonly monthOptions = computed(() =>
     this.monthNames.map((name, i) => ({ key: String(i + 1), value: name })),
@@ -127,13 +133,6 @@ export class AttendanceEmployeeListComponent implements OnInit {
     const v = this.filters.getRawValue();
     this.router.navigate(['/attendance/register'], {
       queryParams: { clientId: v.clientId, month: v.month, year: v.year },
-    });
-  }
-
-  viewEmployee(employee: AttendanceEmployeeListItem) {
-    const v = this.filters.getRawValue();
-    this.router.navigate(['/attendance/employees', employee.employeeId], {
-      queryParams: { month: v.month, year: v.year, clientId: v.clientId },
     });
   }
 }

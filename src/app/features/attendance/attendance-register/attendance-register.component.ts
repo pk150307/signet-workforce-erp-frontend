@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AttendanceService } from '../../../core/services/attendance.service';
@@ -11,45 +11,39 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ClientListItem } from '../../../core/models/client.models';
 import {
   AttendanceGridResponse,
-  AttendanceStatusCode,
-  ATTENDANCE_STATUS_OPTIONS,
   MONTH_NAMES,
   RegisterPeriod,
-  cellClass,
-  cellShort,
 } from '../../../core/models/attendance.models';
 
-type DraftMap = Record<string, Record<string, number | null>>;
-
 interface RegisterExtras {
+  presentDays: number | null;
   overtimeHours: number;
   nightAllowance: number;
   punctualityAward: number;
+  bonus: number;
 }
 
 type RegisterExtrasMap = Record<string, RegisterExtras>;
 
 const EMPTY_EXTRAS: RegisterExtras = {
+  presentDays: null,
   overtimeHours: 0,
   nightAllowance: 0,
   punctualityAward: 0,
+  bonus: 0,
 };
 
-function normalizeCellStatus(value: number | string | null | undefined): number | null {
-  if (value == null || value === '') return null;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
 function extrasEqual(a: RegisterExtras, b: RegisterExtras): boolean {
-  return a.overtimeHours === b.overtimeHours
+  return a.presentDays === b.presentDays
+    && a.overtimeHours === b.overtimeHours
     && a.nightAllowance === b.nightAllowance
-    && a.punctualityAward === b.punctualityAward;
+    && a.punctualityAward === b.punctualityAward
+    && a.bonus === b.bonus;
 }
 
 @Component({
   selector: 'app-attendance-register',
-    templateUrl: './attendance-register.component.html',
+  templateUrl: './attendance-register.component.html',
   styleUrl: './attendance-register.component.less',
 })
 export class AttendanceRegisterComponent implements OnInit {
@@ -70,8 +64,6 @@ export class AttendanceRegisterComponent implements OnInit {
   readonly saving = signal(false);
   readonly submittingEmployeeId = signal<string | null>(null);
   readonly grid = signal<AttendanceGridResponse | null>(null);
-  readonly draft = signal<DraftMap>({});
-  readonly saved = signal<DraftMap>({});
   readonly draftExtras = signal<RegisterExtrasMap>({});
   readonly savedExtras = signal<RegisterExtrasMap>({});
   readonly showLockDialog = signal(false);
@@ -84,9 +76,6 @@ export class AttendanceRegisterComponent implements OnInit {
 
   readonly monthNames = MONTH_NAMES;
   readonly years = [2024, 2025, 2026, 2027];
-  readonly statusOptions = ATTENDANCE_STATUS_OPTIONS;
-  readonly cellClass = cellClass;
-  readonly cellShort = cellShort;
 
   readonly clientOptions = computed(() =>
     this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
@@ -112,24 +101,16 @@ export class AttendanceRegisterComponent implements OnInit {
 
   readonly pendingChanges = computed(() => {
     const g = this.grid();
-    const draft = this.draft();
-    const saved = this.saved();
     const draftExtras = this.draftExtras();
     const savedExtras = this.savedExtras();
     if (!g) return {} as Record<string, boolean>;
 
     const result: Record<string, boolean> = {};
     for (const emp of g.employees) {
-      const draftRow = draft[emp.employeeId] ?? {};
-      const savedRow = saved[emp.employeeId] ?? {};
-      const cellsChanged = g.dates.some(
-        date => normalizeCellStatus(draftRow[date]) !== normalizeCellStatus(savedRow[date]),
-      );
-      const extrasChanged = !extrasEqual(
+      result[emp.employeeId] = !extrasEqual(
         draftExtras[emp.employeeId] ?? EMPTY_EXTRAS,
         savedExtras[emp.employeeId] ?? EMPTY_EXTRAS,
       );
-      result[emp.employeeId] = cellsChanged || extrasChanged;
     }
     return result;
   });
@@ -151,7 +132,7 @@ export class AttendanceRegisterComponent implements OnInit {
       return `${pendingCount} employee row(s) have unsaved changes. Submit them before locking.`;
     }
     if (!g.register.isComplete) {
-      return `${g.register.unmarkedCells} cell(s) still unmarked across ${g.register.totalEmployees} employee(s).`;
+      return `${g.register.unmarkedCells} employee(s) still missing present days.`;
     }
     return '';
   });
@@ -278,22 +259,19 @@ export class AttendanceRegisterComponent implements OnInit {
   }
 
   private initDraftFromGrid(g: AttendanceGridResponse) {
-    const draft: DraftMap = {};
     const extras: RegisterExtrasMap = {};
+    for (const key of Object.keys(this.presentDaysText)) {
+      delete this.presentDaysText[key];
+    }
     for (const emp of g.employees) {
-      const row: Record<string, number | null> = {};
-      for (const date of g.dates) {
-        row[date] = normalizeCellStatus(emp.cells[date]);
-      }
-      draft[emp.employeeId] = row;
       extras[emp.employeeId] = {
+        presentDays: emp.presentDays ?? null,
         overtimeHours: emp.overtimeHours ?? 0,
         nightAllowance: emp.nightAllowance ?? 0,
         punctualityAward: emp.punctualityAward ?? 0,
+        bonus: emp.bonus ?? 0,
       };
     }
-    this.draft.set(structuredClone(draft));
-    this.saved.set(structuredClone(draft));
     this.draftExtras.set(structuredClone(extras));
     this.savedExtras.set(structuredClone(extras));
   }
@@ -302,30 +280,48 @@ export class AttendanceRegisterComponent implements OnInit {
     return this.draftExtras()[employeeId] ?? EMPTY_EXTRAS;
   }
 
-  onExtraChange(employeeId: string, field: keyof RegisterExtras, rawValue: string | number) {
+  /** Keep decimal mid-entry (e.g. "25.") without coercing through Number on every keystroke. */
+  private readonly presentDaysText: Record<string, string> = {};
+
+  presentDaysDisplay(employeeId: string): string {
+    if (Object.prototype.hasOwnProperty.call(this.presentDaysText, employeeId)) {
+      return this.presentDaysText[employeeId];
+    }
+    const value = this.getExtras(employeeId).presentDays;
+    return value == null ? '' : String(value);
+  }
+
+  onPresentDaysChange(employeeId: string, rawValue: string | number | null) {
     if (this.isLocked()) return;
+    const text = rawValue == null ? '' : String(rawValue).replace(/[^\d.]/g, '');
+    const cleaned = text.replace(/(\..*)\./g, '$1');
+    this.presentDaysText[employeeId] = cleaned;
+
+    let value: number | null = null;
+    if (cleaned !== '' && cleaned !== '.') {
+      const parsed = Number(cleaned);
+      if (Number.isFinite(parsed)) {
+        value = Math.min(31, Math.max(0, parsed));
+      }
+    }
+
+    this.draftExtras.update(current => ({
+      ...current,
+      [employeeId]: { ...(current[employeeId] ?? EMPTY_EXTRAS), presentDays: value },
+    }));
+  }
+
+  onExtraChange(employeeId: string, field: keyof RegisterExtras, rawValue: string | number | null) {
+    if (this.isLocked()) return;
+    if (field === 'presentDays') {
+      this.onPresentDaysChange(employeeId, rawValue);
+      return;
+    }
     const value = Math.max(0, Number(rawValue) || 0);
     this.draftExtras.update(current => ({
       ...current,
       [employeeId]: { ...(current[employeeId] ?? EMPTY_EXTRAS), [field]: value },
     }));
-  }
-
-  getCellValue(employeeId: string, date: string): number | null {
-    return normalizeCellStatus(this.draft()[employeeId]?.[date]);
-  }
-
-  onCellChange(employeeId: string, date: string, rawValue: string) {
-    if (this.isLocked()) return;
-    const status = normalizeCellStatus(rawValue);
-    this.draft.update(current => ({
-      ...current,
-      [employeeId]: { ...current[employeeId], [date]: status },
-    }));
-  }
-
-  cellSelectValue(status: number | null | undefined): string {
-    return status == null ? '' : String(status);
   }
 
   hasPendingChanges(employeeId: string): boolean {
@@ -334,22 +330,20 @@ export class AttendanceRegisterComponent implements OnInit {
 
   submitEmployee(employeeId: string) {
     if (this.isLocked() || !this.hasPendingChanges(employeeId)) return;
-    const g = this.grid();
-    if (!g) return;
-
-    const cells = g.dates.map(date => ({
-      date,
-      status: this.draft()[employeeId]?.[date] ?? null,
-    }));
     const extras = this.getExtras(employeeId);
+    if (extras.presentDays == null) {
+      this.notification.warning('Enter present days before submitting.');
+      return;
+    }
 
     this.submittingEmployeeId.set(employeeId);
     this.attendanceService.submitEmployeeRow(employeeId, {
       ...this.period,
-      cells,
+      presentDays: extras.presentDays,
       overtimeHours: extras.overtimeHours,
       nightAllowance: extras.nightAllowance,
       punctualityAward: extras.punctualityAward,
+      bonus: extras.bonus,
     }).subscribe({
       next: res => {
         this.grid.update(current => {
@@ -362,23 +356,13 @@ export class AttendanceRegisterComponent implements OnInit {
             ),
           };
         });
-        const normalizedRow: Record<string, number | null> = {};
-        for (const date of g.dates) {
-          normalizedRow[date] = normalizeCellStatus(res.employee.cells[date]);
-        }
         const savedExtraValues: RegisterExtras = {
+          presentDays: res.employee.presentDays,
           overtimeHours: res.employee.overtimeHours,
           nightAllowance: res.employee.nightAllowance,
           punctualityAward: res.employee.punctualityAward,
+          bonus: res.employee.bonus,
         };
-        this.saved.update(current => ({
-          ...current,
-          [employeeId]: normalizedRow,
-        }));
-        this.draft.update(current => ({
-          ...current,
-          [employeeId]: { ...normalizedRow },
-        }));
         this.savedExtras.update(current => ({
           ...current,
           [employeeId]: savedExtraValues,
@@ -390,37 +374,11 @@ export class AttendanceRegisterComponent implements OnInit {
         this.submittingEmployeeId.set(null);
         this.notification.success('Employee attendance saved.');
       },
-      error: () => {
-        this.notification.error('Failed to save employee attendance.');
+      error: (err) => {
+        this.notification.error(err?.error?.message ?? 'Failed to save employee attendance.');
         this.submittingEmployeeId.set(null);
       },
     });
-  }
-
-  bulk(action: 'mark_sundays' | 'mark_all_present' | 'clear_unmarked') {
-    if (this.isLocked()) return;
-    const g = this.grid();
-    if (!g) return;
-
-    this.draft.update(current => {
-      const next = structuredClone(current);
-      for (const emp of g.employees) {
-        if (!next[emp.employeeId]) next[emp.employeeId] = {};
-        for (const date of g.dates) {
-          if (action === 'mark_sundays') {
-            if (this.isSunday(date)) {
-              next[emp.employeeId][date] = AttendanceStatusCode.WeekOff;
-            }
-          } else if (action === 'mark_all_present') {
-            next[emp.employeeId][date] = AttendanceStatusCode.Present;
-          } else {
-            next[emp.employeeId][date] = null;
-          }
-        }
-      }
-      return next;
-    });
-    this.notification.info('Bulk changes applied locally. Submit each employee row to save.');
   }
 
   onFileSelected(event: Event) {
@@ -455,11 +413,11 @@ export class AttendanceRegisterComponent implements OnInit {
         const reg = r.grid.register;
         if (reg.isComplete) {
           this.notification.success(
-            `Imported ${r.applied} cell(s). Register is complete — you can Submit & Lock now.`,
+            `Imported ${r.applied} employee row(s). Register is complete — you can Submit & Lock now.`,
           );
         } else {
           this.notification.warning(
-            `Imported ${r.applied} cell(s). ${reg.unmarkedCells} cell(s) still unmarked before locking.`,
+            `Imported ${r.applied} employee row(s). ${reg.unmarkedCells} employee(s) still missing present days.`,
           );
         }
       },
@@ -474,8 +432,14 @@ export class AttendanceRegisterComponent implements OnInit {
   }
 
   exportRegister() {
-    this.attendanceService.exportRegister(this.period).subscribe({
+    this.attendanceService.exportRegister(this.period, 'excel').subscribe({
       next: blob => this.saveBlob(blob, `attendance-register-${this.period.year}-${this.period.month}.xlsx`),
+    });
+  }
+
+  exportRegisterPdf() {
+    this.attendanceService.exportRegister(this.period, 'pdf').subscribe({
+      next: blob => this.saveBlob(blob, `attendance-register-${this.period.year}-${this.period.month}.pdf`),
     });
   }
 
@@ -499,7 +463,7 @@ export class AttendanceRegisterComponent implements OnInit {
       return;
     }
     if (!this.canLockRegister()) {
-      this.notification.warning('Save all employee rows and mark every day before locking the register.');
+      this.notification.warning('Save all employee rows with present days before locking the register.');
       return;
     }
     this.saving.set(true);
@@ -536,31 +500,5 @@ export class AttendanceRegisterComponent implements OnInit {
       },
       error: () => { this.notification.error('Failed to unlock.'); this.saving.set(false); },
     });
-  }
-
-  dayLabel(date: string): string {
-    const [year, month, day] = date.split('-').map(Number);
-    const mon = MONTH_NAMES[month - 1]?.slice(0, 3) ?? 'Jan';
-    return `${String(day).padStart(2, '0')}-${mon}-${String(year).slice(-2)}`;
-  }
-
-  dayNumber(date: string): string {
-    return date.slice(8, 10);
-  }
-
-  dayWeekday(date: string): string {
-    const d = new Date(`${date}T12:00:00`);
-    return ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()] ?? '';
-  }
-
-  statusTitle(status: number | null | undefined): string {
-    if (status == null) return 'Not marked';
-    const opt = ATTENDANCE_STATUS_OPTIONS.find(o => o.value === status);
-    return opt?.label ?? 'Unknown';
-  }
-
-  isSunday(date: string): boolean {
-    const d = new Date(`${date}T12:00:00`);
-    return d.getDay() === 0;
   }
 }

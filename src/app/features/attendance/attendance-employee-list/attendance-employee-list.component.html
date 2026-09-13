@@ -45,7 +45,7 @@
         <mat-icon>{{ reg.status === 'locked' ? 'lock' : 'edit_note' }}</mat-icon>
         <div>
           <strong>{{ reg.clientName }} — {{ monthNames[reg.month - 1] }} {{ reg.year }}</strong>
-          <span>{{ reg.markedCells }} / {{ reg.totalEmployees * reg.totalDays }} cells marked</span>
+          <span>{{ reg.markedCells }} / {{ reg.totalEmployees }} employees with present days</span>
           @if (reg.status === 'locked') {
             <span>Locked by {{ reg.lockedBy }} on {{ reg.lockedAt | date:'medium' }}</span>
           }
@@ -78,17 +78,15 @@
       <div class="data-list">
         <div class="data-list__header">
           <div class="data-list__cell">Employee</div>
+          <div class="data-list__cell">Client</div>
           <div class="data-list__cell">Department</div>
           <div class="data-list__cell">Site</div>
-          <div class="data-list__cell">P</div>
-          <div class="data-list__cell">A</div>
-          <div class="data-list__cell">L</div>
+          <div class="data-list__cell">Present Days</div>
           <div class="data-list__cell">OT (₹)</div>
           <div class="data-list__cell">Night</div>
           <div class="data-list__cell">PA</div>
-          <div class="data-list__cell">Unmarked</div>
+          <div class="data-list__cell">Bonus</div>
           <div class="data-list__cell">Status</div>
-          <div class="data-list__cell data-list__cell--center"></div>
         </div>
         @for (e of items(); track e.employeeId) {
           <div class="data-list__row">
@@ -96,20 +94,16 @@
               <strong>{{ e.employeeName }}</strong><br>
               <small>{{ e.employeeCode }}</small>
             </div>
+            <div class="data-list__cell">{{ selectedClientName() }}</div>
             <div class="data-list__cell">{{ e.departmentName }}</div>
             <div class="data-list__cell">{{ e.siteName }}</div>
-            <div class="data-list__cell">{{ e.presentCount }}</div>
-            <div class="data-list__cell">{{ e.absentCount }}</div>
-            <div class="data-list__cell">{{ e.leaveCount + e.halfDayCount }}</div>
+            <div class="data-list__cell">{{ e.presentDays != null ? e.presentDays : '—' }}</div>
             <div class="data-list__cell">{{ e.overtimeHours != null ? (e.overtimeHours | number:'1.0-0') : '—' }}</div>
             <div class="data-list__cell">{{ e.nightAllowance || '—' }}</div>
             <div class="data-list__cell">{{ e.punctualityAward || '—' }}</div>
-            <div class="data-list__cell">{{ e.unmarkedCount }}</div>
+            <div class="data-list__cell">{{ e.bonus || '—' }}</div>
             <div class="data-list__cell">
               <signet-status-button [label]="rowStatusLabel(e.rowStatus)" [status]="e.rowStatus" />
-            </div>
-            <div class="data-list__cell data-list__cell--center">
-              <signet-button [widthUnit]="'px'" type="primary" displayText="View" [width]="100" [height]="35" heightUnit="px" (clicked)="viewEmployee(e)" />
             </div>
           </div>
         }

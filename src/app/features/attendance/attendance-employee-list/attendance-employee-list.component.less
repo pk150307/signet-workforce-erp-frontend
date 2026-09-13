@@ -59,14 +59,21 @@
 }
 
 .data-list {
-  /* Proportional widths that always fill the row — no horizontal scroll */
-  --data-list-cols: 16% 11% 11% 5% 5% 5% 7% 6% 5% 8% 12% 9%;
+  /* Employee | Client | Department | Site | Present | OT | Night | PA | Bonus | Status */
+  --data-list-cols: 1.6fr 1.4fr 1.1fr 1.1fr 0.9fr 0.7fr 0.7fr 0.7fr 0.7fr 1fr;
   --data-list-min-width: 100%;
+  width: 100%;
+
+  &__header,
+  &__row {
+    width: 100%;
+  }
 
   &__cell {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
 
     strong,
     small {

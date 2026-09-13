@@ -13,9 +13,9 @@ export const ATTENDANCE_ROUTES: Routes = [
       import('./attendance-register/attendance-register.component').then(m => m.AttendanceRegisterComponent),
   },
   {
+    // Legacy per-employee calendar URL — open the monthly register instead
     path: 'employees/:id',
-    data: { breadcrumb: 'Employee Calendar' },
-    loadComponent: () =>
-      import('./attendance-employee-detail/attendance-employee-detail.component').then(m => m.AttendanceEmployeeDetailComponent),
+    redirectTo: 'register',
+    pathMatch: 'full',
   },
 ];
