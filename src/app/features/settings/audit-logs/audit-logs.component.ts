@@ -70,20 +70,28 @@ export class AuditLogsComponent implements OnInit {
     });
   }
 
-  exportCsv(): void {
-    this.auditLogsService.exportCsv({
+  exportExcel(): void {
+    this.downloadExport('excel');
+  }
+
+  exportPdf(): void {
+    this.downloadExport('pdf');
+  }
+
+  private downloadExport(format: 'excel' | 'pdf'): void {
+    this.auditLogsService.exportExcel({
       search: this.searchCtrl.value || undefined,
       module: this.moduleCtrl.value || undefined,
+      format,
     }).subscribe({
-      next: (csv) => {
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      next: (blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'audit-logs-export.csv';
+        a.download = format === 'pdf' ? 'audit-logs-export.pdf' : 'audit-logs-export.xlsx';
         a.click();
         URL.revokeObjectURL(url);
-        this.notification.success('Audit log export downloaded.');
+        this.notification.success(`${format === 'pdf' ? 'PDF' : 'Excel'} export downloaded.`);
       },
       error: () => this.notification.error('Export failed.'),
     });
