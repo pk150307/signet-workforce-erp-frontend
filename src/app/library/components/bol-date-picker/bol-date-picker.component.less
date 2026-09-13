@@ -3,9 +3,9 @@
 @import '../../../../assets/styles/mediaqueries.less';
 
 .datepicker {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border-radius: 12px;
-    color: #fff;
+    color: var(--color-text-primary);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -47,6 +47,7 @@
 
         .datepicker {
             padding: 20px 20px 0px 20px;
+            background: transparent;
         }
     }
 
@@ -67,7 +68,7 @@
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     padding: 0 !important;
 }
 
@@ -112,12 +113,12 @@
 
 ::ng-deep .md-drppicker td.available:hover {
     border-radius: 8px !important;
-    background: #0a0a0a !important;
+    background: var(--color-surface-hover) !important;
 }
 
 ::ng-deep .calendar-table {
     background: transparent !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     width: 100% !important;
     border-collapse: collapse !important;
     border: none !important;
@@ -128,18 +129,19 @@
     justify-content: center !important;
     align-items: center !important;
     border-radius: 8px;
-    background: #0a0a0a;
+    background: var(--color-bg-subtle);
     height: 36px !important;
     margin-bottom: 18px !important;
 }
 
 ::ng-deep .calendar-table thead tr:first-child th.month .dropdowns select {
-    background: #2a2a2a !important;
-    border: 1px solid #444 !important;
+    background: var(--color-input-bg) !important;
+    border: 1px solid var(--color-input-border) !important;
     border-radius: 6px !important;
     padding: 4px 8px !important;
-    .signet-text-style(#fff, ProximaNova-Medium, 14px, 20px) !important;
+    .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px) !important;
     margin: 0 4px !important;
+    color-scheme: inherit;
 }
 
 ::ng-deep .calendar-table thead tr:last-child {
@@ -148,7 +150,7 @@
 }
 
 ::ng-deep .calendar-table thead tr:last-child th {
-    .signet-text-style(#aaa, ProximaNova-Medium, 12px, 20px) !important;
+    .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 12px, 20px) !important;
     font-weight: 500 !important;
     text-align: center !important;
     width: 40px !important;
@@ -162,7 +164,7 @@
 ::ng-deep .calendar-table tbody td {
     min-width: 40px !important;
     height: 40px !important;
-    .signet-text-style(#fff, ProximaNova-Medium, 14px, 20px) !important;
+    .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px) !important;
     cursor: pointer !important;
     text-align: center !important;
 }
@@ -176,16 +178,12 @@
     border-radius: 8px !important;
 }
 
-// ::ng-deep .calendar-table tbody td:hover span {
-//   background: #333 !important;
-// }
-
 ::ng-deep .calendar-table tbody td.active {
     background-color: transparent;
 
     span {
-        background: #ffa534;
-        color: #fff;
+        background: var(--color-primary);
+        color: var(--color-text-on-gold);
     }
 }
 
@@ -194,7 +192,7 @@
 }
 
 ::ng-deep .calendar-table tbody td.off {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     pointer-events: none !important;
 
     span {
@@ -209,7 +207,7 @@
 ::ng-deep .md-drppicker td.today {
     position: relative !important;
     background: transparent !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
 }
 
 ::ng-deep .md-drppicker td.today:not(.active)::after {
@@ -263,8 +261,8 @@
             height: 40px;
             width: 50px;
             border-radius: 10px;
-            border: 1px solid #4b4b4b;
-            background: #1a1a1a;
+            border: 1px solid var(--color-input-border);
+            background: var(--color-input-bg);
             appearance: textfield;
             -moz-appearance: textfield;
             text-align: center;
@@ -293,27 +291,28 @@
 
     .time-selection {
         display: flex;
-        background-color: #2c2c2c;
+        background-color: var(--color-bg-subtle);
         border-radius: 12px;
         height: 40px;
         width: 82px;
         align-items: center;
         justify-content: center;
 
-            div {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 14px, 20px);
-                cursor: pointer;
-                background-color: transparent;
-                height: 32px;
-                width: 35px;
+        div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            .signet-text-style(var(--color-text-secondary), ProximaNova-Medium, 14px, 20px);
+            cursor: pointer;
+            background-color: transparent;
+            height: 32px;
+            width: 35px;
 
             &.active {
-                background-color: #000;
-                color: #fff;
+                background-color: var(--color-surface);
+                color: var(--color-text-primary);
                 border-radius: 10px;
+                box-shadow: var(--shadow-sm);
                 .signet-text-style(var(--color-text-primary), ProximaNova-Medium, 14px, 20px);
             }
         }

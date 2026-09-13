@@ -144,20 +144,21 @@ export class BolDatePickerComponent {
   }
 
   hidedisablerow() {
-    const tableRows = document.querySelectorAll('tbody tr');
+    const root = this.datepicker?.nativeElement as HTMLElement | undefined;
+    if (!root) return;
 
-    // Loop through each table row
+    const tableRows = root.querySelectorAll('tbody tr');
+
     tableRows.forEach((row) => {
-      (row as HTMLTableRowElement).style.display = 'flex';
-      // Check if the row contains any table cells with the "off" class
-      const hasOffCells = Array.from(row.querySelectorAll('td')).every(
+      const tr = row as HTMLTableRowElement;
+      tr.style.display = 'flex';
+      const hasOffCells = Array.from(tr.querySelectorAll('td')).every(
         (cell) =>
-          cell.classList.contains('off') && cell.classList.contains('available')
+          cell.classList.contains('off') && cell.classList.contains('available'),
       );
 
-      // If any cell in the row has the "off" class, hide the entire row
       if (hasOffCells) {
-        (row as HTMLTableRowElement).style.display = 'none';
+        tr.style.display = 'none';
       }
     });
   }
