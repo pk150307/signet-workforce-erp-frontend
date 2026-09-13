@@ -363,6 +363,24 @@ mat-icon:not([color]) {
   }
 }
 
+/** Feature dialogs with select/date dropdowns — allow menus to escape the panel. */
+.app-dialog--overflow-visible.cdk-overlay-pane,
+.cdk-overlay-pane.app-dialog--overflow-visible {
+  overflow: visible !important;
+}
+
+.app-dialog--overflow-visible {
+  .mat-mdc-dialog-container,
+  .mat-mdc-dialog-container .mdc-dialog__surface,
+  .mat-mdc-dialog-content {
+    overflow: visible !important;
+  }
+
+  .mat-mdc-dialog-content {
+    max-height: none;
+  }
+}
+
 .mat-button-toggle-group {
   border-color: var(--color-border) !important;
   border-radius: var(--radius-sm);
