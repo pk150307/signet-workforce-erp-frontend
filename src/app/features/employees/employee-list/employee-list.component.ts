@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -35,6 +36,7 @@ export class EmployeeListComponent implements OnInit {
   private readonly notification = inject(NotificationService);
   readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
   readonly apiUnavailable = signal(false);
@@ -47,7 +49,7 @@ export class EmployeeListComponent implements OnInit {
   readonly statusCtrl = new FormControl<EmployeeStatus | 'all'>(EmployeeStatus.Active);
   readonly employmentTypeCtrl = new FormControl<string>('');
 
-  readonly displayedColumns = ['employeeCode', 'fullName', 'department', 'designation', 'site', 'status', 'joiningDate', 'actions'];
+  readonly displayedColumns = ['employeeCode', 'softCode', 'fullName', 'department', 'designation', 'site', 'status', 'joiningDate', 'actions'];
 
   readonly clientOptions = computed(() => [
     { key: '', value: 'All clients' },
@@ -79,12 +81,13 @@ export class EmployeeListComponent implements OnInit {
 
     this.searchCtrl.valueChanges.pipe(
       debounceTime(350),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => this.reloadFirstPage());
 
-    this.clientCtrl.valueChanges.subscribe(() => this.reloadFirstPage());
-    this.statusCtrl.valueChanges.subscribe(() => this.reloadFirstPage());
-    this.employmentTypeCtrl.valueChanges.subscribe(() => this.reloadFirstPage());
+    this.clientCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadFirstPage());
+    this.statusCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadFirstPage());
+    this.employmentTypeCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadFirstPage());
   }
 
   loadData(params?: CursorPageParams) {

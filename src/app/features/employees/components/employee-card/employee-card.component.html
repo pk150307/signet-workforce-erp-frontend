@@ -11,7 +11,15 @@
       <signet-status-button [label]="statusLabels[employee.status]" [status]="statusLabels[employee.status]" />
     </div>
 
-    <div class="employee-card__code">{{ employee.employeeCode }}</div>
+    <div class="employee-card__code">
+      {{ employee.employeeCode }}
+      @if (employee.softCode || employee.clientSoftCode) {
+        <span> · {{ employee.softCode || employee.clientSoftCode }}</span>
+      }
+    </div>
+    @if (employee.fatherName) {
+      <div class="employee-card__code">S/O {{ employee.fatherName }}</div>
+    }
 
     @if (showMeta) {
       <div class="employee-card__meta">

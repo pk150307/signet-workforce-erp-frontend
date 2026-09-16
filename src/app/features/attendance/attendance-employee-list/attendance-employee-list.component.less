@@ -52,35 +52,29 @@
   &--locked { background: var(--att-leave-bg); color: var(--att-leave-fg); }
 }
 
-.list-page-responsive(900px);
+.list-page-responsive(1210px);
 
 .data-list-scroll {
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 .data-list {
-  /* Employee | Client | Department | Site | Present | OT | Night | PA | Bonus | Status */
-  --data-list-cols: 1.6fr 1.4fr 1.1fr 1.1fr 0.9fr 0.7fr 0.7fr 0.7fr 0.7fr 1fr;
-  --data-list-min-width: 100%;
-  width: 100%;
+  /* Code | Soft Code | Employee | Client | Department | Site | Present | OT | Night | PA | Bonus | Status */
+  --data-list-cols: calc(calc(100% / 1210) * 90) calc(calc(100% / 1210) * 90) calc(calc(100% / 1210) * 220) calc(calc(100% / 1210) * 140) calc(calc(100% / 1210) * 110) calc(calc(100% / 1210) * 110) calc(calc(100% / 1210) * 90) calc(calc(100% / 1210) * 70) calc(calc(100% / 1210) * 70) calc(calc(100% / 1210) * 60) calc(calc(100% / 1210) * 70) calc(calc(100% / 1210) * 90);
+  --data-list-min-width: 1210px;
+}
 
-  &__header,
-  &__row {
-    width: 100%;
-  }
+.emp-code {
+  font-size: 12px;
+  font-family: ProximaNova-Medium, sans-serif;
+  background: var(--color-divider);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
 
-  &__cell {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-
-    strong,
-    small {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
+.emp-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
 }

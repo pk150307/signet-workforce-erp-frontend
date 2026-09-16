@@ -106,7 +106,7 @@
     @if (showImportPanel() && importPreview(); as prev) {
       <div class="import-panel card">
         <strong>Import preview:</strong> {{ prev.valid }} employees, {{ prev.errors }} errors.
-        <span class="import-hint">Format: Emp ID | Emp Name | Present Days | OT Hours | Night Allowance | Punctuality Award | Bonus</span>
+        <span class="import-hint">Format: Emp ID | Emp Name | Soft Code | Father Name | Present Days | OT Hours | Night Allowance | Punctuality Award | Bonus</span>
         <div class="import-actions">
           <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Cancel" (clicked)="showImportPanel.set(false)" />
           <signet-button [width]="100" [widthUnit]="'%'" type="primary" displayText="Apply to Register" [disabled]="prev.valid === 0" (clicked)="applyImport()" />
@@ -121,8 +121,11 @@
           <div class="register-cell register-cell--head">Employee</div>
           @for (emp of g.employees; track emp.employeeId) {
             <div class="register-cell register-cell--emp" [class.register-cell--pending]="pendingChanges()[emp.employeeId]">
-              <strong>{{ emp.employeeName }}</strong>
-              <small>{{ emp.employeeCode }}</small>
+              <span class="emp-name">{{ emp.employeeName }}</span>
+              <span class="emp-sub" *ngIf="emp.fatherName">S/O {{ emp.fatherName }}</span>
+              <span class="emp-sub emp-sub--codes">
+                {{ emp.employeeCode }}<span *ngIf="emp.softCode"> · {{ emp.softCode }}</span>
+              </span>
               @if (pendingChanges()[emp.employeeId]) {
                 <span class="unsaved-badge">Unsaved</span>
               }

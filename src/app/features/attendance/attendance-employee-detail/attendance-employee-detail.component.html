@@ -3,7 +3,12 @@
     <div>
       <h1 class="page-header__title">{{ calendar()?.employeeName ?? 'Employee Attendance' }}</h1>
       @if (calendar(); as c) {
-        <p class="page-header__subtitle">{{ c.employeeCode }} · {{ c.clientName }} · {{ c.siteName }}</p>
+        <p class="page-header__subtitle">
+          {{ c.employeeCode }}
+          <span *ngIf="c.softCode"> · {{ c.softCode }}</span>
+          <span *ngIf="c.fatherName"> · S/O {{ c.fatherName }}</span>
+          · {{ c.clientName }} · {{ c.siteName }}
+        </p>
       }
     </div>
     <a routerLink="/attendance" class="signet-btn-link"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Back" /></a>

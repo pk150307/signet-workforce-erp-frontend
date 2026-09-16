@@ -108,6 +108,7 @@
               <mat-icon>{{ sortIcon('code') }}</mat-icon>
             </button>
           </div>
+          <div class="data-list__cell">Soft Code</div>
           <div class="data-list__cell">
             <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'name'" (click)="toggleSort('name')">
               Employee
@@ -130,11 +131,13 @@
         @for (emp of data()?.items ?? []; track emp.id) {
           <div class="data-list__row data-list__row--clickable" (click)="viewEmployee(emp.id)">
             <div class="data-list__cell"><span class="emp-code">{{ emp.employeeCode }}</span></div>
+            <div class="data-list__cell"><span class="emp-code">{{ emp.softCode || emp.clientSoftCode || '—' }}</span></div>
             <div class="data-list__cell">
               <div class="emp-info">
                 <div class="emp-avatar">{{ emp.fullName.charAt(0) }}</div>
                 <div class="emp-info__text">
                   <div class="emp-name" [matTooltip]="emp.fullName">{{ emp.fullName }}</div>
+                  <div class="emp-sub" *ngIf="emp.fatherName">S/O {{ emp.fatherName }}</div>
                   <div class="emp-email" [matTooltip]="emp.email">{{ emp.email }}</div>
                 </div>
               </div>

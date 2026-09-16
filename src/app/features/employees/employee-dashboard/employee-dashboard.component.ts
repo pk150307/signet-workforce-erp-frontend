@@ -196,7 +196,9 @@ export class EmployeeDashboardComponent implements OnInit {
       {
         id: '1',
         employeeCode: 'EMP-0248',
+        softCode: 'BRG-01',
         fullName: 'Priya Sharma',
+        fatherName: 'Ramesh Sharma',
         email: 'priya.sharma@signet.com',
         phone: '9876543210',
         department: 'Operations',
@@ -209,7 +211,9 @@ export class EmployeeDashboardComponent implements OnInit {
       {
         id: '2',
         employeeCode: 'EMP-0247',
+        softCode: 'MAL-04',
         fullName: 'Rajesh Kumar',
+        fatherName: 'Suresh Kumar',
         email: 'rajesh.kumar@signet.com',
         phone: '9876543211',
         department: 'Security',
@@ -222,7 +226,9 @@ export class EmployeeDashboardComponent implements OnInit {
       {
         id: '3',
         employeeCode: 'EMP-0246',
+        softCode: 'CTB-02',
         fullName: 'Anita Desai',
+        fatherName: 'Mahesh Desai',
         email: 'anita.desai@signet.com',
         phone: '9876543212',
         department: 'Housekeeping',
@@ -235,7 +241,9 @@ export class EmployeeDashboardComponent implements OnInit {
       {
         id: '4',
         employeeCode: 'EMP-0245',
+        softCode: 'IND-09',
         fullName: 'Mohammed Ali',
+        fatherName: 'Imran Ali',
         email: 'mohammed.ali@signet.com',
         phone: '9876543213',
         department: 'Operations',
@@ -248,7 +256,9 @@ export class EmployeeDashboardComponent implements OnInit {
       {
         id: '5',
         employeeCode: 'EMP-0244',
+        softCode: 'HO-01',
         fullName: 'Sunita Patel',
+        fatherName: 'Kiran Patel',
         email: 'sunita.patel@signet.com',
         phone: '9876543214',
         department: 'Administration',

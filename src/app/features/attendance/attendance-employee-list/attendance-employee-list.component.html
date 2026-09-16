@@ -77,6 +77,8 @@
     <div class="data-list-scroll">
       <div class="data-list">
         <div class="data-list__header">
+          <div class="data-list__cell">Code</div>
+          <div class="data-list__cell">Soft Code</div>
           <div class="data-list__cell">Employee</div>
           <div class="data-list__cell">Client</div>
           <div class="data-list__cell">Department</div>
@@ -90,9 +92,13 @@
         </div>
         @for (e of items(); track e.employeeId) {
           <div class="data-list__row">
+            <div class="data-list__cell"><span class="emp-code">{{ e.employeeCode }}</span></div>
+            <div class="data-list__cell"><span class="emp-code">{{ e.softCode || '—' }}</span></div>
             <div class="data-list__cell">
-              <strong>{{ e.employeeName }}</strong><br>
-              <small>{{ e.employeeCode }}</small>
+              <div class="emp-stack">
+                <span class="emp-name">{{ e.employeeName }}</span>
+                <span class="emp-sub" *ngIf="e.fatherName">S/O {{ e.fatherName }}</span>
+              </div>
             </div>
             <div class="data-list__cell">{{ selectedClientName() }}</div>
             <div class="data-list__cell">{{ e.departmentName }}</div>
