@@ -29,10 +29,9 @@ export class PayslipPdfService {
   }
 
   async downloadMany(payslipIds: string[], zipName: string): Promise<void> {
-    const payslips: PayslipDetail[] = [];
-    for (const id of payslipIds) {
-      payslips.push(await firstValueFrom(this.payslipService.getById(id)));
-    }
+    const payslips = await Promise.all(
+      payslipIds.map(id => firstValueFrom(this.payslipService.getById(id))),
+    );
 
     await this.pdfExport.renderManyComponentsAsSinglePdf(
       payslips.map(ps => ({

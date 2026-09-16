@@ -24,7 +24,10 @@ export enum EmploymentType {
 export interface EmployeeListItem {
   id: string;
   employeeCode: string;
+  softCode?: string | null;
+  clientSoftCode?: string | null;
   fullName: string;
+  fatherName?: string | null;
   email: string;
   phone: string;
   department: string;

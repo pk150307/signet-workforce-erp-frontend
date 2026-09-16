@@ -96,7 +96,9 @@ export interface AttendanceRegisterMeta {
 export interface AttendanceEmployeeListItem {
   employeeId: string;
   employeeCode: string;
+  softCode?: string | null;
   employeeName: string;
+  fatherName?: string | null;
   departmentName: string;
   siteName: string;
   presentDays: number | null;
@@ -124,7 +126,9 @@ export interface AttendanceEmployeeListResponse {
 export interface AttendanceGridEmployee {
   employeeId: string;
   employeeCode: string;
+  softCode?: string | null;
   employeeName: string;
+  fatherName?: string | null;
   departmentName: string;
   siteName: string;
   cells: Record<string, number | null>;
@@ -145,7 +149,9 @@ export interface AttendanceGridResponse {
 export interface EmployeeAttendanceCalendar {
   employeeId: string;
   employeeCode: string;
+  softCode?: string | null;
   employeeName: string;
+  fatherName?: string | null;
   clientName: string;
   siteName: string;
   month: number;

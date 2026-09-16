@@ -6,7 +6,9 @@ export interface PfEsicEmployee {
   id: string;
   employeeId: string;
   employeeCode: string;
+  softCode?: string | null;
   fullName: string;
+  fatherName?: string | null;
   department: string;
   designation: string;
   clientCompanyName?: string | null;

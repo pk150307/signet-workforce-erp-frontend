@@ -15,7 +15,9 @@ export interface PayslipListItem {
   id: string;
   employeeId: string;
   employeeCode: string;
+  softCode?: string | null;
   employeeName: string;
+  fatherName?: string | null;
   department: string;
   clientId?: string | null;
   clientName?: string | null;
@@ -31,7 +33,6 @@ export interface PayslipDetail extends PayslipListItem {
   slipNumber?: string;
   designation: string;
   siteName?: string;
-  softCode?: string;
   bankAccount?: string;
   panNumber?: string;
   uanNumber?: string;

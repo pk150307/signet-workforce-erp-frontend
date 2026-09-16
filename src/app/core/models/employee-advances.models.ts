@@ -39,6 +39,7 @@ export interface EmployeeAdvanceEntry {
   softCode: string | null;
   employeeCode: string;
   employeeName: string;
+  fatherName: string | null;
   designation: string | null;
   advanceAmount: number;
   paymentCount: number;
