@@ -115,6 +115,11 @@
                   </button>
                 </div>
                 <div class="data-list__cell">
+                  <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'softCode'" (click)="toggleSort('softCode')">
+                    Soft Code <mat-icon>{{ sortIcon('softCode') }}</mat-icon>
+                  </button>
+                </div>
+                <div class="data-list__cell">
                   <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'fullName'" (click)="toggleSort('fullName')">
                     Employee <mat-icon>{{ sortIcon('fullName') }}</mat-icon>
                   </button>
@@ -144,12 +149,12 @@
                     <span class="pf-esic-list__code">{{ row.employeeCode }}</span>
                   </div>
                   <div class="data-list__cell">
-                    <div class="pf-esic-list__emp">
-                      <div class="pf-esic-list__avatar">{{ row.fullName.charAt(0) }}</div>
-                      <div class="pf-esic-list__emp-text">
-                        <div class="pf-esic-list__name" [matTooltip]="row.fullName">{{ row.fullName }}</div>
-                        <div class="pf-esic-list__designation">{{ row.designation }}</div>
-                      </div>
+                    <span class="pf-esic-list__code">{{ row.softCode || '—' }}</span>
+                  </div>
+                  <div class="data-list__cell">
+                    <div class="emp-stack">
+                      <span class="emp-name" [matTooltip]="row.fullName">{{ row.fullName }}</span>
+                      <span class="emp-sub" *ngIf="row.fatherName">S/O {{ row.fatherName }}</span>
                     </div>
                   </div>
                   <div class="data-list__cell">{{ row.clientCompanyName || '—' }}</div>

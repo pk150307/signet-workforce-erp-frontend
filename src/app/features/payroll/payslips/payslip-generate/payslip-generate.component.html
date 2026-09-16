@@ -84,6 +84,7 @@
               />
             </div>
             <div class="data-list__cell">Code</div>
+            <div class="data-list__cell">Soft Code</div>
             <div class="data-list__cell">Name</div>
             <div class="data-list__cell">Department</div>
             <div class="data-list__cell">Site</div>
@@ -102,7 +103,13 @@
                 />
               </div>
               <div class="data-list__cell"><span class="emp-code">{{ row.employeeCode }}</span></div>
-              <div class="data-list__cell">{{ row.fullName }}</div>
+              <div class="data-list__cell"><span class="emp-code">{{ row.softCode || row.clientSoftCode || '—' }}</span></div>
+              <div class="data-list__cell">
+                <div class="emp-stack">
+                  <span class="emp-name">{{ row.fullName }}</span>
+                  <span class="emp-sub" *ngIf="row.fatherName">S/O {{ row.fatherName }}</span>
+                </div>
+              </div>
               <div class="data-list__cell">{{ row.department }}</div>
               <div class="data-list__cell">{{ row.siteName || '—' }}</div>
             </div>

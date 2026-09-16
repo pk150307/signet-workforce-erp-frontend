@@ -2,6 +2,7 @@
 <mat-dialog-content class="payments-dialog-content">
   <p class="dialog-hint">
     {{ entry().employeeName }}
+    <span *ngIf="entry().fatherName"> · S/O {{ entry().fatherName }}</span>
     <span *ngIf="entry().softCode"> · Soft Code {{ entry().softCode }}</span>
     · Total ₹{{ entry().advanceAmount | number:'1.0-0' }}
   </p>

@@ -87,7 +87,10 @@
             <tr>
               <td class="sticky-1"><span class="emp-code">{{ row.softCode || '—' }}</span></td>
               <td class="sticky-2"><span class="emp-code">{{ row.employeeCode }}</span></td>
-              <td class="sticky-3"><span class="emp-name">{{ row.employeeName }}</span></td>
+              <td class="sticky-3">
+                <span class="emp-name">{{ row.employeeName }}</span>
+                <span class="emp-sub" *ngIf="row.fatherName">S/O {{ row.fatherName }}</span>
+              </td>
               <td>{{ row.designation || '—' }}</td>
               <td class="num">{{ row.paymentCount || row.payments?.length || 0 }}</td>
               <td class="num"><strong>{{ row.advanceAmount | number:'1.0-0' }}</strong></td>

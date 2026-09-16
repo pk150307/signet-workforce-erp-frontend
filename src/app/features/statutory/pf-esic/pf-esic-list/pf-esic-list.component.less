@@ -91,12 +91,12 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.grid-table-scroll(~'.pf-esic-list__table-wrap', 1100px);
+.grid-table-scroll(~'.pf-esic-list__table-wrap', 1280px);
 .responsive-filters-card(~'.pf-esic-list__filters');
 
 .pf-esic-list__table {
-  --data-list-cols: calc(calc(100% / 1126) * 110) calc(calc(100% / 1126) * 200) calc(calc(100% / 1126) * 100) calc(calc(100% / 1126) * 124) calc(calc(100% / 1126) * 124) calc(calc(100% / 1126) * 140) calc(calc(100% / 1126) * 120) calc(calc(100% / 1126) * 100) calc(calc(100% / 1126) * 108);
-  --data-list-min-width: 1126px;
+  --data-list-cols: calc(calc(100% / 1280) * 120) calc(calc(100% / 1280) * 110) calc(calc(100% / 1280) * 260) calc(calc(100% / 1280) * 130) calc(calc(100% / 1280) * 160) calc(calc(100% / 1280) * 160) calc(calc(100% / 1280) * 170) calc(calc(100% / 1280) * 90) calc(calc(100% / 1280) * 80);
+  --data-list-min-width: 1280px;
 }
 
 .pf-esic-list__code {
@@ -111,52 +111,10 @@
   white-space: nowrap;
 }
 
-.pf-esic-list__emp {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.pf-esic-list__emp-text {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.pf-esic-list__avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark, #00695c));
-  color: var(--color-on-primary, #fff);
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.pf-esic-list__name {
+.emp-name {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  white-space: normal;
-}
-
-.pf-esic-list__designation {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .pf-esic-list__row {
@@ -168,4 +126,4 @@
   }
 }
 
-.list-page-responsive(1100px);
+.list-page-responsive(1280px);

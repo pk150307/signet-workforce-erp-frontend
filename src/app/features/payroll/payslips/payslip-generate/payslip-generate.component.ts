@@ -5,6 +5,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCardModule } from '@angular/material/card';
 import { SelectionModel } from '@angular/cdk/collections';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
@@ -40,7 +41,7 @@ export class PayslipGenerateComponent implements OnInit {
 
   readonly months = PAYSLIP_MONTHS;
   readonly years = this.buildYearOptions();
-  readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'department', 'siteName'];
+  readonly displayedColumns = ['select', 'employeeCode', 'softCode', 'employeeName', 'department', 'siteName'];
 
   readonly monthOptions = computed(() =>
     this.months.map(m => ({ key: String(m.value), value: m.label })),
@@ -69,7 +70,9 @@ export class PayslipGenerateComponent implements OnInit {
     if (!term) return items;
     return items.filter(e =>
       e.fullName.toLowerCase().includes(term) ||
-      e.employeeCode.toLowerCase().includes(term),
+      e.employeeCode.toLowerCase().includes(term) ||
+      (e.softCode ?? '').toLowerCase().includes(term) ||
+      (e.fatherName ?? '').toLowerCase().includes(term),
     );
   });
 
@@ -90,12 +93,16 @@ export class PayslipGenerateComponent implements OnInit {
 
     this.loadEmployees();
 
-    this.form.get('clientId')!.valueChanges.subscribe(() => {
+    this.form.get('clientId')!.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.selection.clear();
       this.loadEmployees();
     });
 
-    this.searchCtrl.valueChanges.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
+    this.searchCtrl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
       this.selection.clear();
     });
   }

@@ -93,7 +93,6 @@ export class EmployeeAdvancesDetailComponent implements OnInit {
       }),
     ).afterClosed().subscribe((result?: EmployeeAdvancesPaymentsDialogResult) => {
       if (result) this.register.set(result);
-      else this.loadRegister(reg.id);
     });
   }
 

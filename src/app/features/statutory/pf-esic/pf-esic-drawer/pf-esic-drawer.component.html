@@ -3,7 +3,7 @@
     <div>
       <h2>PF / ESIC Details</h2>
       @if (detail(); as d) {
-        <p>{{ d.fullName }} · {{ d.employeeCode }}</p>
+        <p>{{ d.fullName }} · {{ d.employeeCode }}<span *ngIf="d.softCode"> · {{ d.softCode }}</span></p>
       }
     </div>
     <button mat-icon-button aria-label="Close" (click)="closed.emit()">
@@ -21,6 +21,8 @@
       <section class="pf-esic-drawer__section">
         <h3>Employee Information</h3>
         <dl class="pf-esic-drawer__info-grid">
+          <div><dt>Father's Name</dt><dd>{{ d.fatherName || '—' }}</dd></div>
+          <div><dt>Soft Code</dt><dd>{{ d.softCode || '—' }}</dd></div>
           <div><dt>Department</dt><dd>{{ d.department }}</dd></div>
           <div><dt>Designation</dt><dd>{{ d.designation }}</dd></div>
           <div><dt>Site</dt><dd>{{ d.siteName || '—' }}</dd></div>

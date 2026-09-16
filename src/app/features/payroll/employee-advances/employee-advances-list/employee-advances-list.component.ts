@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angula
 import { FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { EmployeeAdvancesService } from '../../../../core/services/employee-advances.service';
@@ -80,10 +81,14 @@ export class EmployeeAdvancesListComponent implements OnInit {
       next: clients => this.clients.set(clients),
       error: () => this.notification.warning('Could not load clients.'),
     });
-    this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
+    this.searchCtrl.valueChanges.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
       this.loadData();
     });
-    this.statusCtrl.valueChanges.subscribe(() => this.loadData());
+    this.statusCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadData());
   }
 
   loadData() {
@@ -142,13 +147,9 @@ export class EmployeeAdvancesListComponent implements OnInit {
   }
 
   clearFilters() {
-    this.searchCtrl.setValue('');
-    this.statusCtrl.setValue(null);
+    this.searchCtrl.setValue('', { emitEvent: false });
+    this.statusCtrl.setValue(null, { emitEvent: false });
     this.payrollFilter.resetAll();
-    this.monthCtrl.setValue(this.payrollFilter.month(), { emitEvent: false });
-    this.yearCtrl.setValue(this.payrollFilter.year(), { emitEvent: false });
-    this.clientCtrl.setValue(this.payrollFilter.clientId(), { emitEvent: false });
-    this.loadData();
   }
 
   private currentQuery() {

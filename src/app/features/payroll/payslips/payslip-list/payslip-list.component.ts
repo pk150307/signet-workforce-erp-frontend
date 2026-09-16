@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { PayslipService } from '../../../../core/services/payslip.service';
@@ -34,6 +35,30 @@ interface PayslipStatusAction {
   label: string;
   icon: string;
 }
+
+const PAYSLIP_STATUS_ACTIONS: Record<PayslipStatus, PayslipStatusAction[]> = {
+  Draft: [
+    { status: 'Generated', label: 'Mark Generated', icon: 'task_alt' },
+    { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+  ],
+  Generated: [
+    { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
+    { status: 'Downloaded', label: 'Mark Downloaded', icon: 'download_done' },
+    { status: 'Failed', label: 'Mark Failed', icon: 'error_outline' },
+    { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+  ],
+  Sent: [
+    { status: 'Downloaded', label: 'Mark Downloaded', icon: 'download_done' },
+    { status: 'Failed', label: 'Mark Failed', icon: 'error_outline' },
+    { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+  ],
+  Failed: [
+    { status: 'Generated', label: 'Retry / Regenerate', icon: 'refresh' },
+    { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
+  ],
+  Downloaded: [],
+  Cancelled: [],
+};
 
 @Component({
   selector: 'app-payslip-list',
@@ -75,13 +100,21 @@ export class PayslipListComponent implements OnInit {
     ...this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
   ]);
 
+  readonly clientNameById = computed(() => {
+    const map = new Map<string, string>();
+    for (const client of this.clients()) {
+      if (client.companyName) map.set(String(client.id), client.companyName);
+    }
+    return map;
+  });
+
   readonly searchCtrl = new FormControl('');
   readonly monthCtrl = new FormControl<number | null>(this.payrollFilter.month());
   readonly yearCtrl = new FormControl<number | null>(this.payrollFilter.year());
   readonly clientCtrl = new FormControl<string | null>(this.payrollFilter.clientId());
   readonly statusCtrl = new FormControl<PayslipStatus | null>(null);
 
-  readonly displayedColumns = ['select', 'employeeCode', 'employeeName', 'client', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
+  readonly displayedColumns = ['select', 'employeeCode', 'softCode', 'employeeName', 'client', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
 
 
   ngOnInit() {
@@ -97,12 +130,19 @@ export class PayslipListComponent implements OnInit {
       next: clients => this.clients.set(clients),
     });
 
-    this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
+    this.searchCtrl.valueChanges.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
       this.pager.reset();
       this.loadData(this.pager.firstPageParams());
     });
 
-    this.statusCtrl.valueChanges.subscribe(() => { this.pager.reset(); this.loadData(this.pager.firstPageParams()); });
+    this.statusCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.pager.reset();
+      this.loadData(this.pager.firstPageParams());
+    });
   }
 
   loadData(params?: CursorPageParams) {
@@ -164,14 +204,14 @@ export class PayslipListComponent implements OnInit {
 
   clientLabel(row: PayslipListItem): string {
     if (row.clientName?.trim()) return row.clientName.trim();
+    const names = this.clientNameById();
     if (row.clientId) {
-      const match = this.clients().find(c => String(c.id) === String(row.clientId));
-      if (match?.companyName) return match.companyName;
+      const match = names.get(String(row.clientId));
+      if (match) return match;
     }
     const filterClientId = this.clientCtrl.value;
     if (filterClientId) {
-      const match = this.clients().find(c => String(c.id) === String(filterClientId));
-      if (match?.companyName) return match.companyName;
+      return names.get(String(filterClientId)) ?? '—';
     }
     return '—';
   }
@@ -181,30 +221,7 @@ export class PayslipListComponent implements OnInit {
   }
 
   availableActions(item: PayslipListItem): PayslipStatusAction[] {
-    const map: Record<PayslipStatus, PayslipStatusAction[]> = {
-      Draft: [
-        { status: 'Generated', label: 'Mark Generated', icon: 'task_alt' },
-        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
-      ],
-      Generated: [
-        { status: 'Sent', label: 'Mark as Sent', icon: 'send' },
-        { status: 'Downloaded', label: 'Mark Downloaded', icon: 'download_done' },
-        { status: 'Failed', label: 'Mark Failed', icon: 'error_outline' },
-        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
-      ],
-      Sent: [
-        { status: 'Downloaded', label: 'Mark Downloaded', icon: 'download_done' },
-        { status: 'Failed', label: 'Mark Failed', icon: 'error_outline' },
-        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
-      ],
-      Failed: [
-        { status: 'Generated', label: 'Retry / Regenerate', icon: 'refresh' },
-        { status: 'Cancelled', label: 'Cancel', icon: 'cancel' },
-      ],
-      Downloaded: [],
-      Cancelled: [],
-    };
-    return map[item.status] ?? [];
+    return PAYSLIP_STATUS_ACTIONS[item.status] ?? [];
   }
 
   canDelete(item: PayslipListItem): boolean {
@@ -215,7 +232,7 @@ export class PayslipListComponent implements OnInit {
     this.payslipService.updateStatus(item.id, { status: action.status }).subscribe({
       next: () => {
         this.notification.success(`Payslip marked as ${action.status}.`);
-        this.loadData();
+        this.applyPayslipStatus(item.id, action.status);
       },
       error: (err) => this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Status update failed.'),
     });
@@ -241,7 +258,7 @@ export class PayslipListComponent implements OnInit {
       this.payslipService.delete(item.id).subscribe({
         next: () => {
           this.notification.success('Payslip deleted.');
-          this.loadData();
+          this.removePayslip(item.id);
         },
         error: (err) => this.notification.error(err?.error?.detail ?? err?.error?.message ?? 'Delete failed.'),
       });
@@ -254,7 +271,7 @@ export class PayslipListComponent implements OnInit {
     this.downloadingPdf.set(true);
     this.payslipPdfService.downloadById(item.id).then(() => {
       this.notification.success(`${item.employeeCode} payslip downloaded.`);
-      this.loadData();
+      this.applyPayslipStatus(item.id, 'Downloaded');
     }).catch(() => {
       this.notification.warning('PDF download unavailable. Opening print view.');
       window.open(this.payslipService.getPrintUrl(item.id), '_blank');
@@ -267,7 +284,7 @@ export class PayslipListComponent implements OnInit {
     this.payslipService.emailPayslip(item.id).subscribe({
       next: () => {
         this.notification.success(`Payslip emailed to ${item.employeeName}.`);
-        this.loadData();
+        this.applyPayslipStatus(item.id, 'Sent');
       },
       error: (err) => this.notification.error(err?.error?.detail ?? 'Failed to email payslip.'),
     });
@@ -327,12 +344,10 @@ export class PayslipListComponent implements OnInit {
   }
 
   clearFilters() {
-    this.searchCtrl.setValue('');
-    this.statusCtrl.setValue(null);
+    this.searchCtrl.setValue('', { emitEvent: false });
+    this.statusCtrl.setValue(null, { emitEvent: false });
+    this.pager.reset();
     this.payrollFilter.resetAll();
-    this.monthCtrl.setValue(this.payrollFilter.month(), { emitEvent: false });
-    this.yearCtrl.setValue(this.payrollFilter.year(), { emitEvent: false });
-    this.clientCtrl.setValue(this.payrollFilter.clientId(), { emitEvent: false });
   }
 
   private runBulkDownload(ids: string[], filename: string) {
@@ -351,12 +366,37 @@ export class PayslipListComponent implements OnInit {
       }
       this.payslipPdfService.downloadMany(ids, filename).then(() => {
         this.notification.success(`${ids.length} payslip(s) downloaded.`);
-        this.loadData();
+        ids.forEach(id => this.applyPayslipStatus(id, 'Downloaded'));
       }).catch(() => {
         this.notification.error('Bulk download failed.');
       }).finally(() => {
         this.downloadingPdf.set(false);
       });
+    });
+  }
+
+  private applyPayslipStatus(id: string, status: PayslipStatus) {
+    const current = this.data();
+    if (!current) return;
+    const statusFilter = this.statusCtrl.value;
+    if (statusFilter && statusFilter !== status) {
+      this.removePayslip(id);
+      return;
+    }
+    this.data.set({
+      ...current,
+      items: current.items.map(item => item.id === id ? { ...item, status } : item),
+    });
+  }
+
+  private removePayslip(id: string) {
+    const current = this.data();
+    if (!current) return;
+    const removed = current.items.find(item => item.id === id);
+    if (removed) this.selection.deselect(removed);
+    this.data.set({
+      ...current,
+      items: current.items.filter(item => item.id !== id),
     });
   }
 

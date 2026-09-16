@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -37,6 +38,7 @@ export class PfEsicListComponent implements OnInit {
   private readonly clientsService = inject(ClientsService);
   private readonly notification = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
   readonly error = signal(false);
@@ -55,6 +57,7 @@ export class PfEsicListComponent implements OnInit {
 
   readonly displayedColumns = [
     'employeeCode',
+    'softCode',
     'fullName',
     'clientCompanyName',
     'aadhaarNumber',
@@ -104,18 +107,22 @@ export class PfEsicListComponent implements OnInit {
     this.loadClients();
     this.loadData();
 
-    this.searchCtrl.valueChanges.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
+    this.searchCtrl.valueChanges.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
       this.pager.reset();
       this.loadData(this.pager.firstPageParams());
     });
 
-    this.employeeStatusCtrl.valueChanges.subscribe(() => {
+    this.employeeStatusCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.pager.reset();
       this.loadData(this.pager.firstPageParams());
     });
 
     [this.statusCtrl, this.clientCtrl, this.hasUanCtrl, this.hasEsicCtrl].forEach(ctrl => {
-      ctrl.valueChanges.subscribe(() => {
+      ctrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
         this.pager.reset();
         this.loadData(this.pager.firstPageParams());
       });
@@ -296,6 +303,8 @@ export class PfEsicListComponent implements OnInit {
         e =>
           e.fullName.toLowerCase().includes(q) ||
           e.employeeCode.toLowerCase().includes(q) ||
+          (e.softCode ?? '').toLowerCase().includes(q) ||
+          (e.fatherName ?? '').toLowerCase().includes(q) ||
           e.uanNumber?.includes(q) ||
           e.esicNumber?.includes(q)
       );
@@ -342,7 +351,9 @@ export class PfEsicListComponent implements OnInit {
         id: '1',
         employeeId: 'emp-001',
         employeeCode: 'EMP001',
+        softCode: 'TR-01',
         fullName: 'Rajesh Kumar',
+        fatherName: 'Suresh Kumar',
         department: 'Operations',
         designation: 'Supervisor',
         clientCompanyName: 'Tata Realty',
