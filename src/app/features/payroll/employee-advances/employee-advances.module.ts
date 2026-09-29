@@ -6,6 +6,7 @@ import { EmployeeAdvancesDetailComponent } from './employee-advances-detail/empl
 import { EmployeeAdvancesGenerateDialogComponent } from './employee-advances-generate-dialog/employee-advances-generate-dialog.component';
 import { EmployeeAdvancesPaymentsDialogComponent } from './employee-advances-payments-dialog/employee-advances-payments-dialog.component';
 import { EmployeeAdvancesReopenDialogComponent } from './employee-advances-reopen-dialog/employee-advances-reopen-dialog.component';
+import { ExportColumnsDialogComponent } from '../../../shared/components/export-columns-dialog/export-columns-dialog.component';
 
 @NgModule({
   declarations: [
@@ -15,6 +16,6 @@ import { EmployeeAdvancesReopenDialogComponent } from './employee-advances-reope
     EmployeeAdvancesPaymentsDialogComponent,
     EmployeeAdvancesReopenDialogComponent,
   ],
-  imports: [SharedModule, EmployeeAdvancesRoutingModule],
+  imports: [SharedModule, EmployeeAdvancesRoutingModule, ExportColumnsDialogComponent],
 })
 export class EmployeeAdvancesModule {}

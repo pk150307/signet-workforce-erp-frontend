@@ -23,6 +23,7 @@ import {
   resolvePaginationNavigate,
 } from '../../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../../library/components/pagination/pagination.component';
+import { SortDir, sortIconName, toggleSortState } from '../../../../core/utils/sort.util';
 import { PayslipListItem, PayslipStatus } from '../../../../core/models/payslip.models';
 import { ClientListItem } from '../../../../core/models/client.models';
 import {
@@ -30,6 +31,7 @@ import {
   PAYSLIP_STATUS_OPTIONS,
   getPayslipStatusClass,
 } from '../payslip.mock';
+import { portalYears } from '../../../../core/utils/year-options.util';
 interface PayslipStatusAction {
   status: PayslipStatus;
   label: string;
@@ -84,7 +86,7 @@ export class PayslipListComponent implements OnInit {
   readonly selection = new SelectionModel<PayslipListItem>(true, []);
 
   readonly months = PAYSLIP_MONTHS;
-  readonly years = this.buildYearOptions();
+  readonly years = portalYears();
   readonly statusOptions = PAYSLIP_STATUS_OPTIONS;
 
   readonly monthOptions = computed(() =>
@@ -115,6 +117,8 @@ export class PayslipListComponent implements OnInit {
   readonly statusCtrl = new FormControl<PayslipStatus | null>(null);
 
   readonly displayedColumns = ['select', 'employeeCode', 'softCode', 'employeeName', 'client', 'department', 'netSalary', 'status', 'generatedAt', 'actions'];
+  sortBy = 'employeeCode';
+  sortDir: SortDir = 'asc';
 
 
   ngOnInit() {
@@ -400,6 +404,18 @@ export class PayslipListComponent implements OnInit {
     });
   }
 
+  toggleSort(active: string) {
+    const next = toggleSortState(this.sortBy, this.sortDir, active);
+    this.sortBy = next.sortBy;
+    this.sortDir = next.sortDir;
+    this.pager.reset();
+    this.loadData(this.pager.firstPageParams());
+  }
+
+  sortIcon(active: string): string {
+    return sortIconName(this.sortBy, this.sortDir, active);
+  }
+
   private currentQuery() {
     return {
       search: this.searchCtrl.value || undefined,
@@ -407,19 +423,9 @@ export class PayslipListComponent implements OnInit {
       year: this.yearCtrl.value ?? undefined,
       clientId: this.clientCtrl.value || undefined,
       status: this.statusCtrl.value ?? undefined,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
     };
   }
 
-  private currentMonth(): number {
-    return this.payrollFilter.month();
-  }
-
-  private currentYear(): number {
-    return this.payrollFilter.year();
-  }
-
-  private buildYearOptions(): number[] {
-    const y = this.currentYear();
-    return [y - 1, y, y + 1];
-  }
 }

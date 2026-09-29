@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ClientListItem } from '../../../../core/models/client.models';
 import { GenerateSalaryRegisterRequest } from '../../../../core/models/salary-register.models';
 import { SALARY_REGISTER_MONTHS } from '../salary-register.constants';
+import { portalYears } from '../../../../core/utils/year-options.util';
 
 export interface SalaryRegisterGenerateDialogData {
   clientId: string | null;
@@ -23,7 +24,7 @@ export class SalaryRegisterGenerateDialogComponent {
   readonly dialogRef = inject(MatDialogRef<SalaryRegisterGenerateDialogComponent, SalaryRegisterGenerateDialogResult>);
   readonly data = inject<SalaryRegisterGenerateDialogData>(MAT_DIALOG_DATA);
 
-  readonly years = this.buildYearOptions(this.data.year);
+  readonly years = portalYears();
 
   readonly monthOptions = computed(() =>
     SALARY_REGISTER_MONTHS.map(m => ({ key: String(m.value), value: m.label })),
@@ -61,7 +62,4 @@ export class SalaryRegisterGenerateDialogComponent {
     this.dialogRef.close({ clientId, month: Number(month), year: Number(year) });
   }
 
-  private buildYearOptions(current: number): number[] {
-    return [current - 1, current, current + 1];
-  }
 }

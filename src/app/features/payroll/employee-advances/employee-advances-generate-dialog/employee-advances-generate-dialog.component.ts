@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ClientListItem } from '../../../../core/models/client.models';
 import { GenerateEmployeeAdvanceRequest } from '../../../../core/models/employee-advances.models';
 import { EMPLOYEE_ADVANCE_MONTHS } from '../employee-advances.constants';
+import { portalYears } from '../../../../core/utils/year-options.util';
 
 export interface EmployeeAdvancesGenerateDialogData {
   clientId: string | null;
@@ -25,7 +26,7 @@ export class EmployeeAdvancesGenerateDialogComponent {
   );
   readonly data = inject<EmployeeAdvancesGenerateDialogData>(MAT_DIALOG_DATA);
 
-  readonly years = [this.data.year - 1, this.data.year, this.data.year + 1];
+  readonly years = portalYears();
   readonly monthOptions = computed(() =>
     EMPLOYEE_ADVANCE_MONTHS.map(m => ({ key: String(m.value), value: m.label })),
   );

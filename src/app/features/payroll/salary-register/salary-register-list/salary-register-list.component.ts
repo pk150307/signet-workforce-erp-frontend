@@ -27,6 +27,7 @@ import {
   SalaryRegisterGenerateDialogComponent,
   SalaryRegisterGenerateDialogResult,
 } from '../salary-register-generate-dialog/salary-register-generate-dialog.component';
+import { portalYears } from '../../../../core/utils/year-options.util';
 
 @Component({
   selector: 'app-salary-register-list',
@@ -48,7 +49,7 @@ export class SalaryRegisterListComponent implements OnInit {
   readonly clients = signal<ClientListItem[]>([]);
 
   readonly months = SALARY_REGISTER_MONTHS;
-  readonly years = this.buildYearOptions();
+  readonly years = portalYears();
   readonly statusOptions = SALARY_REGISTER_STATUS_OPTIONS;
   readonly statusLabel = salaryRegisterStatusLabel;
   readonly monthLabel = salaryRegisterMonthLabel;
@@ -173,8 +174,4 @@ export class SalaryRegisterListComponent implements OnInit {
     };
   }
 
-  private buildYearOptions(): number[] {
-    const y = this.payrollFilter.year();
-    return [y - 1, y, y + 1];
-  }
 }

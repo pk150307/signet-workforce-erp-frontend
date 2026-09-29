@@ -6,6 +6,7 @@ import { SalaryRegisterDetailComponent } from './salary-register-detail/salary-r
 import { SalaryRegisterGenerateDialogComponent } from './salary-register-generate-dialog/salary-register-generate-dialog.component';
 import { SalaryRegisterEditRowDialogComponent } from './salary-register-edit-row-dialog/salary-register-edit-row-dialog.component';
 import { SalaryRegisterReopenDialogComponent } from './salary-register-reopen-dialog/salary-register-reopen-dialog.component';
+import { ExportColumnsDialogComponent } from '../../../shared/components/export-columns-dialog/export-columns-dialog.component';
 
 @NgModule({
   declarations: [
@@ -15,6 +16,6 @@ import { SalaryRegisterReopenDialogComponent } from './salary-register-reopen-di
     SalaryRegisterEditRowDialogComponent,
     SalaryRegisterReopenDialogComponent,
   ],
-  imports: [SharedModule, SalaryRegisterRoutingModule],
+  imports: [SharedModule, SalaryRegisterRoutingModule, ExportColumnsDialogComponent],
 })
 export class SalaryRegisterModule {}

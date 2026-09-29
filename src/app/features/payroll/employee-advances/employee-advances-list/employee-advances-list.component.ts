@@ -27,6 +27,7 @@ import {
   EmployeeAdvancesGenerateDialogComponent,
   EmployeeAdvancesGenerateDialogResult,
 } from '../employee-advances-generate-dialog/employee-advances-generate-dialog.component';
+import { portalYears } from '../../../../core/utils/year-options.util';
 
 @Component({
   selector: 'app-employee-advances-list',
@@ -48,7 +49,7 @@ export class EmployeeAdvancesListComponent implements OnInit {
   readonly clients = signal<ClientListItem[]>([]);
 
   readonly months = EMPLOYEE_ADVANCE_MONTHS;
-  readonly years = this.buildYearOptions();
+  readonly years = portalYears();
   readonly statusOptions = EMPLOYEE_ADVANCE_STATUS_OPTIONS;
   readonly statusLabel = employeeAdvanceStatusLabel;
   readonly monthLabel = employeeAdvanceMonthLabel;
@@ -164,8 +165,4 @@ export class EmployeeAdvancesListComponent implements OnInit {
     };
   }
 
-  private buildYearOptions(): number[] {
-    const y = this.payrollFilter.year();
-    return [y - 1, y, y + 1];
-  }
 }

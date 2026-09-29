@@ -16,6 +16,8 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { EmployeeListItem, EmployeeStatus } from '../../../../core/models/employee.models';
 import { ClientListItem } from '../../../../core/models/client.models';
 import { PAYSLIP_MONTHS } from '../payslip.mock';
+import { SortDir, compareBy, sortIconName, toggleSortState } from '../../../../core/utils/sort.util';
+import { portalYears } from '../../../../core/utils/year-options.util';
 
 @Component({
   selector: 'app-payslip-generate',
@@ -40,8 +42,10 @@ export class PayslipGenerateComponent implements OnInit {
   readonly selection = new SelectionModel<EmployeeListItem>(true, []);
 
   readonly months = PAYSLIP_MONTHS;
-  readonly years = this.buildYearOptions();
+  readonly years = portalYears();
   readonly displayedColumns = ['select', 'employeeCode', 'softCode', 'employeeName', 'department', 'siteName'];
+  sortBy = 'employeeCode';
+  sortDir: SortDir = 'asc';
 
   readonly monthOptions = computed(() =>
     this.months.map(m => ({ key: String(m.value), value: m.label })),
@@ -66,15 +70,30 @@ export class PayslipGenerateComponent implements OnInit {
 
   readonly filteredEmployees = computed(() => {
     const term = (this.searchCtrl.value ?? '').trim().toLowerCase();
-    const items = this.employees();
-    if (!term) return items;
-    return items.filter(e =>
-      e.fullName.toLowerCase().includes(term) ||
-      e.employeeCode.toLowerCase().includes(term) ||
-      (e.softCode ?? '').toLowerCase().includes(term) ||
-      (e.fatherName ?? '').toLowerCase().includes(term),
-    );
+    const items = this.employees().filter(e => {
+      if (!term) return true;
+      return e.fullName.toLowerCase().includes(term) ||
+        e.employeeCode.toLowerCase().includes(term) ||
+        (e.softCode ?? '').toLowerCase().includes(term) ||
+        (e.fatherName ?? '').toLowerCase().includes(term);
+    });
+    const key = this.sortBy;
+    const dir = this.sortDir;
+    return [...items].sort((a, b) => compareBy(a, b, (row) => (
+      key === 'softCode' ? (row.softCode ?? row.clientSoftCode ?? '') : row.employeeCode
+    ), dir));
   });
+
+  toggleSort(active: string) {
+    const next = toggleSortState(this.sortBy, this.sortDir, active);
+    this.sortBy = next.sortBy;
+    this.sortDir = next.sortDir;
+    this.employees.update((items) => [...items]);
+  }
+
+  sortIcon(active: string): string {
+    return sortIconName(this.sortBy, this.sortDir, active);
+  }
 
   ngOnInit() {
     this.payrollFilter.bindControls(
@@ -183,8 +202,4 @@ export class PayslipGenerateComponent implements OnInit {
     });
   }
 
-  private buildYearOptions(): number[] {
-    const current = new Date().getFullYear();
-    return [current - 1, current, current + 1];
-  }
 }

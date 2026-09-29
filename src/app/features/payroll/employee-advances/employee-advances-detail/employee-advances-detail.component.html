@@ -71,8 +71,16 @@
         </colgroup>
         <thead>
           <tr>
-            <th class="sticky-1">Soft Code</th>
-            <th class="sticky-2">Emp Code</th>
+            <th class="sticky-1">
+              <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'softCode'" (click)="toggleSort('softCode')">
+                Soft Code <mat-icon>{{ sortIcon('softCode') }}</mat-icon>
+              </button>
+            </th>
+            <th class="sticky-2">
+              <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'employeeCode'" (click)="toggleSort('employeeCode')">
+                Emp Code <mat-icon>{{ sortIcon('employeeCode') }}</mat-icon>
+              </button>
+            </th>
             <th class="sticky-3">Name</th>
             <th>Designation</th>
             <th class="num">Payments</th>
@@ -83,7 +91,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of reg.employees; track row.id) {
+          @for (row of sortedEmployees(reg.employees); track row.id) {
             <tr>
               <td class="sticky-1"><span class="emp-code">{{ row.softCode || '—' }}</span></td>
               <td class="sticky-2"><span class="emp-code">{{ row.employeeCode }}</span></td>

@@ -14,6 +14,7 @@ import {
   resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
+import { portalYears } from '../../../core/utils/year-options.util';
 
 @Component({
   selector: 'app-payroll-runs',
@@ -37,7 +38,7 @@ export class PayrollRunsComponent implements OnInit {
     value: i + 1,
     label: new Date(2000, i, 1).toLocaleString('en', { month: 'long' }),
   }));
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly years = portalYears();
 
   readonly monthOptions = computed(() =>
     this.months.map(m => ({ key: String(m.value), value: m.label })),

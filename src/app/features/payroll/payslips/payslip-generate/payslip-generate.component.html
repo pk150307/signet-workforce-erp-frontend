@@ -28,7 +28,7 @@
             fieldTitle="Year"
             placeholder="Select year"
             [options]="yearOptions()"
-            [searchFunctionality]="false"
+            [searchFunctionality]="true"
             [width]="100"
             widthUnit="%"
           />
@@ -83,8 +83,16 @@
                 (permissionToggled)="toggleAllRows()"
               />
             </div>
-            <div class="data-list__cell">Code</div>
-            <div class="data-list__cell">Soft Code</div>
+            <div class="data-list__cell">
+              <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'employeeCode'" (click)="toggleSort('employeeCode')">
+                Code <mat-icon>{{ sortIcon('employeeCode') }}</mat-icon>
+              </button>
+            </div>
+            <div class="data-list__cell">
+              <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'softCode'" (click)="toggleSort('softCode')">
+                Soft Code <mat-icon>{{ sortIcon('softCode') }}</mat-icon>
+              </button>
+            </div>
             <div class="data-list__cell">Name</div>
             <div class="data-list__cell">Department</div>
             <div class="data-list__cell">Site</div>

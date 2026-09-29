@@ -24,6 +24,12 @@ import {
   SalaryRegisterReopenDialogComponent,
   SalaryRegisterReopenDialogResult,
 } from '../salary-register-reopen-dialog/salary-register-reopen-dialog.component';
+import { SortDir, compareBy, sortIconName, toggleSortState } from '../../../../core/utils/sort.util';
+import {
+  ExportColumnsDialogResult,
+  openExportColumnsDialog,
+} from '../../../../shared/components/export-columns-dialog/export-columns-dialog.component';
+import { SALARY_REGISTER_EXPORT_COLUMNS } from '../../../../core/constants/export-columns.constants';
 
 @Component({
   selector: 'app-salary-register-detail',
@@ -47,6 +53,25 @@ export class SalaryRegisterDetailComponent implements OnInit {
   readonly statusLabel = salaryRegisterStatusLabel;
   readonly monthLabel = salaryRegisterMonthLabel;
   readonly canEdit = canEditSalaryRegister;
+  sortBy = 'softCode';
+  sortDir: SortDir = 'asc';
+
+  toggleSort(active: string) {
+    const next = toggleSortState(this.sortBy, this.sortDir, active);
+    this.sortBy = next.sortBy;
+    this.sortDir = next.sortDir;
+  }
+
+  sortIcon(active: string): string {
+    return sortIconName(this.sortBy, this.sortDir, active);
+  }
+
+  sortedEmployees(rows: SalaryRegisterEmployeeRow[] | null | undefined): SalaryRegisterEmployeeRow[] {
+    const key = this.sortBy;
+    return [...(rows ?? [])].sort((a, b) => compareBy(a, b, (row) => (
+      key === 'employeeCode' ? row.employeeCode : (row.softCode ?? '')
+    ), this.sortDir));
+  }
 
   ngOnInit() {
     const id = this.route.snapshot.params['id'];
@@ -203,52 +228,44 @@ export class SalaryRegisterDetailComponent implements OnInit {
   }
 
   exportExcel() {
-    const reg = this.register();
-    if (!reg || this.exporting()) return;
-
-    this.exporting.set(true);
-    this.salaryRegisterService.exportExcel(reg.id).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const code = reg.clientCode || reg.clientId;
-        const month = String(reg.month).padStart(2, '0');
-        a.download = `salary-register-${code}-${reg.year}-${month}.xlsx`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.exporting.set(false);
-        this.notification.success('Excel export downloaded.');
-      },
-      error: () => {
-        this.exporting.set(false);
-        this.notification.error('Export failed.');
-      },
-    });
+    this.openExportDialog('excel');
   }
 
   exportPdf() {
+    this.openExportDialog('pdf');
+  }
+
+  private openExportDialog(format: 'excel' | 'pdf') {
     const reg = this.register();
     if (!reg || this.exporting()) return;
 
-    this.exporting.set(true);
-    this.salaryRegisterService.exportPdf(reg.id).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const code = reg.clientCode || reg.clientId;
-        const month = String(reg.month).padStart(2, '0');
-        a.download = `salary-register-${code}-${reg.year}-${month}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.exporting.set(false);
-        this.notification.success('PDF export downloaded.');
-      },
-      error: () => {
-        this.exporting.set(false);
-        this.notification.error('Export failed.');
-      },
+    openExportColumnsDialog(this.dialog, {
+      format,
+      columns: SALARY_REGISTER_EXPORT_COLUMNS,
+    }).subscribe((result: ExportColumnsDialogResult | null) => {
+      if (!result?.columns?.length) return;
+      this.exporting.set(true);
+      const request = format === 'pdf'
+        ? this.salaryRegisterService.exportPdf(reg.id, result.columns)
+        : this.salaryRegisterService.exportExcel(reg.id, result.columns);
+      request.subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const code = reg.clientCode || reg.clientId;
+          const month = String(reg.month).padStart(2, '0');
+          a.download = `salary-register-${code}-${reg.year}-${month}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+          a.click();
+          URL.revokeObjectURL(url);
+          this.exporting.set(false);
+          this.notification.success(format === 'pdf' ? 'PDF export downloaded.' : 'Excel export downloaded.');
+        },
+        error: () => {
+          this.exporting.set(false);
+          this.notification.error('Export failed.');
+        },
+      });
     });
   }
 }

@@ -24,6 +24,12 @@ import {
   EmployeeAdvancesReopenDialogComponent,
   EmployeeAdvancesReopenDialogResult,
 } from '../employee-advances-reopen-dialog/employee-advances-reopen-dialog.component';
+import { SortDir, compareBy, sortIconName, toggleSortState } from '../../../../core/utils/sort.util';
+import {
+  ExportColumnsDialogResult,
+  openExportColumnsDialog,
+} from '../../../../shared/components/export-columns-dialog/export-columns-dialog.component';
+import { EMPLOYEE_ADVANCE_EXPORT_COLUMNS } from '../../../../core/constants/export-columns.constants';
 
 @Component({
   selector: 'app-employee-advances-detail',
@@ -47,6 +53,25 @@ export class EmployeeAdvancesDetailComponent implements OnInit {
   readonly statusLabel = employeeAdvanceStatusLabel;
   readonly monthLabel = employeeAdvanceMonthLabel;
   readonly canEdit = canEditEmployeeAdvance;
+  sortBy = 'softCode';
+  sortDir: SortDir = 'asc';
+
+  toggleSort(active: string) {
+    const next = toggleSortState(this.sortBy, this.sortDir, active);
+    this.sortBy = next.sortBy;
+    this.sortDir = next.sortDir;
+  }
+
+  sortIcon(active: string): string {
+    return sortIconName(this.sortBy, this.sortDir, active);
+  }
+
+  sortedEmployees(rows: EmployeeAdvanceEntry[] | null | undefined): EmployeeAdvanceEntry[] {
+    const key = this.sortBy;
+    return [...(rows ?? [])].sort((a, b) => compareBy(a, b, (row) => (
+      key === 'employeeCode' ? row.employeeCode : (row.softCode ?? '')
+    ), this.sortDir));
+  }
 
   ngOnInit() {
     this.loadRegister(this.route.snapshot.params['id']);
@@ -186,42 +211,40 @@ export class EmployeeAdvancesDetailComponent implements OnInit {
   }
 
   exportExcel() {
-    const reg = this.register();
-    if (!reg || this.exporting()) return;
-    this.exporting.set(true);
-    this.advancesService.exportExcel(reg.id).subscribe({
-      next: (blob) => {
-        this.saveBlob(
-          blob,
-          `employee-advances-${reg.clientCode || reg.clientId}-${reg.year}-${String(reg.month).padStart(2, '0')}.xlsx`,
-        );
-        this.exporting.set(false);
-        this.notification.success('Excel export downloaded.');
-      },
-      error: () => {
-        this.exporting.set(false);
-        this.notification.error('Export failed.');
-      },
-    });
+    this.openExportDialog('excel');
   }
 
   exportPdf() {
+    this.openExportDialog('pdf');
+  }
+
+  private openExportDialog(format: 'excel' | 'pdf') {
     const reg = this.register();
     if (!reg || this.exporting()) return;
-    this.exporting.set(true);
-    this.advancesService.exportPdf(reg.id).subscribe({
-      next: (blob) => {
-        this.saveBlob(
-          blob,
-          `employee-advances-${reg.clientCode || reg.clientId}-${reg.year}-${String(reg.month).padStart(2, '0')}.pdf`,
-        );
-        this.exporting.set(false);
-        this.notification.success('PDF export downloaded.');
-      },
-      error: () => {
-        this.exporting.set(false);
-        this.notification.error('Export failed.');
-      },
+
+    openExportColumnsDialog(this.dialog, {
+      format,
+      columns: EMPLOYEE_ADVANCE_EXPORT_COLUMNS,
+    }).subscribe((result: ExportColumnsDialogResult | null) => {
+      if (!result?.columns?.length) return;
+      this.exporting.set(true);
+      const request = format === 'pdf'
+        ? this.advancesService.exportPdf(reg.id, result.columns)
+        : this.advancesService.exportExcel(reg.id, result.columns);
+      request.subscribe({
+        next: (blob) => {
+          this.saveBlob(
+            blob,
+            `employee-advances-${reg.clientCode || reg.clientId}-${reg.year}-${String(reg.month).padStart(2, '0')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`,
+          );
+          this.exporting.set(false);
+          this.notification.success(format === 'pdf' ? 'PDF export downloaded.' : 'Excel export downloaded.');
+        },
+        error: () => {
+          this.exporting.set(false);
+          this.notification.error('Export failed.');
+        },
+      });
     });
   }
 
