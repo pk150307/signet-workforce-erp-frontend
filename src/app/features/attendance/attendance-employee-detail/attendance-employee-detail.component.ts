@@ -10,6 +10,7 @@ import {
   cellClass,
   cellShort,
 } from '../../../core/models/attendance.models';
+import { portalYears } from '../../../core/utils/year-options.util';
 
 @Component({
   selector: 'app-attendance-employee-detail',
@@ -26,7 +27,7 @@ export class AttendanceEmployeeDetailComponent implements OnInit {
   readonly monthNames = MONTH_NAMES;
   readonly cellClass = cellClass;
   readonly cellShort = cellShort;
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly years = portalYears();
 
   readonly monthOptions = computed(() =>
     this.monthNames.map((name, i) => ({ key: String(i + 1), value: name })),

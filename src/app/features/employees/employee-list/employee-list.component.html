@@ -102,19 +102,31 @@
     <div class="data-list-scroll employee-list__table-wrap" *ngIf="(data()?.items?.length ?? 0) > 0">
       <div class="data-list employee-list__table">
         <div class="data-list__header">
-          <div class="data-list__cell">
+          <div class="data-list__cell data-list__cell--sticky employee-list__sticky-1">
             <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'code'" (click)="toggleSort('code')">
               Code
               <mat-icon>{{ sortIcon('code') }}</mat-icon>
             </button>
           </div>
-          <div class="data-list__cell">Soft Code</div>
-          <div class="data-list__cell">
+          <div class="data-list__cell data-list__cell--sticky employee-list__sticky-2">
+            <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'softCode'" (click)="toggleSort('softCode')">
+              Soft Code
+              <mat-icon>{{ sortIcon('softCode') }}</mat-icon>
+            </button>
+          </div>
+          <div class="data-list__cell data-list__cell--sticky employee-list__sticky-3">
             <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'name'" (click)="toggleSort('name')">
               Employee
               <mat-icon>{{ sortIcon('name') }}</mat-icon>
             </button>
           </div>
+          <div class="data-list__cell data-list__cell--sticky employee-list__sticky-4">Mobile</div>
+          <div class="data-list__cell">UAN</div>
+          <div class="data-list__cell">ESI</div>
+          <div class="data-list__cell">Aadhaar</div>
+          <div class="data-list__cell">Bank Name</div>
+          <div class="data-list__cell">Account</div>
+          <div class="data-list__cell">IFSC</div>
           <div class="data-list__cell">Department</div>
           <div class="data-list__cell">Designation</div>
           <div class="data-list__cell">Site</div>
@@ -130,9 +142,9 @@
 
         @for (emp of data()?.items ?? []; track emp.id) {
           <div class="data-list__row data-list__row--clickable" (click)="viewEmployee(emp.id)">
-            <div class="data-list__cell"><span class="emp-code">{{ emp.employeeCode }}</span></div>
-            <div class="data-list__cell"><span class="emp-code">{{ emp.softCode || emp.clientSoftCode || '—' }}</span></div>
-            <div class="data-list__cell">
+            <div class="data-list__cell data-list__cell--sticky employee-list__sticky-1"><span class="emp-code">{{ emp.employeeCode }}</span></div>
+            <div class="data-list__cell data-list__cell--sticky employee-list__sticky-2"><span class="emp-code">{{ emp.softCode || emp.clientSoftCode || '—' }}</span></div>
+            <div class="data-list__cell data-list__cell--sticky employee-list__sticky-3">
               <div class="emp-info">
                 <div class="emp-avatar">{{ emp.fullName.charAt(0) }}</div>
                 <div class="emp-info__text">
@@ -142,6 +154,13 @@
                 </div>
               </div>
             </div>
+            <div class="data-list__cell data-list__cell--sticky employee-list__sticky-4"><span class="cell-text" [matTooltip]="emp.phone">{{ emp.phone || '—' }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.uanNumber || ''">{{ emp.uanNumber || '—' }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.esiNumber || ''">{{ emp.esiNumber || '—' }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.aadhaarNumber || ''">{{ emp.aadhaarNumber || '—' }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.bankName || ''">{{ emp.bankName || '—' }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.accountNumber || ''">{{ emp.accountNumber || '—' }}</span></div>
+            <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.ifscCode || ''">{{ emp.ifscCode || '—' }}</span></div>
             <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.department">{{ emp.department }}</span></div>
             <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.designation">{{ emp.designation }}</span></div>
             <div class="data-list__cell">

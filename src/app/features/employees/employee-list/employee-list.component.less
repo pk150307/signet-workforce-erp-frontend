@@ -132,9 +132,18 @@
   }
 }
 
-.list-page-responsive(1014px);
+.list-page-responsive(2122px);
 
 .employee-list__table {
-  --data-list-cols: calc(calc(100% / 1014) * 110) calc(calc(100% / 1014) * 90) calc(calc(100% / 1014) * 240) calc(calc(100% / 1014) * 110) calc(calc(100% / 1014) * 110) calc(calc(100% / 1014) * 110) calc(calc(100% / 1014) * 100) calc(calc(100% / 1014) * 100) calc(calc(100% / 1014) * 44);
-  --data-list-min-width: 1014px;
+  --data-list-cols: 120px 168px 240px 130px 120px 110px 140px 160px 140px 130px 130px 140px 130px 110px 110px 44px;
+  --data-list-min-width: 2122px;
+}
+
+.employee-list__sticky-1 { left: 0; }
+.employee-list__sticky-2 { left: 120px; }
+.employee-list__sticky-3 { left: 288px; }
+.employee-list__sticky-4 { left: 528px; }
+
+.employee-list__table .data-list__cell--sticky {
+  white-space: nowrap;
 }

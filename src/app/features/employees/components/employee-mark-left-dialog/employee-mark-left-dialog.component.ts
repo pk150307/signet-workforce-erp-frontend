@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { EmployeeService } from '../../../../core/services/employee.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { EMPLOYEE_LEFT_REASONS, EmployeeListItem } from '../../../../core/models/employee.models';
+import { dateToSignetValue, formatLocalDate, signetValueToDate } from '../../../../core/utils/date-calendar.util';
 
 export interface EmployeeMarkLeftDialogData {
   employee: EmployeeListItem;
@@ -34,21 +35,11 @@ export class EmployeeMarkLeftDialogComponent {
   });
 
   dateToSignetValue(date: Date | null | undefined): { startDate?: string } {
-    if (!date) return {};
-    const d = date instanceof Date ? date : new Date(date);
-    if (Number.isNaN(d.getTime())) return {};
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return { startDate: `${y}-${m}-${day}T00:00:00` };
+    return dateToSignetValue(date);
   }
 
   signetValueToDate(value: { startDate?: string } | null | undefined): Date | null {
-    if (!value?.startDate) return null;
-    const datePart = value.startDate.split('T')[0];
-    const [y, m, d] = datePart.split('-').map(Number);
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d);
+    return signetValueToDate(value);
   }
 
   onLastWorkingDateChange(value: { startDate?: string }) {
@@ -68,7 +59,7 @@ export class EmployeeMarkLeftDialogComponent {
     this.saving.set(true);
 
     this.employeeService.markLeft(this.data.employee.id, {
-      lastWorkingDate: lastWorkingDate.toISOString(),
+      lastWorkingDate: formatLocalDate(lastWorkingDate),
       reason: raw.reason!.trim(),
       remarks: raw.remarks?.trim() || undefined,
     }).subscribe({

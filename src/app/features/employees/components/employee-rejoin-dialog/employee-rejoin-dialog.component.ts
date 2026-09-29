@@ -14,6 +14,7 @@ import { DepartmentListItem } from '../../../../core/models/department.models';
 import { DesignationListItem } from '../../../../core/models/designation.models';
 import { SiteListItem } from '../../../../core/models/sites.models';
 import { invalidateLookupCache } from '../../../../core/utils/lookup-cache.util';
+import { formatLocalDate } from '../../../../core/utils/date-calendar.util';
 
 export interface EmployeeRejoinDialogData {
   employee: EmployeeListItem;
@@ -196,7 +197,7 @@ export class EmployeeRejoinDialogComponent implements OnInit {
     this.saving.set(true);
 
     this.employeeService.rejoin(this.data.employee.id, {
-      joiningDate: raw.joiningDate!.toISOString(),
+      joiningDate: formatLocalDate(raw.joiningDate),
       departmentId: String(raw.departmentId!),
       designationId: String(raw.designationId!),
       siteId: raw.siteId || undefined,

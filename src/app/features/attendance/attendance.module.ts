@@ -9,6 +9,7 @@ import { AttendanceEmployeeListComponent } from './attendance-employee-list/atte
 import { AttendanceRegisterComponent } from './attendance-register/attendance-register.component';
 import { DailyAttendanceComponent } from './daily-attendance/daily-attendance.component';
 import { MonthlyAttendanceComponent } from './monthly-attendance/monthly-attendance.component';
+import { ExportColumnsDialogComponent } from '../../shared/components/export-columns-dialog/export-columns-dialog.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { MonthlyAttendanceComponent } from './monthly-attendance/monthly-attenda
   imports: [
     SharedModule,
     AttendanceModuleRoutingModule,
+    ExportColumnsDialogComponent,
   ],
 })
 export class AttendanceModule {}

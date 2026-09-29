@@ -6,6 +6,7 @@ import { catchError, finalize, map } from 'rxjs/operators';
 
 import { EmployeeService } from '../../../core/services/employee.service';
 import { parseApiDate } from '../../../core/utils/api-response.util';
+import { apiErrorMessage, dateToSignetValue, formatLocalDate, signetValueToDate } from '../../../core/utils/date-calendar.util';
 import { EmployeeDocumentService } from '../../../core/services/employee-document.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { DepartmentService } from '../../../core/services/department.service';
@@ -120,7 +121,7 @@ export class EmployeeFormComponent implements OnInit {
       ...this.designations().map(d => ({ key: String(d.id), value: d.designationName })),
     ];
   });
-  readonly dobDatePickerConfig: Partial<DatePickerPayload> = { maxDate: dayjs() };
+  readonly dobDatePickerConfig: Partial<DatePickerPayload> = { maxDate: dayjs(), showTimeFields: false };
   readonly statusLabels = EMPLOYEE_STATUS_LABELS;
 
   readonly requiredDocTypes: EmployeeDocumentType[] = [];
@@ -465,10 +466,10 @@ export class EmployeeFormComponent implements OnInit {
           this.notification.success('Draft saved. You can resume later from the employee list.');
         }
       },
-      error: () => {
+      error: (err) => {
         this.savingDraft.set(false);
         if (showNotification) {
-          this.notification.error('Failed to save draft.');
+          this.notification.error(apiErrorMessage(err, 'Failed to save draft.'));
         }
       },
     });
@@ -587,9 +588,9 @@ export class EmployeeFormComponent implements OnInit {
             },
           });
         },
-        error: () => {
+        error: (err) => {
           this.saving.set(false);
-          this.notification.error('Failed to update employee.');
+          this.notification.error(apiErrorMessage(err, 'Failed to update employee.'));
         },
       });
       return;
@@ -608,9 +609,9 @@ export class EmployeeFormComponent implements OnInit {
           error: () => this.finalizeSubmit(result.id, result.employeeCode),
         });
       },
-      error: () => {
-        const localId = this.employeeId ?? crypto.randomUUID();
-        this.finalizeSubmit(localId, payload.employeeCode ?? this.draftEmployeeCode, true);
+      error: (err) => {
+        this.saving.set(false);
+        this.notification.error(apiErrorMessage(err, 'Failed to save employee.'));
       },
     });
   }
@@ -639,7 +640,7 @@ export class EmployeeFormComponent implements OnInit {
           id,
           employeeCode: code,
           status: EmployeeStatus.Active,
-          fullName: `${this.personalForm.value.firstName} ${this.personalForm.value.lastName}`,
+          fullName: [this.personalForm.value.firstName, this.personalForm.value.lastName].filter(Boolean).join(' ').trim(),
         });
         this.saving.set(false);
         this.notification.success('Employee created successfully.');
@@ -745,21 +746,11 @@ export class EmployeeFormComponent implements OnInit {
   }
 
   dateToSignetValue(date: Date | null | undefined): { startDate?: string } {
-    if (!date) return {};
-    const d = date instanceof Date ? date : new Date(date);
-    if (Number.isNaN(d.getTime())) return {};
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return { startDate: `${y}-${m}-${day}T00:00:00` };
+    return dateToSignetValue(date);
   }
 
   signetValueToDate(value: { startDate?: string } | null | undefined): Date | null {
-    if (!value?.startDate) return null;
-    const datePart = value.startDate.split('T')[0];
-    const [y, m, d] = datePart.split('-').map(Number);
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d);
+    return signetValueToDate(value);
   }
 
   onDateOfBirthChange(value: { startDate?: string }) {
@@ -797,7 +788,6 @@ export class EmployeeFormComponent implements OnInit {
   }
 
   private formatDate(date: Date | null): string {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
+    return formatLocalDate(date);
   }
 }

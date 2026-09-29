@@ -10,6 +10,7 @@ import { EmployeeDashboardComponent } from './employee-dashboard/employee-dashbo
 import { EmployeeDetailComponent } from './employee-detail/employee-detail.component';
 import { EmployeeFormComponent } from './employee-form/employee-form.component';
 import { EmployeeListComponent } from './employee-list/employee-list.component';
+import { ExportColumnsDialogComponent } from '../../shared/components/export-columns-dialog/export-columns-dialog.component';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import { EmployeeListComponent } from './employee-list/employee-list.component';
   imports: [
     SharedModule,
     EmployeesModuleRoutingModule,
+    ExportColumnsDialogComponent,
   ],
 })
 export class EmployeesModule {}

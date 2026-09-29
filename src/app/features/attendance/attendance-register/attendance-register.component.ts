@@ -14,6 +14,12 @@ import {
   MONTH_NAMES,
   RegisterPeriod,
 } from '../../../core/models/attendance.models';
+import {
+  ExportColumnsDialogResult,
+  openExportColumnsDialog,
+} from '../../../shared/components/export-columns-dialog/export-columns-dialog.component';
+import { ATTENDANCE_EXPORT_COLUMNS } from '../../../core/constants/export-columns.constants';
+import { portalYears } from '../../../core/utils/year-options.util';
 
 interface RegisterExtras {
   presentDays: number | null;
@@ -75,7 +81,7 @@ export class AttendanceRegisterComponent implements OnInit {
   readonly unlockReason = new FormControl('', Validators.required);
 
   readonly monthNames = MONTH_NAMES;
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly years = portalYears();
 
   readonly clientOptions = computed(() =>
     this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
@@ -432,14 +438,23 @@ export class AttendanceRegisterComponent implements OnInit {
   }
 
   exportRegister() {
-    this.attendanceService.exportRegister(this.period, 'excel').subscribe({
-      next: blob => this.saveBlob(blob, `attendance-register-${this.period.year}-${this.period.month}.xlsx`),
-    });
+    this.openExportDialog('excel');
   }
 
   exportRegisterPdf() {
-    this.attendanceService.exportRegister(this.period, 'pdf').subscribe({
-      next: blob => this.saveBlob(blob, `attendance-register-${this.period.year}-${this.period.month}.pdf`),
+    this.openExportDialog('pdf');
+  }
+
+  private openExportDialog(format: 'excel' | 'pdf') {
+    openExportColumnsDialog(this.dialog, {
+      format,
+      columns: ATTENDANCE_EXPORT_COLUMNS,
+    }).subscribe((result: ExportColumnsDialogResult | null) => {
+      if (!result?.columns?.length) return;
+      const ext = format === 'pdf' ? 'pdf' : 'xlsx';
+      this.attendanceService.exportRegister(this.period, format, result.columns).subscribe({
+        next: blob => this.saveBlob(blob, `attendance-register-${this.period.year}-${this.period.month}.${ext}`),
+      });
     });
   }
 

@@ -18,6 +18,8 @@ import {
   resolvePaginationNavigate,
 } from '../../../core/utils/cursor-pagination.util';
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
+import { SortDir, sortIconName, toggleSortState } from '../../../core/utils/sort.util';
+import { portalYears } from '../../../core/utils/year-options.util';
 
 @Component({
   selector: 'app-attendance-employee-list',
@@ -45,7 +47,9 @@ export class AttendanceEmployeeListComponent implements OnInit {
     year: new FormControl(this.attendanceFilter.year(), { nonNullable: true }),
   });
 
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly years = portalYears();
+  sortBy = 'employeeCode';
+  sortDir: SortDir = 'asc';
 
   readonly clientOptions = computed(() =>
     this.clients().map(c => ({ key: String(c.id), value: c.companyName })),
@@ -98,7 +102,12 @@ export class AttendanceEmployeeListComponent implements OnInit {
     if (!v.clientId) return;
     this.loading.set(true);
     const pageParams = params ?? this.pager.firstPageParams();
-    this.attendanceService.getEmployeeList({ ...v, ...pageParams }).subscribe({
+    this.attendanceService.getEmployeeList({
+      ...v,
+      ...pageParams,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
+    }).subscribe({
       next: res => {
         this.register.set(res.register);
         this.items.set(res.items);
@@ -127,6 +136,17 @@ export class AttendanceEmployeeListComponent implements OnInit {
   private reloadFirstPage() {
     this.pager.reset();
     this.load(this.pager.firstPageParams());
+  }
+
+  toggleSort(active: string) {
+    const next = toggleSortState(this.sortBy, this.sortDir, active);
+    this.sortBy = next.sortBy;
+    this.sortDir = next.sortDir;
+    this.reloadFirstPage();
+  }
+
+  sortIcon(active: string): string {
+    return sortIconName(this.sortBy, this.sortDir, active);
   }
 
   openRegister() {

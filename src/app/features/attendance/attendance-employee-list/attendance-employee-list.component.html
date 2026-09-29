@@ -36,7 +36,7 @@
         [options]="yearOptions()"
         [width]="100"
         widthUnit="%"
-        [searchFunctionality]="false"
+        [searchFunctionality]="true"
       />
     </form>
 
@@ -77,8 +77,16 @@
     <div class="data-list-scroll">
       <div class="data-list">
         <div class="data-list__header">
-          <div class="data-list__cell">Code</div>
-          <div class="data-list__cell">Soft Code</div>
+          <div class="data-list__cell">
+            <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'employeeCode'" (click)="toggleSort('employeeCode')">
+              Code <mat-icon>{{ sortIcon('employeeCode') }}</mat-icon>
+            </button>
+          </div>
+          <div class="data-list__cell">
+            <button type="button" class="data-list__sort" [class.data-list__sort--active]="sortBy === 'softCode'" (click)="toggleSort('softCode')">
+              Soft Code <mat-icon>{{ sortIcon('softCode') }}</mat-icon>
+            </button>
+          </div>
           <div class="data-list__cell">Employee</div>
           <div class="data-list__cell">Client</div>
           <div class="data-list__cell">Department</div>

@@ -24,6 +24,12 @@ import { PaginationNavigateEvent } from '../../../library/components/pagination/
 import { featureDropdownDialogConfig } from '../../../core/utils/dialog.util';
 import { EmployeeMarkLeftDialogComponent } from '../components/employee-mark-left-dialog/employee-mark-left-dialog.component';
 import { EmployeeRejoinDialogComponent } from '../components/employee-rejoin-dialog/employee-rejoin-dialog.component';
+import {
+  ExportColumnsDialogResult,
+  openExportColumnsDialog,
+} from '../../../shared/components/export-columns-dialog/export-columns-dialog.component';
+import { EMPLOYEE_EXPORT_COLUMNS } from '../../../core/constants/export-columns.constants';
+import { sortIconName, toggleSortState } from '../../../core/utils/sort.util';
 
 @Component({
   selector: 'app-employee-list',
@@ -138,18 +144,14 @@ export class EmployeeListComponent implements OnInit {
   }
 
   toggleSort(active: string) {
-    if (this.sortBy === active) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = active;
-      this.sortDir = 'asc';
-    }
+    const next = toggleSortState(this.sortBy, this.sortDir, active);
+    this.sortBy = next.sortBy;
+    this.sortDir = next.sortDir;
     this.reloadFirstPage();
   }
 
   sortIcon(active: string): string {
-    if (this.sortBy !== active) return 'unfold_more';
-    return this.sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward';
+    return sortIconName(this.sortBy, this.sortDir, active);
   }
 
   viewEmployee(id: string) {
@@ -157,32 +159,34 @@ export class EmployeeListComponent implements OnInit {
   }
 
   exportExcel() {
-    this.employeeService.exportExcel().subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'employees-export.xlsx';
-        a.click();
-        URL.revokeObjectURL(url);
-        this.notification.success('Excel export downloaded.');
-      },
-      error: () => this.notification.error('Export failed.'),
-    });
+    this.openExportDialog('excel');
   }
 
   exportPdf() {
-    this.employeeService.exportPdf().subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'employees-export.pdf';
-        a.click();
-        URL.revokeObjectURL(url);
-        this.notification.success('PDF export downloaded.');
-      },
-      error: () => this.notification.error('Export failed.'),
+    this.openExportDialog('pdf');
+  }
+
+  private openExportDialog(format: 'excel' | 'pdf') {
+    openExportColumnsDialog(this.dialog, {
+      format,
+      columns: EMPLOYEE_EXPORT_COLUMNS,
+    }).subscribe((result: ExportColumnsDialogResult | null) => {
+      if (!result?.columns?.length) return;
+      const request = format === 'pdf'
+        ? this.employeeService.exportPdf(result.columns)
+        : this.employeeService.exportExcel(result.columns);
+      request.subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = format === 'pdf' ? 'employees-export.pdf' : 'employees-export.xlsx';
+          a.click();
+          URL.revokeObjectURL(url);
+          this.notification.success(format === 'pdf' ? 'PDF export downloaded.' : 'Excel export downloaded.');
+        },
+        error: () => this.notification.error('Export failed.'),
+      });
     });
   }
 
