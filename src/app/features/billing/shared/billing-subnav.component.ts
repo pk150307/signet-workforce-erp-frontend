@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ClientsService } from '../../../core/services/clients.service';
 import { BillingFilterService } from '../../../core/services/billing-filter.service';
 import { ClientListItem } from '../../../core/models/client.models';
+import { portalYears } from '../../../core/utils/year-options.util';
 
 interface BillingNavLink {
   label: string;
@@ -82,7 +83,7 @@ export class BillingSubnavComponent implements OnInit {
     value: i + 1,
     label: new Date(2000, i, 1).toLocaleString('en', { month: 'long' }),
   }));
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly years = portalYears();
 
   readonly navLinks: BillingNavLink[] = [
     { label: 'Dashboard', path: '/billing/dashboard', icon: 'dashboard', exact: true },

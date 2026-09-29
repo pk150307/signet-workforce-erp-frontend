@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClientsService } from '../../../../core/services/clients.service';
 import { BillingFilterService } from '../../../../core/services/billing-filter.service';
 import { ClientListItem } from '../../../../core/models/client.models';
+import { portalYears } from '../../../../core/utils/year-options.util';
 interface BillingNavLink {
   label: string;
   path: string;
@@ -28,7 +29,7 @@ export class BillingSubnavComponent implements OnInit {
     value: i + 1,
     label: new Date(2000, i, 1).toLocaleString('en', { month: 'long' }),
   }));
-  readonly years = [2024, 2025, 2026, 2027];
+  readonly years = portalYears();
 
   readonly clientOptions = computed(() => [
     { key: '', value: 'All clients' },

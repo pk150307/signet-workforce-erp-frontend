@@ -12,6 +12,7 @@ import { SiteListItem } from '../../../../core/models/sites.models';
 import { BillableDepartmentOption, InvoiceDetail } from '../../../../core/models/invoice.models';
 
 import { BillingSubnavComponent } from '../../shared/billing-subnav/billing-subnav.component';
+import { formatLocalDate } from '../../../../core/utils/date-calendar.util';
 @Component({
   selector: 'app-invoice-form',
     templateUrl: './invoice-form.component.html',
@@ -286,8 +287,8 @@ export class InvoiceFormComponent implements OnInit {
 
     this.saving.set(true);
     const raw = this.form.getRawValue();
-    const invoiceDate = raw.invoiceDate.toISOString().split('T')[0];
-    const dueDate = raw.dueDate.toISOString().split('T')[0];
+    const invoiceDate = formatLocalDate(raw.invoiceDate);
+    const dueDate = formatLocalDate(raw.dueDate);
     const gstRate = raw.lineItems[0]?.gstRate ?? 18;
     const payload = {
       invoiceDate,
