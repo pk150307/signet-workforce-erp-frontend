@@ -51,13 +51,18 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
   isDropdownOpen: boolean = false;
   filteredOptions: SelectOption[] = [];
   selectedOption: SelectOption | null = null;
+  dropdownStyles: Record<string, string> = {};
+  resolvedPlacement: 'top' | 'bottom' = 'bottom';
   @Input() dropdownOptionMaxHeight:string='186px'
-  /** Open menu below (default) or above the field — use `top` near page bottoms. */
+  /** Preferred side; the menu flips when that side does not have enough room. */
   @Input() dropdownPlacement: 'top' | 'bottom' = 'bottom';
   @Input() showPrefixOptionIcon:any=false;
   static activeInstance: SearchSelectDropdownComponent | null = null;
   static nextId = 0;
   private readonly uid = ++SearchSelectDropdownComponent.nextId;
+  private positionFrame: number | null = null;
+  private panelEl: HTMLElement | null = null;
+  private panelParent: HTMLElement | null = null;
 
   readonly phoneInputId = `signet-phone-input-${this.uid}`;
 
@@ -104,18 +109,32 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
 
   @HostListener("document:click", ["$event"])
   onClickOutside(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target as HTMLElement)) {
-      this.isDropdownOpen = false;
+    const target = event.target as HTMLElement | null;
+    if (!target) {
+      return;
+    }
+    if (this.elementRef.nativeElement.contains(target) || this.panelEl?.contains(target)) {
+      return;
+    }
+    this.closeDropdown();
+  }
 
-      // Deregister if this was the active dropdown
-      if (SearchSelectDropdownComponent.activeInstance === this) {
-        SearchSelectDropdownComponent.activeInstance = null;
-      }
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isDropdownOpen) {
+      this.closeDropdown();
     }
   }
-  constructor(private elementRef: ElementRef) {}
 
-  ngOnInit() {}
+  constructor(private elementRef: ElementRef<HTMLElement>) {}
+
+  ngOnInit() {
+    window.addEventListener('scroll', this.onViewportChange, true);
+    window.addEventListener('resize', this.onViewportChange);
+    window.visualViewport?.addEventListener('resize', this.onViewportChange);
+    window.visualViewport?.addEventListener('scroll', this.onViewportChange);
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes["options"]) {
       this.filteredOptions = [...this.options];
@@ -136,30 +155,50 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
   }
 
   onPhoneChange() {
-    this.isDropdownOpen = false;
+    this.closeDropdown();
     this.phonevalueChange.emit(this.phoneValue);
     this.selectedCountryCode.emit(this.selectedOption?.key);
   }
   toggleDropdown(): void {
-    const isOpening = !this.isDropdownOpen;
+    if (this.disabled) {
+      return;
+    }
+    if (this.isDropdownOpen) {
+      this.closeDropdown();
+      return;
+    }
+    this.openDropdown();
+  }
+
+  openDropdown(): void {
     this.filteredOptions = [...this.options];
     this.searchText = "";
 
-    // Close any previously open dropdown
     if (
-      isOpening &&
       SearchSelectDropdownComponent.activeInstance &&
       SearchSelectDropdownComponent.activeInstance !== this
     ) {
-      SearchSelectDropdownComponent.activeInstance.isDropdownOpen = false;
+      SearchSelectDropdownComponent.activeInstance.closeDropdown();
     }
 
-    this.isDropdownOpen = isOpening;
-
-    // Register current instance as active
-    SearchSelectDropdownComponent.activeInstance = isOpening ? this : null;
-    // this.positionDropdown();
+    this.isDropdownOpen = true;
+    SearchSelectDropdownComponent.activeInstance = this;
+    this.schedulePosition();
   }
+
+  closeDropdown(): void {
+    if (!this.isDropdownOpen && SearchSelectDropdownComponent.activeInstance !== this) {
+      return;
+    }
+    this.restorePanel();
+    this.isDropdownOpen = false;
+    this.dropdownStyles = {};
+    this.resolvedPlacement = this.dropdownPlacement;
+    if (SearchSelectDropdownComponent.activeInstance === this) {
+      SearchSelectDropdownComponent.activeInstance = null;
+    }
+  }
+
   onSearchChange(value: string) {
     this.searchText = value;
 
@@ -171,15 +210,24 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
 
       return valueMatch || codeMatch;
     });
+    this.schedulePosition();
   }
 
   selectOption(option: SelectOption) {
     this.selectedOption = option;
     this.emitValue(option);
-    this.isDropdownOpen = false;
+    this.closeDropdown();
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onViewportChange, true);
+    window.removeEventListener('resize', this.onViewportChange);
+    window.visualViewport?.removeEventListener('resize', this.onViewportChange);
+    window.visualViewport?.removeEventListener('scroll', this.onViewportChange);
+    if (this.positionFrame != null) {
+      cancelAnimationFrame(this.positionFrame);
+    }
+    this.restorePanel();
     if (SearchSelectDropdownComponent.activeInstance === this) {
       SearchSelectDropdownComponent.activeInstance = null;
     }
@@ -188,30 +236,6 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
     const match = this.options?.find((option) => String(option.key) === String(this.value));
     return match?.value?.toString() ?? '';
   }
-  // onCreateNew() {
-  //   if (!this.searchText || this.searchText.trim() === "") {
-  //     return; // nothing to add
-  //   }
-
-  //   // Prepare new option
-  //   const newOption = {
-  //     key: this.searchText.trim().replace(/\s+/g, "_").toUpperCase(), // generate key
-  //     value: this.searchText.trim(),
-  //   };
-
-  //   // Push into options
-  //   this.options = [...this.options, newOption];
-
-  //   // Update selection
-  //   this.value = newOption.key;
-
-  //   // Emit to parent
-  //   this.createNewValueChange.emit(newOption);
-
-  //   // Reset search and close dropdown
-  //   this.searchText = "";
-  //   this.isDropdownOpen = false;
-  // }
   onCreateNew() {
   if (!this.searchText || this.searchText.trim() === "") {
     return;
@@ -225,13 +249,123 @@ export class SearchSelectDropdownComponent implements OnInit, OnChanges, OnDestr
   // 👉 Just emit to parent
   this.createNewValueChange.emit(newOption);
 
-  // Reset search and close dropdown
   this.searchText = "";
-  this.isDropdownOpen = false;
+  this.closeDropdown();
 }
   trackOptions = (index: number, option: any) => option.key;
 
   get resolvedPlaceholder(): string {
     return resolveFieldPlaceholder(this.fieldTitle, this.placeholder, 'select');
+  }
+
+  private readonly onViewportChange = (): void => {
+    if (this.isDropdownOpen) {
+      this.schedulePosition();
+    }
+  };
+
+  private schedulePosition(): void {
+    if (this.positionFrame != null) {
+      cancelAnimationFrame(this.positionFrame);
+    }
+    this.positionFrame = requestAnimationFrame(() => {
+      this.positionFrame = null;
+      this.positionDropdown();
+    });
+  }
+
+  private getTriggerElement(): HTMLElement | null {
+    const host = this.elementRef.nativeElement;
+    return host.querySelector(
+      this.isPhoneMode
+        ? '.select-wrapper_phone-field'
+        : '.select-wrapper_select-field',
+    );
+  }
+
+  private getPanelElement(): HTMLElement | null {
+    return this.panelEl
+      ?? this.elementRef.nativeElement.querySelector('.select-wrapper__dropdown');
+  }
+
+  private attachPanelToBody(): HTMLElement | null {
+    const panel = this.getPanelElement();
+    if (!panel) {
+      return null;
+    }
+    this.panelEl = panel;
+    if (panel.parentElement !== document.body) {
+      this.panelParent = panel.parentElement;
+      document.body.appendChild(panel);
+    }
+    return panel;
+  }
+
+  private restorePanel(): void {
+    const panel = this.panelEl ?? this.getPanelElement();
+    if (panel && this.panelParent && panel.parentElement === document.body) {
+      this.panelParent.appendChild(panel);
+    }
+    this.panelEl = null;
+    this.panelParent = null;
+  }
+
+  private parseMaxOptionHeight(): number {
+    const parsed = parseInt(String(this.dropdownOptionMaxHeight), 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 186;
+  }
+
+  positionDropdown(): void {
+    const trigger = this.getTriggerElement();
+    if (!trigger || !this.isDropdownOpen) {
+      return;
+    }
+    this.attachPanelToBody();
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const gap = 4;
+    const padding = 8;
+    const searchHeight = this.searchFunctionality ? 48 : 0;
+    const createNewHeight = this.createNew ? 40 : 0;
+    const panelChrome = 16;
+    const preferredHeight = Math.min(
+      320,
+      searchHeight + this.parseMaxOptionHeight() + createNewHeight + panelChrome,
+    );
+
+    const spaceBelow = window.innerHeight - triggerRect.bottom - gap - padding;
+    const spaceAbove = triggerRect.top - gap - padding;
+    const minUsefulHeight = 120;
+
+    let placement = this.dropdownPlacement;
+    if (placement === 'bottom' && spaceBelow < minUsefulHeight && spaceAbove > spaceBelow) {
+      placement = 'top';
+    } else if (placement === 'top' && spaceAbove < minUsefulHeight && spaceBelow > spaceAbove) {
+      placement = 'bottom';
+    }
+    this.resolvedPlacement = placement;
+
+    const available = Math.max(minUsefulHeight, placement === 'bottom' ? spaceBelow : spaceAbove);
+    const maxHeight = Math.round(Math.min(preferredHeight, available));
+
+    let left = triggerRect.left;
+    let width = triggerRect.width;
+    if (left + width > window.innerWidth - padding) {
+      width = Math.max(160, window.innerWidth - left - padding);
+    }
+    if (left < padding) {
+      width = Math.min(width, window.innerWidth - padding * 2);
+      left = padding;
+    }
+
+    this.dropdownStyles = {
+      position: 'fixed',
+      top: placement === 'bottom' ? `${Math.round(triggerRect.bottom + gap)}px` : 'auto',
+      bottom: placement === 'top' ? `${Math.round(window.innerHeight - triggerRect.top + gap)}px` : 'auto',
+      left: `${Math.round(left)}px`,
+      width: `${Math.round(width)}px`,
+      maxHeight: `${maxHeight}px`,
+      zIndex: '11000',
+    };
   }
 }
