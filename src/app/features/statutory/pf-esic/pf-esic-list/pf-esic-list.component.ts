@@ -24,6 +24,11 @@ import { PfEsicDrawerComponent } from '../pf-esic-drawer/pf-esic-drawer.componen
 import { PfEsicBulkWizardComponent, PfEsicBulkWizardData } from '../pf-esic-bulk-wizard/pf-esic-bulk-wizard.component';
 import { featureDialogConfig } from '../../../../core/utils/dialog.util';
 import { paginateMock } from '../../../../core/utils/mock-pagination.util';
+import {
+  ExportColumnsDialogResult,
+  openExportColumnsDialog,
+} from '../../../../shared/components/export-columns-dialog/export-columns-dialog.component';
+import { PF_ESIC_EXPORT_COLUMNS } from '../../../../core/constants/export-columns.constants';
 
 type TriStateFilter = 'all' | 'yes' | 'no';
 
@@ -193,26 +198,36 @@ export class PfEsicListComponent implements OnInit {
   }
 
   exportExcel(): void {
-    this.downloadExport('excel');
+    this.openExportDialog('excel');
   }
 
   exportPdf(): void {
-    this.downloadExport('pdf');
+    this.openExportDialog('pdf');
   }
 
-  private downloadExport(format: 'excel' | 'pdf'): void {
-    this.pfEsicService.export({ ...this.buildQueryParams(), format }).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const ext = format === 'pdf' ? 'pdf' : 'xlsx';
-        a.download = `pf-esic-export-${new Date().toISOString().slice(0, 10)}.${ext}`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.notification.success(`${format === 'pdf' ? 'PDF' : 'Excel'} export downloaded successfully.`);
-      },
-      error: () => this.notification.error('Export failed.'),
+  private openExportDialog(format: 'excel' | 'pdf'): void {
+    openExportColumnsDialog(this.dialog, {
+      format,
+      columns: PF_ESIC_EXPORT_COLUMNS,
+    }).subscribe((result: ExportColumnsDialogResult | null) => {
+      if (!result?.columns?.length) return;
+      this.pfEsicService.export({
+        ...this.buildQueryParams(),
+        format,
+        columns: result.columns.join(','),
+      }).subscribe({
+        next: blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const ext = format === 'pdf' ? 'pdf' : 'xlsx';
+          a.download = `pf-esic-export-${new Date().toISOString().slice(0, 10)}.${ext}`;
+          a.click();
+          URL.revokeObjectURL(url);
+          this.notification.success(`${format === 'pdf' ? 'PDF' : 'Excel'} export downloaded successfully.`);
+        },
+        error: () => this.notification.error('Export failed.'),
+      });
     });
   }
 
