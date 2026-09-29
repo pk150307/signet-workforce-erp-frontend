@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<mat-dialog-content>
+  <p class="dialog-intro">Select the columns to include in the download.</p>
+
+  <div class="export-columns">
+    <signet-custom-checkbox
+      permissionKey="export-all"
+      label="Select all"
+      [checked]="isAllSelected()"
+      [required]="false"
+      groupName="exportColumns"
+      (permissionToggled)="toggleAll($event)"
+    />
+    @for (column of columns; track column.key) {
+      <signet-custom-checkbox
+        [permissionKey]="'export-' + column.key"
+        [label]="column.label"
+        [checked]="isSelected(column.key)"
+        [required]="false"
+        groupName="exportColumns"
+        (permissionToggled)="toggle(column.key, $event)"
+      />
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="export-dialog__actions">
+  <signet-button type="stroke" displayText="Cancel" (clicked)="cancel()" />
+  <signet-button
+    type="primary"
+    [displayText]="data.format === 'pdf' ? 'Download PDF' : 'Download Excel'"
+    (clicked)="confirm()"
+    [disabled]="selected().size === 0"
+  />
+</mat-dialog-actions>

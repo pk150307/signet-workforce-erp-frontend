@@ -929,6 +929,23 @@ mat-cell {
     &--muted {
       color: var(--color-text-muted);
     }
+
+    &--sticky {
+      position: sticky;
+      z-index: 2;
+      overflow: visible;
+      background: var(--color-surface);
+      box-shadow: 1px 0 0 var(--color-divider);
+    }
+  }
+
+  &__header &__cell--sticky {
+    z-index: 5;
+    background: var(--color-bg-subtle);
+  }
+
+  &__row:hover &__cell--sticky {
+    background: var(--color-bg-subtle);
   }
 
   &__sort {
