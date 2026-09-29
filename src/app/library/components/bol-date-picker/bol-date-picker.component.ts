@@ -59,7 +59,7 @@ export class BolDatePickerComponent {
     private sharedService: SharedService
   ) {
     dayjs.tz.setDefault(sharedService.programTimeZone);
-    this.showTimeFields = payload.showTimeFields ?? true;
+    this.showTimeFields = payload.showTimeFields === true;
     this.mapMinMaxDate(payload.maxDate, payload.minDate);
     this.selectedDate = this.handleDateTime(payload.selectedDate ?? dayjs());
     this.outputFormat = payload.outputFormat ?? '';
@@ -186,6 +186,12 @@ export class BolDatePickerComponent {
         .set('hour', hourNum)
         .set('minute', parseInt(this.minutes, 10))
         .set('second', parseInt(this.seconds, 10));
+    } else {
+      this.currentSelection = this.currentSelection
+        .startOf('day')
+        .set('hour', 0)
+        .set('minute', 0)
+        .set('second', 0);
     }
 
     const value = this.currentSelection.format('YYYY-MM-DDTHH:mm:ss');
@@ -221,7 +227,7 @@ export class BolDatePickerComponent {
       }
     } else {
       this.maxDate = dayjs()
-        .set('year', 2500)
+        .set('year', 2050)
         .set('date', 31)
         .set('month', 11)
         .toString();

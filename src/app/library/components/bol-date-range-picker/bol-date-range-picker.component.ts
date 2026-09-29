@@ -59,7 +59,7 @@ export class BolDateRangePickerComponent {
     dayjs.tz.setDefault(this.sharedService.programTimeZone);
     this.payload = payload;
     this.allowSingleDateSelection = payload?.allowSingleDateSelection ?? false;
-    this.showTimeFields = true;
+    this.showTimeFields = payload.showTimeFields === true;
     this.selectedStartDate = payload.selectedStartDate ?? dayjs();
     this.selectedEndDate = payload.selectedEndDate ?? dayjs();
     this.outputFormat = payload?.outputFormat ?? '';
@@ -131,7 +131,7 @@ export class BolDateRangePickerComponent {
       this.maxDate = maxDate.toString();
     } else {
       this.maxDate = dayjs()
-        .set('year', 2500)
+        .set('year', 2050)
         .set('date', 31)
         .set('month', 11)
         .toString();

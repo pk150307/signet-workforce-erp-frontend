@@ -350,14 +350,14 @@ export class CustomTextFieldComponent implements ControlValueAccessor {
   }
 
   handleWheel = (event: WheelEvent) => {
-    // document.addEventListener('wheel', (event) => {
+    if (this.type === 'number') {
+      event.preventDefault();
+      return;
+    }
     const target = event?.target as HTMLElement;
-    const inputField = document.getElementById('noscrol');
     if (event.deltaX !== 0 && target.id === 'noscrol_' + this.randomNumber) {
       event.preventDefault();
     }
-
-    // },{ passive: false });
   };
   ngOnDestroy(): void {
     this.elementRef.nativeElement.removeEventListener(

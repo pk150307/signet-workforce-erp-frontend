@@ -86,6 +86,7 @@ export class DateInputFieldComponent {
     }
     return {
       outputFormat: 'YYYY-MM-DD',
+      showTimeFields: false,
       ...this.config,
       selectedDate: startDate,
       onSave: (selectedDate: dayjs.Dayjs, formattedDate: string) => {
@@ -139,6 +140,7 @@ export class DateInputFieldComponent {
     return {
       outputFormat: 'YYYY-MM-DD',
       allowSingleDateSelection: false,
+      showTimeFields: false,
       ...this.config,
       selectedStartDate: startDate,
       selectedEndDate: endDate,
