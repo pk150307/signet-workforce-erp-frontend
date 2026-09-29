@@ -1,27 +1,34 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ReportsService } from '../../../core/services/reports.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { AttendanceReportData } from '../../../core/models/reports.models';
+import { AttendanceReportData, ReportQuery } from '../../../core/models/reports.models';
+import { downloadReportCsv } from '../report-export.util';
 
 @Component({
   selector: 'app-attendance-report',
   templateUrl: './attendance-report.component.html',
   styleUrl: './attendance-report.component.less',
 })
-export class AttendanceReportComponent implements OnInit {
+export class AttendanceReportComponent {
   private readonly reportsService = inject(ReportsService);
   private readonly notification = inject(NotificationService);
+
   readonly loading = signal(true);
   readonly report = signal<AttendanceReportData | null>(null);
+  private query: ReportQuery = {};
 
-  ngOnInit() {
+  onFiltersChange(query: ReportQuery): void {
+    this.query = query;
     this.load();
   }
 
-  load() {
+  load(): void {
     this.loading.set(true);
-    this.reportsService.getAttendanceReport().subscribe({
-      next: (data) => { this.report.set(data); this.loading.set(false); },
+    this.reportsService.getAttendanceReport(this.query).subscribe({
+      next: (data) => {
+        this.report.set(data);
+        this.loading.set(false);
+      },
       error: () => {
         this.report.set(null);
         this.loading.set(false);
@@ -30,13 +37,13 @@ export class AttendanceReportComponent implements OnInit {
     });
   }
 
-  formatSummaryLabel(key: string): string {
-    const labels: Record<string, string> = {
-      present: 'Present',
-      absent: 'Absent',
-      onLeave: 'On Leave',
-      late: 'Late',
-    };
-    return labels[key] ?? key;
+  exportReport(): void {
+    const report = this.report();
+    if (!report) return;
+    downloadReportCsv(
+      `attendance-report-${report.period.label}`,
+      ['Client', 'Attendance'],
+      report.rows.map((row) => [row.label, row.value]),
+    );
   }
 }

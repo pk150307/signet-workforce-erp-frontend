@@ -14,6 +14,7 @@ import { SettingsSubnavComponent } from './shared/settings-subnav/settings-subna
 import { SystemConfigComponent } from './system-config/system-config.component';
 import { UserDrawerComponent } from './user-drawer/user-drawer.component';
 import { UsersListComponent } from './users-list/users-list.component';
+import { ExportColumnsDialogComponent } from '../../shared/components/export-columns-dialog/export-columns-dialog.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { UsersListComponent } from './users-list/users-list.component';
   imports: [
     SharedModule,
     SettingsModuleRoutingModule,
+    ExportColumnsDialogComponent,
   ],
 })
 export class SettingsModule {}

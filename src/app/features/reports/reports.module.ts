@@ -6,6 +6,7 @@ import { EmployeeReportComponent } from './employee-report/employee-report.compo
 import { InvoiceReportComponent } from './invoice-report/invoice-report.component';
 import { PayrollReportComponent } from './payroll-report/payroll-report.component';
 import { ReportsHubComponent } from './reports-hub/reports-hub.component';
+import { ReportFiltersComponent } from './report-filters/report-filters.component';
 
 @NgModule({
   declarations: [
@@ -14,6 +15,7 @@ import { ReportsHubComponent } from './reports-hub/reports-hub.component';
     InvoiceReportComponent,
     PayrollReportComponent,
     ReportsHubComponent,
+    ReportFiltersComponent,
   ],
   imports: [
     SharedModule,

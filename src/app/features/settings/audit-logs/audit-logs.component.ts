@@ -17,6 +17,12 @@ import {
 import { PaginationNavigateEvent } from '../../../library/components/pagination/pagination.component';
 import { AuditLogListItem } from '../../../core/models/iam.models';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  ExportColumnsDialogResult,
+  openExportColumnsDialog,
+} from '../../../shared/components/export-columns-dialog/export-columns-dialog.component';
+import { AUDIT_LOG_EXPORT_COLUMNS } from '../../../core/constants/export-columns.constants';
 
 @Component({
   selector: 'app-audit-logs',
@@ -27,6 +33,7 @@ export class AuditLogsComponent implements OnInit {
   private readonly auditLogsService = inject(AuditLogsService);
   private readonly notification = inject(NotificationService);
   private readonly authService = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
   readonly data = signal<CursorPaginatedResult<AuditLogListItem> | null>(null);
@@ -71,29 +78,36 @@ export class AuditLogsComponent implements OnInit {
   }
 
   exportExcel(): void {
-    this.downloadExport('excel');
+    this.openExportDialog('excel');
   }
 
   exportPdf(): void {
-    this.downloadExport('pdf');
+    this.openExportDialog('pdf');
   }
 
-  private downloadExport(format: 'excel' | 'pdf'): void {
-    this.auditLogsService.exportExcel({
-      search: this.searchCtrl.value || undefined,
-      module: this.moduleCtrl.value || undefined,
+  private openExportDialog(format: 'excel' | 'pdf'): void {
+    openExportColumnsDialog(this.dialog, {
       format,
-    }).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = format === 'pdf' ? 'audit-logs-export.pdf' : 'audit-logs-export.xlsx';
-        a.click();
-        URL.revokeObjectURL(url);
-        this.notification.success(`${format === 'pdf' ? 'PDF' : 'Excel'} export downloaded.`);
-      },
-      error: () => this.notification.error('Export failed.'),
+      columns: AUDIT_LOG_EXPORT_COLUMNS,
+    }).subscribe((result: ExportColumnsDialogResult | null) => {
+      if (!result?.columns?.length) return;
+      this.auditLogsService.exportExcel({
+        search: this.searchCtrl.value || undefined,
+        module: this.moduleCtrl.value || undefined,
+        format,
+        columns: result.columns.join(','),
+      }).subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = format === 'pdf' ? 'audit-logs-export.pdf' : 'audit-logs-export.xlsx';
+          a.click();
+          URL.revokeObjectURL(url);
+          this.notification.success(`${format === 'pdf' ? 'PDF' : 'Excel'} export downloaded.`);
+        },
+        error: () => this.notification.error('Export failed.'),
+      });
     });
   }
 

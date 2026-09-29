@@ -1,23 +1,43 @@
 <div class="page-container">
   <div class="page-header">
-    <div><h1 class="page-header__title">Attendance Report</h1><p class="page-header__subtitle">{{ report()?.period }}</p></div>
-    <div class="page-header__actions"><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="load()" /><signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export" /></div>
+    <div>
+      <h1 class="page-header__title">Attendance Report</h1>
+      <p class="page-header__subtitle">{{ report()?.period?.label || 'All periods · All clients' }}</p>
+    </div>
+    <div class="page-header__actions">
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Refresh" (clicked)="load()" />
+      <signet-button [width]="100" [widthUnit]="'%'" type="stroke" displayText="Export" [disabled]="!report()" (clicked)="exportReport()" />
+    </div>
   </div>
+
+  <app-report-filters (filtersChange)="onFiltersChange($event)" />
+
   <app-skeleton-loader *ngIf="loading()" type="card" [rows]="3"></app-skeleton-loader>
+
   <ng-container *ngIf="!loading() && report() as r">
     <div class="kpi-grid">
-      <div class="stat-card" *ngFor="let entry of (r.summary | keyvalue)">
-        <div><div class="stat-card__value">{{ entry.value }}</div><div class="stat-card__label">{{ formatSummaryLabel(entry.key) }}</div></div>
+      <div class="stat-card">
+        <div><div class="stat-card__value">{{ r.summary.present | number }}</div><div class="stat-card__label">Present</div></div>
+      </div>
+      <div class="stat-card">
+        <div><div class="stat-card__value">{{ r.summary.absent | number }}</div><div class="stat-card__label">Absent</div></div>
+      </div>
+      <div class="stat-card">
+        <div><div class="stat-card__value">{{ r.summary.onLeave | number }}</div><div class="stat-card__label">On Leave</div></div>
+      </div>
+      <div class="stat-card">
+        <div><div class="stat-card__value">{{ r.summary.late | number }}</div><div class="stat-card__label">Late</div></div>
       </div>
     </div>
-    <div class="card report-table" *ngIf="(r.rows?.length ?? 0) > 0">
+
+    <div class="card report-table" *ngIf="r.rows.length">
       <table class="summary-table">
-        <thead><tr><th>Item</th><th>Value</th><th>Trend</th></tr></thead>
+        <thead><tr><th>Client</th><th>Attendance</th></tr></thead>
         <tbody>
-          <tr *ngFor="let row of r.rows"><td>{{ row.label }}</td><td>{{ row.value }}</td><td>{{ row.trend ?? '—' }}</td></tr>
+          <tr *ngFor="let row of r.rows"><td>{{ row.label }}</td><td>{{ row.value }}</td></tr>
         </tbody>
       </table>
     </div>
-    <app-empty-state *ngIf="(r.rows?.length ?? 0) === 0" icon="bar_chart" title="No report data" description="No data available for this period."></app-empty-state>
+    <app-empty-state *ngIf="!r.rows.length" icon="bar_chart" title="No report data" description="No attendance data for the selected filters."></app-empty-state>
   </ng-container>
 </div>

@@ -1,0 +1,48 @@
+<div class="filter-bar card report-filters">
+  <signet-search-select-dropdown
+    class="report-filters__field"
+    [formControl]="monthCtrl"
+    fieldTitle="Month"
+    placeholder="All months"
+    [options]="monthOptions"
+    [searchFunctionality]="false"
+    [required]="false"
+    [width]="100"
+    widthUnit="%"
+  />
+
+  <signet-search-select-dropdown
+    class="report-filters__field"
+    [formControl]="yearCtrl"
+    fieldTitle="Year"
+    placeholder="All years"
+    [options]="yearOptions"
+    [searchFunctionality]="true"
+    [required]="false"
+    [width]="100"
+    widthUnit="%"
+  />
+
+  <signet-search-select-dropdown
+    class="report-filters__field"
+    [formControl]="clientCtrl"
+    fieldTitle="Client"
+    placeholder="All clients"
+    [options]="clientOptions()"
+    [searchFunctionality]="true"
+    [required]="false"
+    [width]="100"
+    widthUnit="%"
+  />
+
+  @if (hasFilters()) {
+    <signet-button
+      class="report-filters__clear"
+      [width]="100"
+      [widthUnit]="'%'"
+      type="stroke"
+      displayText="Clear filters"
+      (clicked)="clearFilters()"
+    />
+  }
+</div>
