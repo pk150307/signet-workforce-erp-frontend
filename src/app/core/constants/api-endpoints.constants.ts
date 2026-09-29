@@ -180,6 +180,8 @@ export const API_ENDPOINTS = {
     attendance: '/reports/attendance',
     payroll: '/reports/payroll',
     billing: '/reports/billing',
+    invoices: '/reports/invoices',
+    employees: '/reports/employees',
   },
   notifications: {
     base: '/notifications',

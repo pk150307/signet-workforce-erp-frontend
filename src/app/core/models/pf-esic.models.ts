@@ -77,4 +77,5 @@ export interface PfEsicQueryParams extends CursorPageParams {
   sortBy?: string;
   sortDir?: 'asc' | 'desc';
   format?: 'excel' | 'pdf';
+  columns?: string;
 }

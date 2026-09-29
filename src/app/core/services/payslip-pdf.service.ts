@@ -24,6 +24,7 @@ export class PayslipPdfService {
       selector: '.payslip-document',
       filename: this.filenameFor(payslip),
       width: '800px',
+      fitToSinglePage: true,
     });
     await firstValueFrom(this.payslipService.markDownloaded(payslip.id)).catch(() => undefined);
   }
@@ -40,6 +41,7 @@ export class PayslipPdfService {
         selector: '.payslip-document',
         filename: this.filenameFor(ps),
         width: '800px',
+        fitToSinglePage: true,
       })),
       zipName.endsWith('.pdf') ? zipName : `${zipName}.pdf`,
     );
@@ -48,7 +50,7 @@ export class PayslipPdfService {
   }
 
   saveElementAsPdf(element: HTMLElement, filename: string): Promise<void> {
-    return this.pdfExport.saveElementAsPdf(element, filename);
+    return this.pdfExport.saveElementAsPdf(element, filename, true);
   }
 
   private filenameFor(payslip: PayslipDetail): string {

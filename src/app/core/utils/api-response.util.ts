@@ -231,7 +231,7 @@ export function mapEmployeeListItem(raw: unknown): EmployeeListItem {
     employeeCode: pickString(r, 'employeeCode', 'code') ?? '',
     softCode: pickString(r, 'softCode', 'clientSoftCode') ?? null,
     clientSoftCode: pickString(r, 'clientSoftCode', 'softCode') ?? null,
-    fullName: fullName || 'Employee',
+    fullName: fullName || firstName || '',
     fatherName: pickString(r, 'fatherName') ?? null,
     email: pickString(r, 'email') ?? '',
     phone: pickString(r, 'phone', 'mobile') ?? '',
@@ -241,6 +241,13 @@ export function mapEmployeeListItem(raw: unknown): EmployeeListItem {
     status: pickNumber(r, 'status') as EmployeeStatus,
     joiningDate: pickString(r, 'joiningDate') ?? '',
     profilePhotoUrl: pickString(r, 'profilePhotoUrl', 'photoUrl') ?? null,
+    uanNumber: pickString(r, 'uanNumber') ?? null,
+    esiNumber: pickString(r, 'esiNumber') ?? null,
+    aadhaarNumber: pickString(r, 'aadhaarNumber') ?? null,
+    bankName: pickString(r, 'bankName') ?? null,
+    accountNumber: pickString(r, 'accountNumber') ?? null,
+    ifscCode: pickString(r, 'ifscCode') ?? null,
+    accountHolderName: pickString(r, 'accountHolderName') ?? null,
   };
 }
 
@@ -259,6 +266,12 @@ export function parseApiDate(value: unknown): Date | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const d = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   let d = new Date(trimmed);
   if (!isNaN(d.getTime())) return d;
 
@@ -269,12 +282,6 @@ export function parseApiDate(value: unknown): Date | null {
   const withoutTz = trimmed.replace(/\s+[A-Z]{1,4}$/i, '');
   d = new Date(withoutTz);
   if (!isNaN(d.getTime())) return d;
-
-  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    d = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
-    return isNaN(d.getTime()) ? null : d;
-  }
 
   // API sometimes returns truncated dates like "Thu Jun 25"
   const dayMonth = trimmed.match(/^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+([A-Za-z]{3})\s+(\d{1,2})$/i);
@@ -428,10 +435,13 @@ export function mapInvoiceStatusLabel(status: InvoiceStatus): string {
 }
 
 function normalizeDateToIso(value: unknown): string {
-  const parsed = parseApiDate(value);
-  if (parsed) return parsed.toISOString().split('T')[0];
   if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
-  return '';
+  const parsed = parseApiDate(value);
+  if (!parsed) return '';
+  const y = parsed.getFullYear();
+  const m = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export function mapInvoiceListItem(raw: unknown): InvoiceListItem {

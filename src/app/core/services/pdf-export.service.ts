@@ -15,6 +15,7 @@ export interface RenderComponentPdfOptions {
   selector: string;
   filename: string;
   width?: string;
+  fitToSinglePage?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,7 +53,7 @@ export class PdfExportService {
         throw new Error('Document element could not be rendered for PDF export.');
       }
 
-      await this.saveElementAsPdf(element, options.filename);
+      await this.saveElementAsPdf(element, options.filename, options.fitToSinglePage);
 
       this.appRef.detachView(compRef.hostView);
       compRef.destroy();
@@ -61,8 +62,8 @@ export class PdfExportService {
     }
   }
 
-  async saveElementAsPdf(element: HTMLElement, filename: string): Promise<void> {
-    const blob = await this.elementToPdfBlob(element);
+  async saveElementAsPdf(element: HTMLElement, filename: string, fitToSinglePage = false): Promise<void> {
+    const blob = await this.elementToPdfBlob(element, fitToSinglePage);
     const safeName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
     this.downloadBlob(blob, safeName);
   }
@@ -97,7 +98,7 @@ export class PdfExportService {
         throw new Error('Document element could not be rendered for PDF export.');
       }
 
-      const blob = await this.elementToPdfBlob(element);
+      const blob = await this.elementToPdfBlob(element, options.fitToSinglePage);
 
       this.appRef.detachView(compRef.hostView);
       compRef.destroy();
@@ -158,24 +159,10 @@ export class PdfExportService {
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
         if (index > 0) {
           pdf.addPage();
         }
-
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-
-        while (heightLeft > 0) {
-          pdf.addPage();
-          position = heightLeft - imgHeight;
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-          heightLeft -= pageHeight;
-        }
+        addPdfImage(pdf, imgData, canvas.width, canvas.height, pageWidth, pageHeight, items[index].fitToSinglePage !== false);
 
         this.appRef.detachView(compRef.hostView);
         compRef.destroy();
@@ -188,7 +175,7 @@ export class PdfExportService {
     this.downloadBlob(pdf.output('blob'), safeName);
   }
 
-  async elementToPdfBlob(element: HTMLElement): Promise<Blob> {
+  async elementToPdfBlob(element: HTMLElement, fitToSinglePage = false): Promise<Blob> {
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -200,23 +187,15 @@ export class PdfExportService {
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
-    }
+    addPdfImage(
+      pdf,
+      imgData,
+      canvas.width,
+      canvas.height,
+      pdf.internal.pageSize.getWidth(),
+      pdf.internal.pageSize.getHeight(),
+      fitToSinglePage,
+    );
 
     return pdf.output('blob');
   }
@@ -228,5 +207,40 @@ export class PdfExportService {
     anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+}
+
+function addPdfImage(
+  pdf: jsPDF,
+  imgData: string,
+  canvasWidth: number,
+  canvasHeight: number,
+  pageWidth: number,
+  pageHeight: number,
+  fitToSinglePage: boolean,
+): void {
+  const imgWidth = pageWidth;
+  const imgHeight = (canvasHeight * imgWidth) / canvasWidth;
+  const overflow = imgHeight - pageHeight;
+
+  if (fitToSinglePage || overflow <= 1) {
+    const scale = imgHeight > pageHeight ? pageHeight / imgHeight : 1;
+    const fittedWidth = imgWidth * scale;
+    const fittedHeight = imgHeight * scale;
+    const x = (pageWidth - fittedWidth) / 2;
+    pdf.addImage(imgData, 'PNG', x, 0, fittedWidth, fittedHeight, undefined, 'FAST');
+    return;
+  }
+
+  let heightLeft = imgHeight;
+  let position = 0;
+  pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+  heightLeft -= pageHeight;
+
+  while (heightLeft > 1) {
+    position = heightLeft - imgHeight;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+    heightLeft -= pageHeight;
   }
 }

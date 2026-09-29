@@ -76,7 +76,7 @@ export class AttendanceService {
     );
   }
 
-  getEmployeeList(params: RegisterPeriod & CursorPageParams) {
+  getEmployeeList(params: RegisterPeriod & CursorPageParams & { sortBy?: string; sortDir?: 'asc' | 'desc' }) {
     return this.http.get<unknown>(`${this.base}/registers/employees`, {
       params: toHttpParams({
         clientId: params.clientId,
@@ -85,6 +85,8 @@ export class AttendanceService {
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
         cursor: params.cursor,
         direction: params.direction,
+        sortBy: params.sortBy,
+        sortDir: params.sortDir,
       }),
     }).pipe(
       map(res => mapAttendanceEmployeeListResponse(res)),
@@ -142,9 +144,11 @@ export class AttendanceService {
     });
   }
 
-  exportRegister(params: RegisterPeriod, format: 'excel' | 'pdf' = 'excel') {
+  exportRegister(params: RegisterPeriod, format: 'excel' | 'pdf' = 'excel', columns?: string[]) {
+    let httpParams = this.periodParams(params).set('format', format);
+    if (columns?.length) httpParams = httpParams.set('columns', columns.join(','));
     return this.http.get(`${this.base}/registers/import/export`, {
-      params: this.periodParams(params).set('format', format),
+      params: httpParams,
       responseType: 'blob',
     });
   }

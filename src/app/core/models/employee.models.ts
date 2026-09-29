@@ -36,7 +36,38 @@ export interface EmployeeListItem {
   status: EmployeeStatus;
   joiningDate: string;
   profilePhotoUrl: string | null;
+  uanNumber?: string | null;
+  esiNumber?: string | null;
+  aadhaarNumber?: string | null;
+  bankName?: string | null;
+  accountNumber?: string | null;
+  ifscCode?: string | null;
+  accountHolderName?: string | null;
 }
+
+export const EMPLOYEE_EXPORT_COLUMNS = [
+  { key: 'employeeCode', label: 'Employee Code' },
+  { key: 'softCode', label: 'Soft Code' },
+  { key: 'firstName', label: 'First Name' },
+  { key: 'lastName', label: 'Last Name' },
+  { key: 'fatherName', label: 'Father Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Mobile' },
+  { key: 'uanNumber', label: 'UAN' },
+  { key: 'esiNumber', label: 'ESI' },
+  { key: 'aadhaarNumber', label: 'Aadhaar' },
+  { key: 'bankName', label: 'Bank Name' },
+  { key: 'accountNumber', label: 'Bank Account' },
+  { key: 'ifscCode', label: 'IFSC' },
+  { key: 'accountHolderName', label: 'Account Holder' },
+  { key: 'status', label: 'Status' },
+  { key: 'department', label: 'Department' },
+  { key: 'designation', label: 'Designation' },
+  { key: 'site', label: 'Site' },
+  { key: 'joiningDate', label: 'Joining Date' },
+  { key: 'basicSalary', label: 'Basic Salary' },
+  { key: 'grossSalary', label: 'Gross Salary' },
+] as const;
 
 export interface EmployeeDetail {
   id: string;

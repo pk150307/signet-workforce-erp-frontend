@@ -67,14 +67,16 @@ export class SalaryRegisterService {
     );
   }
 
-  exportExcel(id: string) {
+  exportExcel(id: string, columns?: string[]) {
     return this.http.get(`${this.baseUrl}/${id}/export/excel`, {
+      params: { columns: columns?.join(',') ?? '' },
       responseType: 'blob',
     });
   }
 
-  exportPdf(id: string) {
+  exportPdf(id: string, columns?: string[]) {
     return this.http.get(`${this.baseUrl}/${id}/export/pdf`, {
+      params: { columns: columns?.join(',') ?? '' },
       responseType: 'blob',
     });
   }

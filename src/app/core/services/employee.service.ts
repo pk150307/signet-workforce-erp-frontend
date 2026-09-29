@@ -101,12 +101,12 @@ function buildMockDetail(id: string): EmployeeDetail {
   const stored = MOCK_EMPLOYEE_DETAILS[id];
   if (stored) return stored;
 
-  const [firstName = 'Sample', ...rest] = (item?.fullName ?? 'Sample Employee').split(' ');
+  const [firstName = 'Sample', ...rest] = (item?.fullName ?? 'Sample').split(' ');
   return {
     id,
     employeeCode: item?.employeeCode ?? `EMP-${id}`,
     firstName,
-    lastName: rest.join(' ') || 'Employee',
+    lastName: rest.join(' '),
     email: item?.email ?? 'employee@signet.com',
     phone: item?.phone ?? '9876543210',
     alternatePhone: null,
@@ -290,16 +290,16 @@ export class EmployeeService {
     );
   }
 
-  exportExcel() {
+  exportExcel(columns?: string[]) {
     return this.http.get(`${this.base}/export`, {
-      params: { format: 'excel' },
+      params: { format: 'excel', columns: columns?.join(',') ?? '' },
       responseType: 'blob',
     });
   }
 
-  exportPdf() {
+  exportPdf(columns?: string[]) {
     return this.http.get(`${this.base}/export`, {
-      params: { format: 'pdf' },
+      params: { format: 'pdf', columns: columns?.join(',') ?? '' },
       responseType: 'blob',
     });
   }

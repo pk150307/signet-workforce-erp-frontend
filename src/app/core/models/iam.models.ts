@@ -152,4 +152,5 @@ export interface IamQueryParams extends CursorPageParams {
   unreadOnly?: boolean;
   notificationType?: string;
   loginStatus?: string;
+  columns?: string;
 }
