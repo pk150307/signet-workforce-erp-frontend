@@ -55,7 +55,7 @@ export class EmployeeListComponent implements OnInit {
   readonly statusCtrl = new FormControl<EmployeeStatus | 'all'>(EmployeeStatus.Active);
   readonly employmentTypeCtrl = new FormControl<string>('');
 
-  readonly displayedColumns = ['employeeCode', 'softCode', 'fullName', 'department', 'designation', 'site', 'status', 'joiningDate', 'actions'];
+  readonly displayedColumns = ['employeeCode', 'softCode', 'fullName', 'department', 'designation', 'client', 'site', 'status', 'joiningDate', 'actions'];
 
   readonly clientOptions = computed(() => [
     { key: '', value: 'All clients' },
@@ -96,22 +96,28 @@ export class EmployeeListComponent implements OnInit {
     this.employmentTypeCtrl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reloadFirstPage());
   }
 
-  loadData(params?: CursorPageParams) {
-    this.loading.set(true);
-    const pageParams = params ?? this.pager.firstPageParams();
-
-    this.employeeService.getAll({
-      ...pageParams,
+  private currentFilters() {
+    return {
       search: this.searchCtrl.value || undefined,
       clientId: this.clientCtrl.value || undefined,
       status: this.statusCtrl.value === 'all'
-        ? 'all'
+        ? 'all' as const
         : (this.statusCtrl.value ?? EmployeeStatus.Active),
       employmentType: this.employmentTypeCtrl.value
         ? (Number(this.employmentTypeCtrl.value) as EmploymentType)
         : undefined,
       sortBy: this.sortBy,
       sortDir: this.sortDir,
+    };
+  }
+
+  loadData(params?: CursorPageParams) {
+    this.loading.set(true);
+    const pageParams = params ?? this.pager.firstPageParams();
+
+    this.employeeService.getAll({
+      ...pageParams,
+      ...this.currentFilters(),
     }).subscribe({
       next: (result) => {
         this.data.set(result);
@@ -172,9 +178,10 @@ export class EmployeeListComponent implements OnInit {
       columns: EMPLOYEE_EXPORT_COLUMNS,
     }).subscribe((result: ExportColumnsDialogResult | null) => {
       if (!result?.columns?.length) return;
+      const filter = this.currentFilters();
       const request = format === 'pdf'
-        ? this.employeeService.exportPdf(result.columns)
-        : this.employeeService.exportExcel(result.columns);
+        ? this.employeeService.exportPdf(result.columns, filter)
+        : this.employeeService.exportExcel(result.columns, filter);
       request.subscribe({
         next: (blob) => {
           const url = URL.createObjectURL(blob);

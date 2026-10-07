@@ -129,6 +129,7 @@
           <div class="data-list__cell">IFSC</div>
           <div class="data-list__cell">Department</div>
           <div class="data-list__cell">Designation</div>
+          <div class="data-list__cell">Client</div>
           <div class="data-list__cell">Site</div>
           <div class="data-list__cell">Status</div>
           <div class="data-list__cell">
@@ -163,6 +164,13 @@
             <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.ifscCode || ''">{{ emp.ifscCode || '—' }}</span></div>
             <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.department">{{ emp.department }}</span></div>
             <div class="data-list__cell"><span class="cell-text" [matTooltip]="emp.designation">{{ emp.designation }}</span></div>
+            <div class="data-list__cell">
+              @if (emp.clientName) {
+                <span class="cell-text" [matTooltip]="emp.clientName">{{ emp.clientName }}</span>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </div>
             <div class="data-list__cell">
               @if (emp.siteName) {
                 <span class="cell-text" [matTooltip]="emp.siteName">{{ emp.siteName }}</span>
