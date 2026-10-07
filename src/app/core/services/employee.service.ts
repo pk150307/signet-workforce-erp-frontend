@@ -290,17 +290,42 @@ export class EmployeeService {
     );
   }
 
-  exportExcel(columns?: string[]) {
+  exportExcel(columns?: string[], filter: Omit<EmployeeFilter, 'pageSize' | 'cursor' | 'direction' | 'page'> = {}) {
     return this.http.get(`${this.base}/export`, {
-      params: { format: 'excel', columns: columns?.join(',') ?? '' },
+      params: this.exportParams('excel', columns, filter),
       responseType: 'blob',
     });
   }
 
-  exportPdf(columns?: string[]) {
+  exportPdf(columns?: string[], filter: Omit<EmployeeFilter, 'pageSize' | 'cursor' | 'direction' | 'page'> = {}) {
     return this.http.get(`${this.base}/export`, {
-      params: { format: 'pdf', columns: columns?.join(',') ?? '' },
+      params: this.exportParams('pdf', columns, filter),
       responseType: 'blob',
     });
+  }
+
+  private exportParams(
+    format: 'excel' | 'pdf',
+    columns: string[] | undefined,
+    filter: Omit<EmployeeFilter, 'pageSize' | 'cursor' | 'direction' | 'page'>,
+  ): HttpParams {
+    const query: Record<string, string | number | undefined> = {
+      format,
+      columns: columns?.join(',') || undefined,
+      search: filter.search || undefined,
+      departmentId: filter.departmentId,
+      designationId: filter.designationId,
+      siteId: filter.siteId,
+      clientId: filter.clientId,
+      status: filter.status === 'all' ? 'all' : filter.status,
+      employmentType: filter.employmentType,
+    };
+
+    let params = new HttpParams();
+    Object.entries(query).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      params = params.set(key, String(value));
+    });
+    return params;
   }
 }

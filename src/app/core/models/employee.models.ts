@@ -33,6 +33,7 @@ export interface EmployeeListItem {
   department: string;
   designation: string;
   siteName: string | null;
+  clientName?: string | null;
   status: EmployeeStatus;
   joiningDate: string;
   profilePhotoUrl: string | null;
@@ -63,6 +64,7 @@ export const EMPLOYEE_EXPORT_COLUMNS = [
   { key: 'status', label: 'Status' },
   { key: 'department', label: 'Department' },
   { key: 'designation', label: 'Designation' },
+  { key: 'client', label: 'Client' },
   { key: 'site', label: 'Site' },
   { key: 'joiningDate', label: 'Joining Date' },
   { key: 'basicSalary', label: 'Basic Salary' },

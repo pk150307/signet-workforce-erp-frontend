@@ -238,6 +238,7 @@ export function mapEmployeeListItem(raw: unknown): EmployeeListItem {
     department: pickString(r, 'department', 'departmentName') ?? '',
     designation: pickString(r, 'designation', 'designationName') ?? '',
     siteName: pickString(r, 'siteName', 'site') ?? null,
+    clientName: pickString(r, 'clientName', 'clientCompanyName', 'client') ?? null,
     status: pickNumber(r, 'status') as EmployeeStatus,
     joiningDate: pickString(r, 'joiningDate') ?? '',
     profilePhotoUrl: pickString(r, 'profilePhotoUrl', 'photoUrl') ?? null,
