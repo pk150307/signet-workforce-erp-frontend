@@ -12,6 +12,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
   { label: 'Employees', icon: 'people', route: '/employees' },
   { label: 'Attendance', icon: 'event_available', route: '/attendance' },
+  { label: 'Document Formatter', icon: 'difference', route: '/document-formatter' },
   { label: 'Payslips', icon: 'description', route: '/payroll/payslips' },
   { label: 'Salary Register', icon: 'table_chart', route: '/payroll/salary-register' },
   { label: 'Employee Advances', icon: 'payments', route: '/payroll/employee-advances' },
