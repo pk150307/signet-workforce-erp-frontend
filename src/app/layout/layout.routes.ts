@@ -27,6 +27,12 @@ export const LAYOUT_ROUTES: Routes = [
     loadChildren: () => import('../features/attendance/attendance.routes').then(m => m.ATTENDANCE_ROUTES),
   },
   {
+    path: 'document-formatter',
+    data: { breadcrumb: { label: 'Document Formatter', route: '/document-formatter' } },
+    loadChildren: () =>
+      import('../features/document-formatter/document-formatter.module').then(m => m.DocumentFormatterModule),
+  },
+  {
     path: 'leave',
     data: { breadcrumb: { label: 'Leave', route: '/leave' } },
     loadChildren: () => import('../features/leave/leave.routes').then(m => m.LEAVE_ROUTES),

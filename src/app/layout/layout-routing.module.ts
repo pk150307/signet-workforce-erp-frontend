@@ -34,6 +34,12 @@ const routes: Routes = [
         loadChildren: () => import('../features/attendance/attendance.module').then((m) => m.AttendanceModule),
       },
       {
+        path: 'document-formatter',
+        data: { breadcrumb: { label: 'Document Formatter', route: '/document-formatter' } },
+        loadChildren: () =>
+          import('../features/document-formatter/document-formatter.module').then((m) => m.DocumentFormatterModule),
+      },
+      {
         path: 'leave',
         data: { breadcrumb: { label: 'Leave', route: '/leave' } },
         loadChildren: () => import('../features/leave/leave.module').then((m) => m.LeaveModule),
