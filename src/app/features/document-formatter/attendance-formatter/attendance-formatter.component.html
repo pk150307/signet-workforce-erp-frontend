@@ -1,0 +1,203 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-header__title">Document Formatter</h1>
+      <p class="page-header__subtitle">
+        @if (selectedClientName(); as clientName) {
+          {{ clientName }}
+        } @else if (loadingClients()) {
+          Loading clients…
+        } @else {
+          Select a client, then upload the raw attendance Excel.
+        }
+      </p>
+    </div>
+  </div>
+
+  <div class="card filter-card">
+    <form [formGroup]="filters" class="filter-row">
+      <signet-search-select-dropdown
+        formControlName="clientId"
+        fieldTitle="Client"
+        [placeholder]="loadingClients() ? 'Loading clients…' : 'Select client'"
+        [options]="clientOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+        (valueChange)="onClientSelected($event)"
+      />
+      <signet-search-select-dropdown
+        formControlName="month"
+        fieldTitle="File month"
+        placeholder="Month"
+        [options]="monthOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="false"
+      />
+      <signet-search-select-dropdown
+        formControlName="year"
+        fieldTitle="File year"
+        placeholder="Year"
+        [options]="yearOptions()"
+        [width]="100"
+        widthUnit="%"
+        [searchFunctionality]="true"
+      />
+    </form>
+
+    @if (selectedClientName(); as clientName) {
+      <p class="selected-client">Client: <strong>{{ clientName }}</strong></p>
+    } @else if (!loadingClients() && clients().length === 0) {
+      <p class="selected-client">No clients found. Refresh the page and try again.</p>
+    }
+
+    <div class="upload-row">
+      <label class="upload-btn">
+        <mat-icon>upload_file</mat-icon>
+        {{ file() ? 'Replace Excel' : 'Upload raw Excel' }}
+        <input type="file" accept=".xlsx,.xlsm" hidden (change)="onFileSelected($event)" />
+      </label>
+      @if (file(); as selected) {
+        <span class="file-name">{{ selected.name }}</span>
+        <button type="button" class="text-btn" (click)="clearFile()">Remove</button>
+      }
+      <signet-button
+        [width]="160"
+        widthUnit="px"
+        type="stroke"
+        displayText="Preview"
+        [disabled]="!canPreview()"
+        (clicked)="runPreview()"
+      />
+      <signet-button
+        [width]="260"
+        widthUnit="px"
+        type="primary"
+        displayText="Download attendance sheet"
+        [disabled]="!canDownload()"
+        (clicked)="download()"
+      />
+      @if (working()) {
+        <span class="file-name">Reading the sheet…</span>
+      } @else if (!selectedClientId()) {
+        <span class="file-name">Select a client to enable preview and download.</span>
+      } @else if (!file()) {
+        <span class="file-name">Upload the Excel file to enable preview and download.</span>
+      } @else if (preview() && !preview()!.summary.matched) {
+        <span class="file-name">No employees matched this client, so the sheet cannot be downloaded.</span>
+      }
+    </div>
+  </div>
+
+  <div class="hint-banner card">
+    <mat-icon>info</mat-icon>
+    <div class="mapping">
+      <span>
+        The raw Excel is used as it is. Soft Code, Emp Name, Father Name, Present Days,
+        Night Allowance, OT Hours, Punctuality Award, and Bonus are copied into the attendance sheet.
+        Emp ID is filled from the employee list for the selected client.
+      </span>
+    </div>
+  </div>
+
+  @if (working() && !preview()) {
+    <app-skeleton-loader type="table" [rows]="6"></app-skeleton-loader>
+  }
+
+  @if (preview(); as result) {
+    @if (detectedPeriodLabel(); as period) {
+      <div class="period-banner card">
+        <mat-icon>event</mat-icon>
+        <div>
+          <strong>Sheet period: {{ period }}</strong>
+          @if (selectedPeriodDiffers()) {
+            <span>The download name still uses the month and year selected above.</span>
+          }
+        </div>
+        @if (selectedPeriodDiffers()) {
+          <signet-button
+            [width]="180"
+            widthUnit="px"
+            type="stroke"
+            displayText="Use sheet period"
+            (clicked)="useDetectedPeriod()"
+          />
+        }
+      </div>
+    }
+
+    <div class="summary-row">
+      <button type="button" class="summary-chip" [class.summary-chip--active]="rowFilter() === 'all'" (click)="setFilter('all')">
+        {{ result.summary.sourceRows }} in sheet
+      </button>
+      <button type="button" class="summary-chip" [class.summary-chip--active]="rowFilter() === 'ready'" (click)="setFilter('ready')">
+        {{ result.summary.matched - result.summary.needsReview }} ready
+      </button>
+      <button type="button" class="summary-chip" [class.summary-chip--active]="rowFilter() === 'attention'" (click)="setFilter('attention')">
+        {{ attentionCount() }} need attention
+      </button>
+    </div>
+
+    <div class="next-step card">
+      <span>Client: <strong>{{ result.clientName || selectedClientName() }}</strong></span>
+    </div>
+
+    @if (result.summary.matched) {
+      <div class="next-step card">
+        <span>Import the downloaded file on the attendance register for {{ result.clientName || selectedClientName() }}.</span>
+        <a [routerLink]="registerLink().router" [queryParams]="registerLink().query">Open attendance register</a>
+      </div>
+    }
+
+    <div class="card table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Emp ID</th>
+              <th>Employee</th>
+              <th>Soft code</th>
+              <th>Father name</th>
+              <th>Present</th>
+              <th>OT (₹)</th>
+              <th>Night</th>
+              <th>PA</th>
+              <th>Bonus</th>
+              <th>Sheet</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of visibleRows(); track row.rowNumber) {
+              <tr>
+                <td>
+                  <span class="status" [class.status--ready]="row.status === 'matched' && !row.needsReview" [class.status--review]="row.needsReview" [class.status--issue]="row.status !== 'matched'">
+                    {{ statusLabel(row) }}
+                  </span>
+                  @if (row.message) {
+                    <span class="row-note">{{ row.message }}</span>
+                  }
+                </td>
+                <td>{{ row.employeeCode || '—' }}</td>
+                <td>{{ row.employeeName || row.sourceName || '—' }}</td>
+                <td>{{ row.softCode || row.sourceCode }}</td>
+                <td>{{ row.fatherName || row.sourceFatherName || '—' }}</td>
+                <td class="num">{{ row.presentDays != null ? (row.presentDays | number:'1.0-2') : '—' }}</td>
+                <td class="num">{{ row.overtimeHours | number:'1.0-0' }}</td>
+                <td class="num">{{ row.nightAllowance | number:'1.0-0' }}</td>
+                <td class="num">{{ row.punctualityAward | number:'1.0-0' }}</td>
+                <td class="num">{{ row.bonus | number:'1.0-0' }}</td>
+                <td class="sheet-code">{{ row.sourceCode }} · {{ row.sourceName }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="11" class="empty">No rows in this view.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
